@@ -21,7 +21,14 @@ const (
 
 type Resources [ResourceMax]uint64
 
-type ResourcesMultiplier [ResourceMax]float32
+type ResourcesIncrement [ResourceMax]int64
+
+type ResourcesMultiplier [ResourceMax]float64
+
+type ResourceModifiers struct {
+	Mult ResourcesMultiplier
+	Plus ResourcesIncrement
+}
 
 type UnitType struct {
 	// Unique Id of the Unit Type
@@ -31,22 +38,22 @@ type UnitType struct {
 	// A health equal to 0 means the death of the unit.
 	Health uint
 
-	// How afftected is that type of unit by a loss of Health.
+	// How affected is that type of unit by a loss of Health.
 	// Must be between 0 and 1.
 	// 0 means that the capacity of the Unit isn't affected by a health reduction.
 	// 1 means that the capacity of the Unit loses an equal percentage of its capacity
 	// for a loss of health (in other words, a HealthFactor of 1 means that the Unit
 	// will hit at 90% of its maximal power if it has 90% of its health points).
-	HealthFactor float32
+	HealthFactor float64
 
 	// The display name of the Unit Type
 	Name string
 
 	// Instantiation cost of the current UnitType
-	Build Resources
+	Cost Resources
 
-	//
-	Maintenance Resources
+	// Might positive (resource boost) or more commonly negative (maintenance cost)
+	Prod ResourceModifiers
 }
 
 // Both Cell and City must not be 0, and have a non-0 value.
@@ -74,14 +81,14 @@ type BuildingType struct {
 	// Display name of the current BuildingType
 	Name string
 
-	// Multiplier of the City production
-	Multiplier ResourcesMultiplier
+	// How much does the production cost
+	Cost Resources
+
+	// Impat of the current Building on the total storage capacity of the City.
+	Stock ResourceModifiers
 
 	// Increment of resources produced by this building.
-	Boost Resources
-
-	// How much does the production cost
-	BuildingCost Resources
+	Prod ResourceModifiers
 }
 
 type Building struct {
@@ -92,7 +99,7 @@ type Building struct {
 	Type uint64
 }
 
-type CityCore struct {
+type City struct {
 	// The unique ID of the current City
 	Id uint64
 
@@ -114,28 +121,21 @@ type CityCore struct {
 	// Resources stock owned by the current City
 	Stock Resources
 
+	// Maximum amounts of each resources that might be stored in the town hall
+	// of the city. That limit doesn't consider the modifiers.
+	StockCapacity Resources
+
 	// Resources produced each round by the City, before the enforcing of
 	// Production Boosts ans Production Multipliers
 	Production Resources
-}
 
-type City struct {
-	Meta CityCore
-
+	// Is the city still usable
 	Deleted bool
 
 	// An array of Units guarding the current City.
 	// This is redundant with the City field of the Unit type.
 	// Consider it as an index.
 	Units []uint64
-
-	Buildings []Building
-}
-
-type CityView struct {
-	Core CityCore
-
-	Units []Unit
 
 	Buildings []Building
 }
@@ -167,6 +167,7 @@ type User struct {
 	// Has the current User the permission to manage the service.
 	Admin bool `json:",omitempty"`
 
+	// Can the user still login.
 	Inactive bool `json:",omitempty"`
 }
 
@@ -216,28 +217,28 @@ func (w *World) Check() error {
 	}
 
 	if !sort.IsSorted(&w.Users) {
-		return errors.New("User sequence: unsorted")
+		return errors.New("user sequence: unsorted")
 	}
 	for i, u := range w.Users {
 		if uint64(i)+1 != u.Id {
-			return errors.New(fmt.Sprintf("User sequence: hole at %d", i))
+			return errors.New(fmt.Sprintf("user sequence: hole at %d", i))
 		}
 	}
 
 	if !sort.IsSorted(&w.Characters) {
-		return errors.New("Character sequence: unsorted")
+		return errors.New("character sequence: unsorted")
 	}
 	for i, c := range w.Characters {
 		if uint64(i)+1 != c.Id {
-			return errors.New(fmt.Sprintf("Character sequence: hole at %d", i))
+			return errors.New(fmt.Sprintf("character sequence: hole at %d", i))
 		}
 	}
 
 	if !sort.IsSorted(&w.Cities) {
-		return errors.New("City sequence: unsorted")
+		return errors.New("city sequence: unsorted")
 	}
 	for i, c := range w.Cities {
-		if uint64(i)+1 != c.Meta.Id {
+		if uint64(i)+1 != c.Id {
 			return errors.New(fmt.Sprintf("City sequence: hole at %d", i))
 		}
 	}
@@ -245,12 +246,12 @@ func (w *World) Check() error {
 	return nil
 }
 
-func (p *World) ReadLocker() sync.Locker {
-	return p.rw.RLocker()
+func (w *World) ReadLocker() sync.Locker {
+	return w.rw.RLocker()
 }
 
-func (p *World) getNextId() uint64 {
-	return atomic.AddUint64(&p.NextId, 1)
+func (w *World) getNextId() uint64 {
+	return atomic.AddUint64(&w.NextId, 1)
 }
 
 func (w *World) DumpJSON(dst io.Writer) error {

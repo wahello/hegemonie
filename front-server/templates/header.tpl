@@ -15,10 +15,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 </head>
 <body>
 <header><h1>Hegemonie</h1></header>
-<nav>
-    {% if userid %}<a href="/game/user">User</a>{% endif %}
-    {% if cid %}<a href="/game/character?uid={{ userid }}&cid={{ cid }}">Character</a>{% endif %}
-    {% if lid %}<a href="/game/land?uid={{ userid }}&cid={{ cid }}&lid={{ lid }}">Land</a>{% endif %}
-    {% if userid %}<a href="/action/logout">Log-Out</a>{% endif %}
-</nav>
 <main>
+    <nav>
+        {% if userid %}<a href="/game/user">User</a>{% endif %}
+        {% if cid %}<a href="/game/character?cid={{ cid }}">Character</a>{% endif %}
+        {% if lid %}<a href="/game/land?cid={{ cid }}&lid={{ lid }}">Land</a>{% endif %}
+        {% if userid %}<a href="/action/logout">Log-Out</a>{% endif %}
+    </nav>

@@ -35,30 +35,28 @@
     ],
     "Cities": [
         {
-            "Meta": {
-                "Id": 1,
-                "Cell": 1,
-                "Owner": 4,
-                "Deputy": 4,
-                "Name": "Fleury-Mérogis",
-                "Stock": [ 0, 0, 0, 0 ],
-                "Production": [ 0, 0, 0, 0 ]
-            },
+            "Id": 1,
+            "Cell": 1,
+            "Owner": 4,
+            "Deputy": 4,
+            "Name": "Fleury-Mérogis",
+            "Stock": [ 250, 13, 22, 37 ],
+            "StockCapacity": [ 1000, 1000, 1000, 1000 ],
+            "Production": [ 10, 10, 10, 10 ],
             "Units": [1, 2, 3],
             "Buildings": [
                 {"Id": 1, "Type": 1}
             ]
         },
         {
-            "Meta": {
-                "Id": 2,
-                "Cell": 14,
-                "Owner": 1,
-                "Deputy": 2,
-                "Name": "Ironforge",
-                "Stock": [ 0, 0, 0, 0 ],
-                "Production": [ 0, 0, 0, 0 ]
-            },
+            "Id": 2,
+            "Cell": 14,
+            "Owner": 1,
+            "Deputy": 2,
+            "Name": "Ironforge",
+            "Stock": [ 250, 13, 22, 37 ],
+            "StockCapacity": [ 1000, 1000, 1000, 1000 ],
+            "Production": [ 10, 10, 10, 10 ],
             "Units": [1, 2, 3],
             "Buildings": [
                 {"Id": 1, "Type": 1}
@@ -77,7 +75,7 @@
             "Health": 100,
             "HealthFactor": 0.5,
             "Build": [ 0, 0, 0, 0 ],
-            "Maintenance": [ 0, 0, 0, 0 ]
+            "Maintenance": [ 0, 0, 5, 0 ]
         },
         {
             "Id": 2,
@@ -85,24 +83,25 @@
             "Health": 150,
             "HealthFactor": 0.0,
             "Build": [ 0, 0, 0, 0 ],
-            "Maintenance": [ 0, 0, 0, 0 ]
+            "Maintenance": [ 0, 5, 0, 0 ]
         },
         {
             "Id": 3,
-            "Name": "Piquet de gréviste SNCF",
+            "Name": "Escouade de grévistes SNCF",
             "Health": 200,
             "HealthFactor": 1.0,
-            "Build": [ 0, 0, 0, 0 ],
-            "Maintenance": [ 0, 0, 0, 0 ]
+            "Build": [ 10, 5, 0, 0 ],
+            "Maintenance": [ 10, 0, 0, 0 ]
         }
     ],
     "BuildingTypes": [
         {
             "Id": 1,
             "Name": "Étable",
-            "Multiplier": [ 1.0, 1.0, 1.0, 1.0 ],
-            "Boost": [ 0, 0, 0, 0 ],
-            "BuildingCost": [ 0, 0, 0, 0 ]
+            "Multiplier": [ 1.1, 1.05, 1.05, 1.0 ],
+            "Cost": [ 0, 0, 0, 10 ],
+            "Stock": {"Plus":[ 10, 10, 10, 10 ], "Mult": [1.0, 1.0, 1.0, 1.0]},
+            "Prod": {"Plus":[ 10, 10, 10, 10 ], "Mult": [1.0, 1.0, 1.0, 1.0]}
         }
     ],
     "NextId": 1,

@@ -11,57 +11,48 @@ import (
 	"errors"
 )
 
-func (p *World) UserCreate(mail, pass string) (uint64, error) {
+func (w *World) UserCreate(mail, pass string) (uint64, error) {
 	if !validMail(mail) || !validPass(pass) {
 		return 0, errors.New("EINVAL")
 	}
 
-	p.rw.Lock()
-	defer p.rw.Unlock()
+	w.rw.Lock()
+	defer w.rw.Unlock()
 
-	h := p.hashPassword(pass)
-	for _, u := range p.Users {
+	h := w.hashPassword(pass)
+	for _, u := range w.Users {
 		if u.Email == mail && u.Password == h {
 			return 0, errors.New("User exists")
 		}
 	}
 
-	id := p.getNextId()
+	id := w.getNextId()
 	u := User{Id: id, Name: "No-Name", Email: mail, Password: pass}
-	p.Users = append(p.Users, u)
+	w.Users = append(w.Users, u)
 	return id, nil
 }
 
-func (p *World) UserGet(id uint64) (User, error) {
-	if id <= 0 {
-		return User{}, errors.New("EINVAL")
-	}
-
-	p.rw.RLock()
-	defer p.rw.RUnlock()
-
+func (w *World) UserGet(id uint64) *User {
 	// TODO(jfs): lookup in the sorted array
-	for _, u := range p.Users {
+	for _, u := range w.Users {
 		if u.Id == id {
-			var copy User = u
-			copy.Password = ""
-			return copy, nil
+			return &u
 		}
 	}
 
-	return User{}, errors.New("User not found")
+	return nil
 }
 
-func (p *World) UserAuth(mail, pass string) (uint64, error) {
+func (w *World) UserAuth(mail, pass string) (uint64, error) {
 	if mail == "" || pass == "" {
 		return 0, errors.New("EINVAL")
 	}
 
-	p.rw.RLock()
-	defer p.rw.RUnlock()
+	w.rw.RLock()
+	defer w.rw.RUnlock()
 
-	h := p.hashPassword(pass)
-	for _, u := range p.Users {
+	h := w.hashPassword(pass)
+	for _, u := range w.Users {
 		if u.Email == mail {
 			if u.Password == h {
 				// Hashed password matches
@@ -78,17 +69,17 @@ func (p *World) UserAuth(mail, pass string) (uint64, error) {
 	return 0, errors.New("User not found")
 }
 
-func (p *World) UserGetCharacters(id uint64, hook func(*Character)) {
-	for _, c := range p.Characters {
+func (w *World) UserGetCharacters(id uint64, hook func(*Character)) {
+	for _, c := range w.Characters {
 		if c.User == id {
 			hook(&c)
 		}
 	}
 }
 
-func (p *World) hashPassword(pass string) string {
+func (w *World) hashPassword(pass string) string {
 	checksum := sha256.New()
-	checksum.Write([]byte(p.Salt))
+	checksum.Write([]byte(w.Salt))
 	checksum.Write([]byte(pass))
 	return hex.EncodeToString(checksum.Sum(nil))
 }
@@ -115,4 +106,28 @@ func (s *SetOfUsers) Swap(i, j int) {
 	tmp := (*s)[i]
 	(*s)[i] = (*s)[j]
 	(*s)[j] = tmp
+}
+
+func (w *World) UserShow(id uint64) (view UserView, err error) {
+	if id <= 0 {
+		err = errors.New("EINVAL")
+	} else {
+		w.rw.RLock()
+		defer w.rw.RUnlock()
+
+		if u := w.UserGet(id); u == nil {
+			err = errors.New("User not found")
+		} else {
+			view.Id = u.Id
+			view.Name = u.Name
+			view.Email = u.Email
+			view.Inactive = u.Inactive
+			view.Admin = u.Admin
+			view.Characters = make([]NamedItem, 0)
+			w.UserGetCharacters(id, func(c *Character) {
+				view.Characters = append(view.Characters, NamedItem{Id: c.Id, Name: c.Name})
+			})
+		}
+	}
+	return view, err
 }

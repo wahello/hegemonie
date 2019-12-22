@@ -5,8 +5,8 @@
 
 package world
 
-func (p *World) GetUnit(id uint64) *Unit {
-	for _, c := range p.Units {
+func (w *World) GetUnit(id uint64) *Unit {
+	for _, c := range w.Units {
 		if c.Id == id {
 			return &c
 		}
@@ -14,8 +14,8 @@ func (p *World) GetUnit(id uint64) *Unit {
 	return nil
 }
 
-func (p *World) GetUnitType(id uint64) *UnitType {
-	for _, c := range p.UnitTypes {
+func (w *World) GetUnitType(id uint64) *UnitType {
+	for _, c := range w.UnitTypes {
 		if c.Id == id {
 			return &c
 		}

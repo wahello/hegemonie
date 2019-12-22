@@ -5,10 +5,6 @@
 
 package world_client
 
-import (
-	"hegemonie/world"
-)
-
 type ErrorReply struct {
 	Code int
 	Msg  string
@@ -17,26 +13,4 @@ type ErrorReply struct {
 type AuthReply struct {
 	Id  uint64
 	Msg string
-}
-
-type NamedItem struct {
-	Name string
-	Id   uint64
-}
-
-type UserShowReply struct {
-	Meta       world.User
-	Characters []NamedItem
-}
-
-type CharacterShowReply struct {
-	Meta     world.Character
-	OwnerOf  []NamedItem
-	DeputyOf []NamedItem
-}
-
-type CityShowReply struct {
-	Meta      world.CityCore
-	Units     []NamedItem
-	Buildings []NamedItem
 }
