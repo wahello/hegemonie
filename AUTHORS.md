@@ -1,2 +1,4 @@
 # Individuals
-jfsmig <jf.smigielski@gmail.com>
+
+* jfsmig <jf.smigielski@gmail.com>
+* korween <korween <kortechmail@gmail.com>

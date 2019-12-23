@@ -13,11 +13,40 @@ the world evolve with external triggers: long term actions progress a bit
 toward their completion, the movements are executed, attacks started, resources
 produced, etc etc.
 
-Technical facts:
+
+## Build & Install
+
+Build, the ugly way:
+
+```
+git clone https://github.com/jfsmig/hegemonie.git
+cd hegemonie
+make
+```
+
+Build, the pretty way:
+
+```
+BASE=github.com/jfsmig/hegemonie
+go install $BASE/hege-front
+go install $BASE/hege-world
+```
+
+Then install, the only way:
+
+```
+DESTDIR=/usr/local/bin
+/usr/bin/install $GOPATH/bin/hege-world $DESTDIR
+/usr/bin/install $GOPATH/bin/hege-front $DESTDIR
+```
+
+## Technical facts
+
 1. Written in 100% in Golang: for the sake of Simplicity and Portability. The
-   code mostly depends on [Go-Macaron](https://go-macaron.com). At the moment
-   no special attention has been paid to the performance of the whole thing:
-   this will happend after the release of a very first MVP.
+   code mostly depends on [Go-Macaron](https://go-macaron.com) and the Golang
+   [standard library](https://golang.org/pkg). At the moment no special
+   attention has been paid to the performance of the whole thing: this will
+   happen after the release of a very first MVP.
 2. No database required: the system has all its components in RAM while it is
    alive, it periodically persist its state and restore it at the startup.
    The status is written in [JSON](https://json.org) to ease the daily
@@ -33,7 +62,7 @@ Technical facts:
 A game instance for a small community is lightweight enough to run on a small
 ARM-based board.
 
-## Architecture
+### Architecture
 
 * **hege-front** serves HTTP pages for the human beings
 * **hege-world** manage the game's world through a simple HTTP/JSON API
