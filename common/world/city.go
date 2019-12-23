@@ -110,94 +110,106 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 	w.rw.RLock()
 	defer w.rw.RUnlock()
 
+	// Fetch + sanity checks about the city
 	pCity := w.CityGet(cityId)
-	pChar := w.CharacterGet(characterId)
-
-	if pCity == nil || pChar == nil {
+	if pCity == nil {
 		err = errors.New("Not Found")
-	} else if pCity.Deputy != characterId && pCity.Owner != characterId {
+		return
+	}
+	if pCity.Deputy != characterId && pCity.Owner != characterId {
 		err = errors.New("Forbidden")
-	} else if pChar.User != userId {
-		err = errors.New("Forbidden")
-	} else {
-		view.Id = pCity.Id
-		view.Name = pCity.Name
-		view.Owner.Id = pCity.Owner
-		view.Deputy.Id = pCity.Deputy
-		view.Buildings = make([]BuildingView, 0, len(pCity.Buildings))
-		view.Units = make([]UnitView, 0, len(pCity.Units))
-
-		// Compute the modifiers
-		for i := 0; i < ResourceMax; i++ {
-			view.Production.Buildings.Mult[i] = 1.0
-			view.Production.Knowledge.Mult[i] = 1.0
-			view.Production.Troops.Mult[i] = 1.0
-			view.Stock.Buildings.Mult[i] = 1.0
-			view.Stock.Knowledge.Mult[i] = 1.0
-			view.Stock.Troops.Mult[i] = 1.0
-		}
-
-		for _, b := range pCity.Buildings {
-			v := BuildingView{}
-			v.Id = b.Id
-			v.Type = *w.GetBuildingType(b.Type)
-			view.Buildings = append(view.Buildings, v)
-			for i := 0; i < ResourceMax; i++ {
-				view.Production.Buildings.Plus[i] += v.Type.Prod.Plus[i]
-				view.Production.Buildings.Mult[i] *= v.Type.Prod.Mult[i]
-				view.Stock.Buildings.Plus[i] += v.Type.Stock.Plus[i]
-				view.Stock.Buildings.Mult[i] *= v.Type.Stock.Mult[i]
-			}
-		}
-		for _, unitId := range pCity.Units {
-			u := w.GetUnit(unitId)
-			v := UnitView{}
-			v.Id = u.Id
-			v.Type = *w.GetUnitType(u.Type)
-			view.Units = append(view.Units, v)
-			for i := 0; i < ResourceMax; i++ {
-				view.Production.Troops.Plus[i] += v.Type.Prod.Plus[i]
-				view.Production.Troops.Mult[i] *= v.Type.Prod.Mult[i]
-			}
-		}
-
-		// Apply all the modifiers on the production
-		view.Production.Base = pCity.Production
-		view.Production.Actual = pCity.Production
-		for i := 0; i < ResourceMax; i++ {
-			v := float64(view.Production.Base[i])
-			v = v * view.Production.Troops.Mult[i]
-			v = v * view.Production.Buildings.Mult[i]
-			v = v * view.Production.Knowledge.Mult[i]
-
-			vi := int64(v)
-			vi = vi + view.Production.Troops.Plus[i]
-			vi = vi + view.Production.Buildings.Plus[i]
-			vi = vi + view.Production.Knowledge.Plus[i]
-
-			view.Production.Actual[i] = uint64(vi)
-		}
-
-		// Apply all the modifiers on the stock
-		view.Stock.Base = pCity.Stock
-		view.Stock.Actual = pCity.Stock
-		for i := 0; i < ResourceMax; i++ {
-			v := float64(view.Stock.Base[i])
-			v = v * view.Stock.Troops.Mult[i]
-			v = v * view.Stock.Buildings.Mult[i]
-			v = v * view.Stock.Knowledge.Mult[i]
-
-			vi := int64(v)
-			vi = vi + view.Stock.Troops.Plus[i]
-			vi = vi + view.Stock.Buildings.Plus[i]
-			vi = vi + view.Stock.Knowledge.Plus[i]
-
-			view.Stock.Actual[i] = uint64(vi)
-		}
-
-		view.Stock.Usage = pCity.Stock
-		return view, err
+		return
 	}
 
-	return view, err
+	// Fetch + senity checks about the City
+	pOwner := w.CharacterGet(pCity.Owner)
+	pDeputy := w.CharacterGet(pCity.Deputy)
+	if pOwner == nil || pDeputy == nil {
+		err = errors.New("Not Found")
+		return
+	}
+	if pOwner.User != userId && pDeputy.User != userId {
+		err = errors.New("Forbidden")
+		return
+	}
+
+	view.Id = pCity.Id
+	view.Name = pCity.Name
+	view.Owner.Id = pOwner.Id
+	view.Owner.Name = pOwner.Name
+	view.Deputy.Id = pDeputy.Id
+	view.Deputy.Name = pDeputy.Name
+	view.Buildings = make([]BuildingView, 0, len(pCity.Buildings))
+	view.Units = make([]UnitView, 0, len(pCity.Units))
+
+	// Compute the modifiers
+	for i := 0; i < ResourceMax; i++ {
+		view.Production.Buildings.Mult[i] = 1.0
+		view.Production.Knowledge.Mult[i] = 1.0
+		view.Production.Troops.Mult[i] = 1.0
+		view.Stock.Buildings.Mult[i] = 1.0
+		view.Stock.Knowledge.Mult[i] = 1.0
+		view.Stock.Troops.Mult[i] = 1.0
+	}
+
+	for _, b := range pCity.Buildings {
+		v := BuildingView{}
+		v.Id = b.Id
+		v.Type = *w.GetBuildingType(b.Type)
+		view.Buildings = append(view.Buildings, v)
+		for i := 0; i < ResourceMax; i++ {
+			view.Production.Buildings.Plus[i] += v.Type.Prod.Plus[i]
+			view.Production.Buildings.Mult[i] *= v.Type.Prod.Mult[i]
+			view.Stock.Buildings.Plus[i] += v.Type.Stock.Plus[i]
+			view.Stock.Buildings.Mult[i] *= v.Type.Stock.Mult[i]
+		}
+	}
+	for _, unitId := range pCity.Units {
+		u := w.GetUnit(unitId)
+		v := UnitView{}
+		v.Id = u.Id
+		v.Type = *w.GetUnitType(u.Type)
+		view.Units = append(view.Units, v)
+		for i := 0; i < ResourceMax; i++ {
+			view.Production.Troops.Plus[i] += v.Type.Prod.Plus[i]
+			view.Production.Troops.Mult[i] *= v.Type.Prod.Mult[i]
+		}
+	}
+
+	// Apply all the modifiers on the production
+	view.Production.Base = pCity.Production
+	view.Production.Actual = pCity.Production
+	for i := 0; i < ResourceMax; i++ {
+		v := float64(view.Production.Base[i])
+		v = v * view.Production.Troops.Mult[i]
+		v = v * view.Production.Buildings.Mult[i]
+		v = v * view.Production.Knowledge.Mult[i]
+
+		vi := int64(v)
+		vi = vi + view.Production.Troops.Plus[i]
+		vi = vi + view.Production.Buildings.Plus[i]
+		vi = vi + view.Production.Knowledge.Plus[i]
+
+		view.Production.Actual[i] = uint64(vi)
+	}
+
+	// Apply all the modifiers on the stock
+	view.Stock.Base = pCity.StockCapacity
+	view.Stock.Actual = pCity.StockCapacity
+	view.Stock.Usage = pCity.Stock
+	for i := 0; i < ResourceMax; i++ {
+		v := float64(view.Stock.Base[i])
+		v = v * view.Stock.Troops.Mult[i]
+		v = v * view.Stock.Buildings.Mult[i]
+		v = v * view.Stock.Knowledge.Mult[i]
+
+		vi := int64(v)
+		vi = vi + view.Stock.Troops.Plus[i]
+		vi = vi + view.Stock.Buildings.Plus[i]
+		vi = vi + view.Stock.Knowledge.Plus[i]
+
+		view.Stock.Actual[i] = uint64(vi)
+	}
+
+	return
 }

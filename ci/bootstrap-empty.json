@@ -74,24 +74,24 @@
             "Name": "Troll",
             "Health": 100,
             "HealthFactor": 0.5,
-            "Build": [ 0, 0, 0, 0 ],
-            "Maintenance": [ 0, 0, 5, 0 ]
+            "Cost": [ 10, 9, 8, 7 ],
+            "Prod": {"Plus":[ -1, -1, -1, -1 ], "Mult": [1.0, 1.0, 1.0, 1.0]}
         },
         {
             "Id": 2,
             "Name": "Golem",
             "Health": 150,
             "HealthFactor": 0.0,
-            "Build": [ 0, 0, 0, 0 ],
-            "Maintenance": [ 0, 5, 0, 0 ]
+            "Cost": [ 10, 9, 8, 7 ],
+            "Prod": {"Plus":[ -1, -1, -1, -1 ], "Mult": [1.0, 1.0, 1.0, 1.0]}
         },
         {
             "Id": 3,
             "Name": "Escouade de grévistes SNCF",
             "Health": 200,
             "HealthFactor": 1.0,
-            "Build": [ 10, 5, 0, 0 ],
-            "Maintenance": [ 10, 0, 0, 0 ]
+            "Cost": [ 10, 9, 8, 7 ],
+            "Prod": {"Plus":[ -1, -1, -1, -1 ], "Mult": [1.0, 1.0, 1.0, 1.0]}
         }
     ],
     "BuildingTypes": [

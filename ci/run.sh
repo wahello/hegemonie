@@ -11,12 +11,12 @@ function finish() {
 	wait
 }
 
-$PWD/hege-front \
-	-templates $PWD/front-server/templates \
-	-static $PWD/front-server/static \
+hege-front \
+	-templates $PWD/hege-front/templates \
+	-static $PWD/hege-front/static \
 	&
 
-$PWD/hege-world \
+hege-world \
 	-load $CONFIG \
 	&
 

@@ -9,7 +9,7 @@ clean:
 install: all
 	install /usr/local/bin hege-front hege-world
 
-.PHONY: all clean install test try \
+.PHONY: all clean install test fmt try \
 	world client mapper hege-front hege-world
 
 mapper:
@@ -22,6 +22,13 @@ hege-front:
 	go install $(BASE)/hege-front
 hege-world:
 	go install $(BASE)/hege-world
+
+fmt:
+	go fmt $(BASE)/common/world
+	go fmt $(BASE)/common/client
+	go fmt $(BASE)/common/mapper
+	go fmt $(BASE)/hege-world
+	go fmt $(BASE)/hege-front
 
 test:
 	go test $(BASE)/common/world

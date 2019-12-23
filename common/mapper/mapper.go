@@ -6,9 +6,9 @@
 package mapper
 
 import (
-    "time"
 	"encoding/json"
-    "math/rand"
+	"math/rand"
+	"time"
 )
 
 type slot struct {
@@ -16,27 +16,27 @@ type slot struct {
 }
 
 type biome struct {
-	Type int64
+	Type  int64
 	Decay int64
 }
 
 // Terrain generation primitive
 func Generate() (string, string, error) {
-    gameMap := genPhase1(64, 64, false)
-    overlay := genPhase1(64, 64, true)
-    gameMap, overlay = genPhase2(gameMap, overlay, 100, 64, 64)
+	gameMap := genPhase1(64, 64, false)
+	overlay := genPhase1(64, 64, true)
+	gameMap, overlay = genPhase2(gameMap, overlay, 100, 64, 64)
 
-    gameMapB, err := json.Marshal(gameMap)
-    if err != nil {
-        return "", "", err
-    }
+	gameMapB, err := json.Marshal(gameMap)
+	if err != nil {
+		return "", "", err
+	}
 
-    overlayB, err := json.Marshal(overlay)
-    if err != nil {
-        return "", "", err
-    }
+	overlayB, err := json.Marshal(overlay)
+	if err != nil {
+		return "", "", err
+	}
 
-    return string(gameMapB), string(overlayB), nil
+	return string(gameMapB), string(overlayB), nil
 }
 
 // Init map slice, using a filler (nothing or grass)
@@ -52,7 +52,7 @@ func genPhase1(resX int64, resY int64, empty bool) []*slot {
 			res = append(res, &slot{Terrain: filler})
 		}
 	}
-    return res
+	return res
 }
 
 // Add biomes using decay-based generation
@@ -66,7 +66,7 @@ func genPhase2(gameMap, overlay []*slot, nSpawns, resX, resY int64) ([]*slot, []
 		biome{Type: 5, Decay: 250},
 	}
 	var biomeOverlay = map[int64][]int64{
-		2: []int64{81,},
+		2: []int64{81},
 	}
 	dirs := []int64{-1 * resX, 1, resX, -1}
 
@@ -82,8 +82,8 @@ func genPhase2(gameMap, overlay []*slot, nSpawns, resX, resY int64) ([]*slot, []
 			newSource := sources[rand.Int63n(sourceLen)] + dirs[rand.Int63n(dirLen)]
 			if newSource < int64(0) {
 				newSource = int64(0)
-			} else if newSource > (resX * resY - int64(1)) {
-				newSource = (resX * resY - int64(1))
+			} else if newSource > (resX*resY - int64(1)) {
+				newSource = (resX*resY - int64(1))
 			}
 			if !itemInSlice(sources, newSource) {
 				sources = append(sources, newSource)
