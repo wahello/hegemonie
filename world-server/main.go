@@ -17,8 +17,8 @@ import (
 	"strconv"
 	"time"
 
-	. "../world"
-	. "../world-client"
+	. "github.com/jfsmig/hegemonie/world"
+	. "github.com/jfsmig/hegemonie/world-client"
 )
 
 var (

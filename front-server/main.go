@@ -6,9 +6,9 @@
 package main
 
 import (
-	"../common/mapper"
-	. "../world"
-	. "../world-client"
+	"github.com/jfsmig/hegemonie/common/mapper"
+	. "github.com/jfsmig/hegemonie/world"
+	. "github.com/jfsmig/hegemonie/world-client"
 	"encoding/json"
 	"flag"
 	"github.com/go-macaron/binding"
