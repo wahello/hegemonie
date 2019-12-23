@@ -1,5 +1,12 @@
-* { font-family:'Montserrat', Helvetica; color:#000; }
-h1 { font-size: 32px; }
-h2 { font-size: 24px; }
-h3 { font-size: 16px; }
-p { font-size: 16px; }
+body { background-color: #232B2B; }
+* { font-family:'Helvetica', Helvetica; }
+h1 { font-size: 32px; color:#DC3D24; }
+header h1 { font-size: 48px; }
+h2 { font-size: 24px; color: #E3AE57; }
+h3 { font-size: 16px; color: #E3AE57; }
+p, li { font-size: 16px; color:#FFFFFF; }
+a { color: #E3AE57; }
+footer p { color: #999999; }
+em { color: #E3AE57; }
+tr td { font-size: 16px; color:#FFFFFF; }
+tr th { font-size: 18px; color: #E3AE57; }

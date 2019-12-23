@@ -5,8 +5,8 @@
 
 package world
 
-func (p *World) GetBuildingType(id uint64) *BuildingType {
-	for _, i := range p.BuildingTypes {
+func (w *World) GetBuildingType(id uint64) *BuildingType {
+	for _, i := range w.BuildingTypes {
 		if i.Id == id {
 			return &i
 		}

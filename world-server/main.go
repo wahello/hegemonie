@@ -17,8 +17,8 @@ import (
 	"strconv"
 	"time"
 
-	. "hegemonie/world"
-	. "hegemonie/world-client"
+	. "github.com/jfsmig/hegemonie/world"
+	. "github.com/jfsmig/hegemonie/world-client"
 )
 
 var (
@@ -76,16 +76,10 @@ func routes(w *World, m *macaron.Macaron) {
 			struid := ctx.Query("uid")
 			if id, err := strconv.ParseUint(struid, 10, 63); err != nil {
 				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed User ID"})
-			} else if user, err := w.UserGet(id); err != nil {
+			} else if userView, err := w.UserShow(id); err != nil {
 				ctx.JSON(404, ErrorReply{Code: 400, Msg: err.Error()})
 			} else {
-				var payload UserShowReply
-				payload.Characters = make([]NamedItem, 0)
-				payload.Meta = user
-				w.UserGetCharacters(id, func(c *Character) {
-					payload.Characters = append(payload.Characters, NamedItem{Name: c.Name, Id: c.Id})
-				})
-				ctx.JSON(200, &payload)
+				ctx.JSON(200, &userView)
 			}
 		})
 
@@ -97,21 +91,10 @@ func routes(w *World, m *macaron.Macaron) {
 				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed User ID"})
 			} else if cid, err := strconv.ParseUint(strcid, 10, 63); err != nil {
 				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed Character ID"})
-			} else if character, err := w.CharacterShow(uid, cid); err != nil {
+			} else if charView, err := w.CharacterShow(uid, cid); err != nil {
 				ctx.JSON(404, ErrorReply{Code: 400, Msg: err.Error()})
 			} else {
-				var payload CharacterShowReply
-				payload.Meta = character
-				payload.OwnerOf = make([]NamedItem, 0)
-				payload.DeputyOf = make([]NamedItem, 0)
-				w.CharacterGetCities(cid,
-					func(c *City) {
-						payload.OwnerOf = append(payload.OwnerOf, NamedItem{Name: c.Meta.Name, Id: c.Meta.Id})
-					},
-					func(c *City) {
-						payload.DeputyOf = append(payload.DeputyOf, NamedItem{Name: c.Meta.Name, Id: c.Meta.Id})
-					})
-				ctx.JSON(200, &payload)
+				ctx.JSON(200, &charView)
 			}
 		})
 
@@ -129,20 +112,7 @@ func routes(w *World, m *macaron.Macaron) {
 			} else if cityView, err := w.CityShow(uid, cid, lid); err != nil {
 				ctx.JSON(404, ErrorReply{Code: 400, Msg: err.Error()})
 			} else {
-				var payload CityShowReply
-				log.Println("cityView:", cityView)
-				payload.Meta = cityView.Core
-				payload.Units = make([]NamedItem, 0)
-				for _, u := range cityView.Units {
-					payload.Units = append(payload.Units,
-						NamedItem{Id: u.Id, Name: w.GetUnitType(u.Type).Name})
-				}
-				payload.Buildings = make([]NamedItem, 0)
-				for _, b := range cityView.Buildings {
-					payload.Buildings = append(payload.Buildings,
-						NamedItem{Id: b.Id, Name: w.GetBuildingType(b.Type).Name})
-				}
-				ctx.JSON(200, &payload)
+				ctx.JSON(200, &cityView)
 			}
 		})
 

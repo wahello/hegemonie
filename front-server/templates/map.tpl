@@ -19,7 +19,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
     function getCityInfo(id) {
         for (cid in cities) {
-            if (cities[cid].Meta.Id == id) {
+            if (cities[cid].Id == id) {
                 return cities[cid]
             }
         }
@@ -51,7 +51,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             toAppend = "<div class='tile' style='" + getTileStyle(map.Cells[idx].Biome) + "'>";
             if (map.Cells[idx].City > 0) {
                 toAppend += "<div class='city' style='" + getTileStyle(121) + "'>" +
-                    "<span class='cityName'>" + getCityInfo(map.Cells[idx].City).Meta.Name + "</span>"
+                    "<span class='cityName'>" + getCityInfo(map.Cells[idx].City).Name + "</span>"
                 + "</div>"
             }
             toAppend += "</div>"

@@ -5,53 +5,28 @@
 
 package world
 
-import "errors"
+import (
+	"errors"
+)
 
-func (p *World) CityShow(userId, characterId, cityId uint64) (CityView, error) {
-	p.rw.RLock()
-	defer p.rw.RUnlock()
-
-	var err error
-	var result CityView
-
-	pCity := p.CityGet(cityId)
-	pChar := p.CharacterGet(characterId)
-	if pCity == nil || pChar == nil {
-		err = errors.New("Not Found")
-	} else if pCity.Meta.Deputy != characterId && pCity.Meta.Owner != characterId {
-		err = errors.New("Forbidden")
-	} else if pChar.User != userId {
-		err = errors.New("Forbidden")
-	} else {
-		result.Core = pCity.Meta
-		result.Buildings = pCity.Buildings
-		result.Units = make([]Unit, 0, len(pCity.Units))
-		for _, u := range pCity.Units {
-			result.Units = append(result.Units, *p.GetUnit(u))
-		}
-	}
-
-	return result, err
-}
-
-func (p *World) CityGet(id uint64) *City {
-	for _, c := range p.Cities {
-		if c.Meta.Id == id {
+func (w *World) CityGet(id uint64) *City {
+	for _, c := range w.Cities {
+		if c.Id == id {
 			return &c
 		}
 	}
 	return nil
 }
 
-func (p *World) CityCheck(id uint64) bool {
-	return p.CityGet(id) != nil
+func (w *World) CityCheck(id uint64) bool {
+	return w.CityGet(id) != nil
 }
 
-func (p *World) CityCreate(id, loc uint64) error {
-	p.rw.Lock()
-	defer p.rw.Unlock()
+func (w *World) CityCreate(id, loc uint64) error {
+	w.rw.Lock()
+	defer w.rw.Unlock()
 
-	c0 := p.CityGet(id)
+	c0 := w.CityGet(id)
 	if c0 != nil {
 		if c0.Deleted {
 			c0.Deleted = false
@@ -61,27 +36,27 @@ func (p *World) CityCreate(id, loc uint64) error {
 		}
 	}
 
-	c := City{Meta: CityCore{Id: id, Cell: loc}, Units: make([]uint64, 0)}
-	p.Cities = append(p.Cities, c)
+	c := City{Id: id, Cell: loc, Units: make([]uint64, 0)}
+	w.Cities = append(w.Cities, c)
 	return nil
 }
 
-func (p *World) CitySpawnUnit(idCity, idType uint64) error {
-	p.rw.Lock()
-	defer p.rw.Unlock()
+func (w *World) CitySpawnUnit(idCity, idType uint64) error {
+	w.rw.Lock()
+	defer w.rw.Unlock()
 
-	c := p.CityGet(idCity)
+	c := w.CityGet(idCity)
 	if c == nil {
 		return errors.New("City not found")
 	}
 
-	t := p.GetUnitType(idType)
+	t := w.GetUnitType(idType)
 	if t == nil {
 		return errors.New("Unit type not found")
 	}
 
-	unit := Unit{Id: p.getNextId(), Health: t.Health, Type: t.Id, City: idCity, Cell: 0}
-	p.Units = append(p.Units, unit)
+	unit := Unit{Id: w.getNextId(), Health: t.Health, Type: t.Id, City: idCity, Cell: 0}
+	w.Units = append(w.Units, unit)
 
 	c.Units = append(c.Units, unit.Id)
 	return nil
@@ -96,23 +71,23 @@ func (c *City) CityGetBuilding(id uint64) *Building {
 	return nil
 }
 
-func (p *World) CitySpawnBuilding(idCity, idType uint64) error {
-	p.rw.Lock()
-	defer p.rw.Unlock()
+func (w *World) CitySpawnBuilding(idCity, idType uint64) error {
+	w.rw.Lock()
+	defer w.rw.Unlock()
 
-	c := p.CityGet(idCity)
+	c := w.CityGet(idCity)
 	if c == nil {
 		return errors.New("City not found")
 	}
 
-	t := p.GetBuildingType(idType)
+	t := w.GetBuildingType(idType)
 	if t == nil {
 		return errors.New("Building tye not found")
 	}
 
 	// TODO(jfs): consume the resources
 
-	b := Building{Id: p.getNextId(), Type: idType}
+	b := Building{Id: w.getNextId(), Type: idType}
 	c.Buildings = append(c.Buildings, b)
 	return nil
 }
@@ -122,11 +97,107 @@ func (s *SetOfCities) Len() int {
 }
 
 func (s *SetOfCities) Less(i, j int) bool {
-	return (*s)[i].Meta.Id < (*s)[j].Meta.Id
+	return (*s)[i].Id < (*s)[j].Id
 }
 
 func (s *SetOfCities) Swap(i, j int) {
 	tmp := (*s)[i]
 	(*s)[i] = (*s)[j]
 	(*s)[j] = tmp
+}
+
+func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err error) {
+	w.rw.RLock()
+	defer w.rw.RUnlock()
+
+	pCity := w.CityGet(cityId)
+	pChar := w.CharacterGet(characterId)
+
+	if pCity == nil || pChar == nil {
+		err = errors.New("Not Found")
+	} else if pCity.Deputy != characterId && pCity.Owner != characterId {
+		err = errors.New("Forbidden")
+	} else if pChar.User != userId {
+		err = errors.New("Forbidden")
+	} else {
+		view.Id = pCity.Id
+		view.Name = pCity.Name
+		view.Owner.Id = pCity.Owner
+		view.Deputy.Id = pCity.Deputy
+		view.Buildings = make([]BuildingView, 0, len(pCity.Buildings))
+		view.Units = make([]UnitView, 0, len(pCity.Units))
+
+		// Compute the modifiers
+		for i := 0; i < ResourceMax; i++ {
+			view.Production.Buildings.Mult[i] = 1.0
+			view.Production.Knowledge.Mult[i] = 1.0
+			view.Production.Troops.Mult[i] = 1.0
+			view.Stock.Buildings.Mult[i] = 1.0
+			view.Stock.Knowledge.Mult[i] = 1.0
+			view.Stock.Troops.Mult[i] = 1.0
+		}
+
+		for _, b := range pCity.Buildings {
+			v := BuildingView{}
+			v.Id = b.Id
+			v.Type = *w.GetBuildingType(b.Type)
+			view.Buildings = append(view.Buildings, v)
+			for i := 0; i < ResourceMax; i++ {
+				view.Production.Buildings.Plus[i] += v.Type.Prod.Plus[i]
+				view.Production.Buildings.Mult[i] *= v.Type.Prod.Mult[i]
+				view.Stock.Buildings.Plus[i] += v.Type.Stock.Plus[i]
+				view.Stock.Buildings.Mult[i] *= v.Type.Stock.Mult[i]
+			}
+		}
+		for _, unitId := range pCity.Units {
+			u := w.GetUnit(unitId)
+			v := UnitView{}
+			v.Id = u.Id
+			v.Type = *w.GetUnitType(u.Type)
+			view.Units = append(view.Units, v)
+			for i := 0; i < ResourceMax; i++ {
+				view.Production.Troops.Plus[i] += v.Type.Prod.Plus[i]
+				view.Production.Troops.Mult[i] *= v.Type.Prod.Mult[i]
+			}
+		}
+
+		// Apply all the modifiers on the production
+		view.Production.Base = pCity.Production
+		view.Production.Actual = pCity.Production
+		for i := 0; i < ResourceMax; i++ {
+			v := float64(view.Production.Base[i])
+			v = v * view.Production.Troops.Mult[i]
+			v = v * view.Production.Buildings.Mult[i]
+			v = v * view.Production.Knowledge.Mult[i]
+
+			vi := int64(v)
+			vi = vi + view.Production.Troops.Plus[i]
+			vi = vi + view.Production.Buildings.Plus[i]
+			vi = vi + view.Production.Knowledge.Plus[i]
+
+			view.Production.Actual[i] = uint64(vi)
+		}
+
+		// Apply all the modifiers on the stock
+		view.Stock.Base = pCity.Stock
+		view.Stock.Actual = pCity.Stock
+		for i := 0; i < ResourceMax; i++ {
+			v := float64(view.Stock.Base[i])
+			v = v * view.Stock.Troops.Mult[i]
+			v = v * view.Stock.Buildings.Mult[i]
+			v = v * view.Stock.Knowledge.Mult[i]
+
+			vi := int64(v)
+			vi = vi + view.Stock.Troops.Plus[i]
+			vi = vi + view.Stock.Buildings.Plus[i]
+			vi = vi + view.Stock.Knowledge.Plus[i]
+
+			view.Stock.Actual[i] = uint64(vi)
+		}
+
+		view.Stock.Usage = pCity.Stock
+		return view, err
+	}
+
+	return view, err
 }

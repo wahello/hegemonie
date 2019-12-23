@@ -6,8 +6,9 @@
 package main
 
 import (
-	"hegemonie/common/mapper"
-	. "hegemonie/world-client"
+	"github.com/jfsmig/hegemonie/common/mapper"
+	. "github.com/jfsmig/hegemonie/world"
+	. "github.com/jfsmig/hegemonie/world-client"
 	"encoding/json"
 	"flag"
 	"github.com/go-macaron/binding"
@@ -48,8 +49,6 @@ func (f *front) routePages(m *macaron.Macaron) {
 		})
 	m.Get("/game/user",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-			var detailUser UserShowReply
-
 			// Validate the input
 			sessid := sess.Get("userid")
 			if sessid == nil {
@@ -67,22 +66,21 @@ func (f *front) routePages(m *macaron.Macaron) {
 				return
 			}
 			// Unpack the user
-			detailUser.Characters = make([]NamedItem, 0)
-			if err = json.NewDecoder(resp.Body).Decode(&detailUser); err != nil {
+			var view UserView
+			view.Characters = make([]NamedItem, 0)
+			if err = json.NewDecoder(resp.Body).Decode(&view); err != nil {
 				flash.Error("World problem: " + err.Error())
 				ctx.Redirect("/")
 				return
 			}
 
-			// Display the result
-			ctx.Data["userid"] = detailUser.Meta.Id
-			ctx.Data["User"] = &detailUser
+			log.Println(view)
+			ctx.Data["userid"] = view.Id
+			ctx.Data["User"] = &view
 			ctx.HTML(200, "user")
 		})
 	m.Get("/game/character",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-			var detailCharacter CharacterShowReply
-
 			// Validate the input
 			sessid := sess.Get("userid")
 			if sessid == nil {
@@ -100,18 +98,19 @@ func (f *front) routePages(m *macaron.Macaron) {
 				ctx.Redirect("/")
 				return
 			}
+
 			// Unpack the character
-			detailCharacter.OwnerOf = make([]NamedItem, 0)
-			detailCharacter.DeputyOf = make([]NamedItem, 0)
-			if err = json.NewDecoder(resp.Body).Decode(&detailCharacter); err != nil {
+			var view CharacterView
+			if err = json.NewDecoder(resp.Body).Decode(&view); err != nil {
 				flash.Error("World problem: " + err.Error())
 				ctx.Redirect("/")
 				return
 			}
 
+			log.Println(view)
 			ctx.Data["userid"] = userid
 			ctx.Data["cid"] = charid
-			ctx.Data["Character"] = &detailCharacter
+			ctx.Data["Character"] = &view
 			ctx.HTML(200, "character")
 		})
 	m.Get("/game/land",
@@ -127,6 +126,7 @@ func (f *front) routePages(m *macaron.Macaron) {
 			charid := ctx.Query("cid")
 			landid := ctx.Query("lid")
 			if userid == "" || charid == "" || landid == "" {
+				flash.Error("Page error: " + "Missing fields")
 				ctx.Redirect("/")
 				return
 			}
@@ -139,17 +139,18 @@ func (f *front) routePages(m *macaron.Macaron) {
 				return
 			}
 			// Unpack the character
-			var detailLand CityShowReply
-			if err = json.NewDecoder(resp.Body).Decode(&detailLand); err != nil {
+			var view CityView
+			if err = json.NewDecoder(resp.Body).Decode(&view); err != nil {
 				flash.Error("World problem: " + err.Error())
 				ctx.Redirect("/")
 				return
 			}
 
+			log.Println(view)
 			ctx.Data["userid"] = userid
 			ctx.Data["cid"] = charid
 			ctx.Data["lid"] = landid
-			ctx.Data["Land"] = detailLand
+			ctx.Data["Land"] = view
 			ctx.HTML(200, "land")
 		})
 	m.Get("/game/map",
@@ -219,7 +220,6 @@ func (f *front) routeForms(m *macaron.Macaron) {
 		form.Set("email", info.UserMail)
 		form.Set("password", info.UserPass)
 		resp, err := http.PostForm("http://"+f.endpointWorld+"/user/auth", form)
-		log.Println(err, resp)
 		if err != nil {
 			flash.Error("Authentication error: " + err.Error())
 			ctx.Redirect("/")
