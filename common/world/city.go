@@ -12,7 +12,7 @@ import (
 func (w *World) CityGet(id uint64) *City {
 	for _, c := range w.Cities {
 		if c.Id == id {
-			return &c
+			return c
 		}
 	}
 	return nil
@@ -22,23 +22,13 @@ func (w *World) CityCheck(id uint64) bool {
 	return w.CityGet(id) != nil
 }
 
-func (w *World) CityCreate(id, loc uint64) error {
+func (w *World) CityCreate(loc uint64) (uint64, error) {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
-	c0 := w.CityGet(id)
-	if c0 != nil {
-		if c0.Deleted {
-			c0.Deleted = false
-			return nil
-		} else {
-			return errors.New("City already exists")
-		}
-	}
-
-	c := City{Id: id, Cell: loc, Units: make([]uint64, 0)}
-	w.Cities = append(w.Cities, c)
-	return nil
+	c := City{Id: w.getNextId(), Cell: loc, Units: make([]uint64, 0)}
+	w.Cities = append(w.Cities, &c)
+	return c.Id, nil
 }
 
 func (w *World) CitySpawnUnit(idCity, idType uint64) error {
@@ -50,13 +40,13 @@ func (w *World) CitySpawnUnit(idCity, idType uint64) error {
 		return errors.New("City not found")
 	}
 
-	t := w.GetUnitType(idType)
+	t := w.UnitGetType(idType)
 	if t == nil {
 		return errors.New("Unit type not found")
 	}
 
 	unit := Unit{Id: w.getNextId(), Health: t.Health, Type: t.Id, City: idCity, Cell: 0}
-	w.Units = append(w.Units, unit)
+	w.Units = append(w.Units, &unit)
 
 	c.Units = append(c.Units, unit.Id)
 	return nil
@@ -65,7 +55,7 @@ func (w *World) CitySpawnUnit(idCity, idType uint64) error {
 func (c *City) CityGetBuilding(id uint64) *Building {
 	for _, b := range c.Buildings {
 		if id == b.Id {
-			return &b
+			return b
 		}
 	}
 	return nil
@@ -88,7 +78,7 @@ func (w *World) CitySpawnBuilding(idCity, idType uint64) error {
 	// TODO(jfs): consume the resources
 
 	b := Building{Id: w.getNextId(), Type: idType}
-	c.Buildings = append(c.Buildings, b)
+	c.Buildings = append(c.Buildings, &b)
 	return nil
 }
 
@@ -133,14 +123,19 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 		return
 	}
 
-	view.Id = pCity.Id
-	view.Name = pCity.Name
-	view.Owner.Id = pOwner.Id
+	view = pCity.Show(w)
 	view.Owner.Name = pOwner.Name
-	view.Deputy.Id = pDeputy.Id
 	view.Deputy.Name = pDeputy.Name
-	view.Buildings = make([]BuildingView, 0, len(pCity.Buildings))
-	view.Units = make([]UnitView, 0, len(pCity.Units))
+	return
+}
+
+func (c *City) Show(w *World) (view CityView) {
+	view.Id = c.Id
+	view.Name = c.Name
+	view.Owner.Id = c.Owner
+	view.Deputy.Id = c.Deputy
+	view.Buildings = make([]BuildingView, 0, len(c.Buildings))
+	view.Units = make([]UnitView, 0, len(c.Units))
 
 	// Compute the modifiers
 	for i := 0; i < ResourceMax; i++ {
@@ -152,7 +147,7 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 		view.Stock.Troops.Mult[i] = 1.0
 	}
 
-	for _, b := range pCity.Buildings {
+	for _, b := range c.Buildings {
 		v := BuildingView{}
 		v.Id = b.Id
 		v.Type = *w.GetBuildingType(b.Type)
@@ -164,11 +159,11 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 			view.Stock.Buildings.Mult[i] *= v.Type.Stock.Mult[i]
 		}
 	}
-	for _, unitId := range pCity.Units {
-		u := w.GetUnit(unitId)
+	for _, unitId := range c.Units {
+		u := w.UnitGet(unitId)
 		v := UnitView{}
 		v.Id = u.Id
-		v.Type = *w.GetUnitType(u.Type)
+		v.Type = *w.UnitGetType(u.Type)
 		view.Units = append(view.Units, v)
 		for i := 0; i < ResourceMax; i++ {
 			view.Production.Troops.Plus[i] += v.Type.Prod.Plus[i]
@@ -177,8 +172,8 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 	}
 
 	// Apply all the modifiers on the production
-	view.Production.Base = pCity.Production
-	view.Production.Actual = pCity.Production
+	view.Production.Base = c.Production
+	view.Production.Actual = c.Production
 	for i := 0; i < ResourceMax; i++ {
 		v := float64(view.Production.Base[i])
 		v = v * view.Production.Troops.Mult[i]
@@ -194,9 +189,9 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 	}
 
 	// Apply all the modifiers on the stock
-	view.Stock.Base = pCity.StockCapacity
-	view.Stock.Actual = pCity.StockCapacity
-	view.Stock.Usage = pCity.Stock
+	view.Stock.Base = c.StockCapacity
+	view.Stock.Actual = c.StockCapacity
+	view.Stock.Usage = c.Stock
 	for i := 0; i < ResourceMax; i++ {
 		v := float64(view.Stock.Base[i])
 		v = v * view.Stock.Troops.Mult[i]
@@ -212,4 +207,36 @@ func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err
 	}
 
 	return
+}
+
+func (c *City) Produce(w *World) {
+	// Pre-compute the modified values of Stock and Production
+	view := c.Show(w)
+	post := view.Stock.Usage
+
+	post.Add(&view.Production.Actual)
+
+	for _, b := range c.Buildings {
+		if b.Ticks > 0 {
+			bt := w.GetBuildingType(b.Id)
+			if post.GreaterOrEqualTo(&bt.Cost) {
+				post.Remove(&bt.Cost)
+				b.Ticks--
+			}
+		}
+	}
+
+	for _, uid := range c.Units {
+		u := w.UnitGet(uid)
+		if u.Ticks > 0 {
+			ut := w.UnitGetType(u.Type)
+			if post.GreaterOrEqualTo(&ut.Cost) {
+				post.Remove(&ut.Cost)
+				u.Ticks--
+			}
+		}
+	}
+
+	post.TrimTo(&view.Stock.Actual)
+	c.Stock = post
 }

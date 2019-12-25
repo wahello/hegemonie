@@ -49,6 +49,9 @@ type UnitType struct {
 	// The display name of the Unit Type
 	Name string
 
+	// How many ticks
+	Ticks uint
+
 	// Instantiation cost of the current UnitType
 	Cost Resources
 
@@ -72,6 +75,9 @@ type Unit struct {
 
 	// The unique Id of the City the Unit is in.
 	City uint64
+
+	// How many ticks remain before the Troop training is finished
+	Ticks uint
 }
 
 type BuildingType struct {
@@ -80,6 +86,9 @@ type BuildingType struct {
 
 	// Display name of the current BuildingType
 	Name string
+
+	// How many ticks for the construction
+	Ticks uint
 
 	// How much does the production cost
 	Cost Resources
@@ -97,6 +106,9 @@ type Building struct {
 
 	// The unique ID of the BuildingType associated to the current Building
 	Type uint64
+
+	// How many construction rounds remain before the building's achievement
+	Ticks uint
 }
 
 type City struct {
@@ -137,7 +149,7 @@ type City struct {
 	// Consider it as an index.
 	Units []uint64
 
-	Buildings []Building
+	Buildings []*Building
 }
 
 type Character struct {
@@ -171,19 +183,19 @@ type User struct {
 	Inactive bool `json:",omitempty"`
 }
 
-type SetOfUsers []User
+type SetOfUsers []*User
 
-type SetOfCharacters []Character
+type SetOfCharacters []*Character
 
-type SetOfCities []City
+type SetOfCities []*City
 
 type World struct {
 	Users         SetOfUsers
 	Characters    SetOfCharacters
 	Cities        SetOfCities
-	Units         []Unit
-	UnitTypes     []UnitType
-	BuildingTypes []BuildingType
+	Units         []*Unit
+	UnitTypes     []*UnitType
+	BuildingTypes []*BuildingType
 
 	NextId uint64
 	Salt   string
@@ -201,12 +213,12 @@ func (w *World) Init() {
 	if w.NextId <= 0 {
 		w.NextId = 1
 	}
-	w.Users = make([]User, 0)
-	w.Characters = make([]Character, 0)
-	w.Cities = make([]City, 0)
-	w.Units = make([]Unit, 0)
-	w.UnitTypes = make([]UnitType, 0)
-	w.BuildingTypes = make([]BuildingType, 0)
+	w.Users = make([]*User, 0)
+	w.Characters = make([]*Character, 0)
+	w.Cities = make([]*City, 0)
+	w.Units = make([]*Unit, 0)
+	w.UnitTypes = make([]*UnitType, 0)
+	w.BuildingTypes = make([]*BuildingType, 0)
 }
 
 func (w *World) Check() error {
@@ -267,4 +279,18 @@ func (w *World) LoadJSON(src io.Reader) error {
 	sort.Sort(&w.Characters)
 	sort.Sort(&w.Cities)
 	return nil
+}
+
+func (w *World) Produce() {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	for _, c := range w.Cities {
+		c.Produce(w)
+	}
+}
+
+func (w *World) Move() {
+	w.rw.Lock()
+	defer w.rw.Unlock()
 }

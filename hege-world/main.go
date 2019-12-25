@@ -116,42 +116,66 @@ func routes(w *World, m *macaron.Macaron) {
 			}
 		})
 
-	m.Get("/map/dot", func(ctx *macaron.Context) (int, string) {
-		return 200, w.Places.Dot()
-	})
-	m.Post("/map/rehash", func(ctx *macaron.Context) (int, string) {
-		w.Places.Rehash()
-		return 204, ""
-	})
-	m.Post("/map/check", func(ctx *macaron.Context) (int, string) {
-		if err := w.Places.Check(w); err == nil {
+	m.Get("/map/dot",
+		func(ctx *macaron.Context) (int, string) {
+			return 200, w.Places.Dot()
+		})
+
+	m.Post("/map/rehash",
+		func(ctx *macaron.Context) (int, string) {
+			w.Places.Rehash()
 			return 204, ""
-		} else {
-			return 502, err.Error()
-		}
-	})
-	m.Post("/check", func(ctx *macaron.Context) (int, string) {
-		if err := w.Check(); err == nil {
-			return 204, ""
-		} else {
-			return 502, err.Error()
-		}
-	})
-	m.Post("/save", func(ctx *macaron.Context) (int, string) {
-		if err := save(w); err == nil {
-			return 204, ""
-		} else {
-			return 501, err.Error()
-		}
-	})
+		})
+
+	m.Post("/map/check",
+		func(ctx *macaron.Context) (int, string) {
+			if err := w.Places.Check(w); err == nil {
+				return 204, ""
+			} else {
+				return 502, err.Error()
+			}
+		})
+
+	m.Post("/check",
+		func(ctx *macaron.Context) (int, string) {
+			if err := w.Check(); err == nil {
+				return 204, ""
+			} else {
+				return 502, err.Error()
+			}
+		})
+
+	m.Post("/save",
+		func(ctx *macaron.Context) (int, string) {
+			if err := save(w); err == nil {
+				return 204, ""
+			} else {
+				return 501, err.Error()
+			}
+		})
+
+	m.Post("/produce",
+		func(ctx *macaron.Context) int {
+			w.Produce()
+			return 201
+		})
+
+	m.Post("/move",
+		func(ctx *macaron.Context) int {
+			w.Move()
+			return 201
+		})
 
 	// Mapping routes
-	m.Get("/world/places", func(ctx *macaron.Context) {
-		ctx.JSON(200, &w.Places)
-	})
-	m.Get("/world/cities", func(ctx *macaron.Context) {
-		ctx.JSON(200, &w.Cities)
-	})
+	m.Get("/world/places",
+		func(ctx *macaron.Context) {
+			ctx.JSON(200, &w.Places)
+		})
+
+	m.Get("/world/cities",
+		func(ctx *macaron.Context) {
+			ctx.JSON(200, &w.Cities)
+		})
 }
 
 func runServer(w *World, north string) error {

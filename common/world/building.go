@@ -8,7 +8,7 @@ package world
 func (w *World) GetBuildingType(id uint64) *BuildingType {
 	for _, i := range w.BuildingTypes {
 		if i.Id == id {
-			return &i
+			return i
 		}
 	}
 	return nil

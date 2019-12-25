@@ -74,7 +74,6 @@ func (f *front) routePages(m *macaron.Macaron) {
 				return
 			}
 
-			log.Println(view)
 			ctx.Data["userid"] = view.Id
 			ctx.Data["User"] = &view
 			ctx.HTML(200, "user")
@@ -107,7 +106,6 @@ func (f *front) routePages(m *macaron.Macaron) {
 				return
 			}
 
-			log.Println(view)
 			ctx.Data["userid"] = userid
 			ctx.Data["cid"] = charid
 			ctx.Data["Character"] = &view
@@ -146,7 +144,6 @@ func (f *front) routePages(m *macaron.Macaron) {
 				return
 			}
 
-			log.Println(view)
 			ctx.Data["userid"] = userid
 			ctx.Data["cid"] = charid
 			ctx.Data["lid"] = landid
@@ -242,9 +239,32 @@ func (f *front) routeForms(m *macaron.Macaron) {
 		s.Flush()
 		ctx.Redirect("/")
 	}
+
+	doMove := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
+		resp, err := http.Post("http://"+f.endpointWorld+"/move", "text/plain", nil)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		} else if resp.StatusCode/100 != 2 {
+			flash.Warning("Action failed")
+		}
+		ctx.Redirect("/game/user")
+	}
+
+	doProduce := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
+		resp, err := http.Post("http://"+f.endpointWorld+"/produce", "text/plain", nil)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		} else if resp.StatusCode/100 != 2 {
+			flash.Warning("Action failed")
+		}
+		ctx.Redirect("/game/user")
+	}
+
 	m.Post("/action/login", binding.Bind(LoginForm{}), doLogIn)
 	m.Post("/action/logout", doLogOut)
 	m.Get("/action/logout", doLogOut)
+	m.Post("/action/move", doMove)
+	m.Post("/action/produce", doProduce)
 }
 
 func (f *front) routeMiddlewares(m *macaron.Macaron) {

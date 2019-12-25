@@ -11,7 +11,7 @@ func (w *World) CharacterGet(cid uint64) *Character {
 	// TODO(jfs): lookup in the sorted array
 	for _, c := range w.Characters {
 		if c.Id == cid {
-			return &c
+			return c
 		}
 	}
 	return nil
@@ -28,9 +28,9 @@ func (w *World) CharacterGetCities(id uint64, owner func(*City), deputy func(*Ci
 
 	for _, c := range w.Cities {
 		if c.Owner == id {
-			owner(&c)
+			owner(c)
 		} else if c.Deputy == id {
-			deputy(&c)
+			deputy(c)
 		}
 	}
 }

@@ -1,17 +1,14 @@
 {% include "header.tpl" %}
 <section class="col2">
     <div>
-        <h1>Status of {{Land.Name}}</h1>
-        <h2>Troops defending</h2>
+        <h2>Troops defending {{Land.Name}}</h2>
         <ul>
-            {% for u in Land.Units %}
-            <li>{{u.Type.Name}} (id {{u.Id}})</li>{% endfor %}
+            {% for u in Land.Units %}<li>{{u.Type.Name}} (id {{u.Id}})</li>{% endfor %}
         </ul>
 
-        <h2>Buildings</h2>
+        <h2>Buildings in {{Land.Name}}</h2>
         <ul>
-            {% for b in Land.Buildings %}
-            <li>{{b.Type.Name}} (id {{b.Id}})</li>{% endfor %}
+            {% for b in Land.Buildings %}<li>{{b.Type.Name}} (id {{b.Id}})</li>{% endfor %}
         </ul>
     </div>
 

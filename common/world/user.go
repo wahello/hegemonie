@@ -26,17 +26,16 @@ func (w *World) UserCreate(mail, pass string) (uint64, error) {
 		}
 	}
 
-	id := w.getNextId()
-	u := User{Id: id, Name: "No-Name", Email: mail, Password: pass}
-	w.Users = append(w.Users, u)
-	return id, nil
+	u := User{Id: w.getNextId(), Name: "No-Name", Email: mail, Password: pass}
+	w.Users = append(w.Users, &u)
+	return u.Id, nil
 }
 
 func (w *World) UserGet(id uint64) *User {
 	// TODO(jfs): lookup in the sorted array
 	for _, u := range w.Users {
 		if u.Id == id {
-			return &u
+			return u
 		}
 	}
 
@@ -72,7 +71,7 @@ func (w *World) UserAuth(mail, pass string) (uint64, error) {
 func (w *World) UserGetCharacters(id uint64, hook func(*Character)) {
 	for _, c := range w.Characters {
 		if c.User == id {
-			hook(&c)
+			hook(c)
 		}
 	}
 }

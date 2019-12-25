@@ -5,19 +5,19 @@
 
 package world
 
-func (w *World) GetUnit(id uint64) *Unit {
+func (w *World) UnitGet(id uint64) *Unit {
 	for _, c := range w.Units {
 		if c.Id == id {
-			return &c
+			return c
 		}
 	}
 	return nil
 }
 
-func (w *World) GetUnitType(id uint64) *UnitType {
+func (w *World) UnitGetType(id uint64) *UnitType {
 	for _, c := range w.UnitTypes {
 		if c.Id == id {
-			return &c
+			return c
 		}
 	}
 	return nil
