@@ -176,6 +176,11 @@ func routes(w *World, m *macaron.Macaron) {
 		func(ctx *macaron.Context) {
 			ctx.JSON(200, &w.Cities)
 		})
+
+	m.Get("/world/armies",
+		func(ctx *macaron.Context) {
+			ctx.JSON(200, &w.Armies)
+		})
 }
 
 func runServer(w *World, north string) error {

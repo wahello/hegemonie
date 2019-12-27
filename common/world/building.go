@@ -5,6 +5,27 @@
 
 package world
 
+import "sort"
+
+func (s *SetOfBuildings) Len() int {
+	return len(*s)
+}
+
+func (s *SetOfBuildings) Less(i, j int) bool {
+	return (*s)[i].Id < (*s)[j].Id
+}
+
+func (s *SetOfBuildings) Swap(i, j int) {
+	tmp := (*s)[i]
+	(*s)[i] = (*s)[j]
+	(*s)[j] = tmp
+}
+
+func (s *SetOfBuildings) Add(b *Building) {
+	*s = append(*s, b)
+	sort.Sort(s)
+}
+
 func (w *World) GetBuildingType(id uint64) *BuildingType {
 	for _, i := range w.BuildingTypes {
 		if i.Id == id {

@@ -1,18 +1,6 @@
 {% include "header.tpl" %}
 <section class="col2">
     <div>
-        <h2>Troops defending {{Land.Name}}</h2>
-        <ul>
-            {% for u in Land.Units %}<li>{{u.Type.Name}} (id {{u.Id}})</li>{% endfor %}
-        </ul>
-
-        <h2>Buildings in {{Land.Name}}</h2>
-        <ul>
-            {% for b in Land.Buildings %}<li>{{b.Type.Name}} (id {{b.Id}})</li>{% endfor %}
-        </ul>
-    </div>
-
-    <div>
         <h2>Stocks</h2>
         <table>
             <thead>
@@ -52,5 +40,25 @@
             </tfoot>
         </table>
     </div>
+
+    <div>
+        <h2>Troops defending {{Land.Name}}</h2>
+        <ul>
+            {% for u in Land.Units %}<li>{{u.Type.Name}} (id {{u.Id}})</li>{% endfor %}
+        </ul>
+    </div>
+    <div>
+        <h2>Buildings in {{Land.Name}}</h2>
+        <ul>
+            {% for b in Land.Buildings %}<li>{{b.Type.Name}} (id {{b.Id}})</li>{% endfor %}
+        </ul>
+    </div>
+    <div>
+        <h2>Armies of {{Land.Name}}</h2>
+        <ul>
+            {% for a in Land.Armies %}<li>{{a.Name}} (id {{a.Id}})</li>{% endfor %}
+        </ul>
+    </div>
+
 </section>
 {% include "footer.tpl" %}

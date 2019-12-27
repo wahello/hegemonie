@@ -9,6 +9,20 @@ import (
 	"errors"
 )
 
+func (s *SetOfCities) Len() int {
+	return len(*s)
+}
+
+func (s *SetOfCities) Less(i, j int) bool {
+	return (*s)[i].Id < (*s)[j].Id
+}
+
+func (s *SetOfCities) Swap(i, j int) {
+	tmp := (*s)[i]
+	(*s)[i] = (*s)[j]
+	(*s)[j] = tmp
+}
+
 func (w *World) CityGet(id uint64) *City {
 	for _, c := range w.Cities {
 		if c.Id == id {
@@ -26,7 +40,7 @@ func (w *World) CityCreate(loc uint64) (uint64, error) {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
-	c := City{Id: w.getNextId(), Cell: loc, Units: make([]uint64, 0)}
+	c := City{Id: w.getNextId(), Cell: loc, units: make(SetOfUnits, 0)}
 	w.Cities = append(w.Cities, &c)
 	return c.Id, nil
 }
@@ -45,15 +59,14 @@ func (w *World) CitySpawnUnit(idCity, idType uint64) error {
 		return errors.New("Unit type not found")
 	}
 
-	unit := Unit{Id: w.getNextId(), Health: t.Health, Type: t.Id, City: idCity, Cell: 0}
-	w.Units = append(w.Units, &unit)
-
-	c.Units = append(c.Units, unit.Id)
+	unit := &Unit{Id: w.getNextId(), Health: t.Health, Type: t.Id, City: idCity}
+	w.Units.Add(unit)
+	unit.Defend(c, w)
 	return nil
 }
 
 func (c *City) CityGetBuilding(id uint64) *Building {
-	for _, b := range c.Buildings {
+	for _, b := range c.buildings {
 		if id == b.Id {
 			return b
 		}
@@ -77,23 +90,9 @@ func (w *World) CitySpawnBuilding(idCity, idType uint64) error {
 
 	// TODO(jfs): consume the resources
 
-	b := Building{Id: w.getNextId(), Type: idType}
-	c.Buildings = append(c.Buildings, &b)
+	b := &Building{Id: w.getNextId(), Type: idType}
+	c.buildings.Add(b)
 	return nil
-}
-
-func (s *SetOfCities) Len() int {
-	return len(*s)
-}
-
-func (s *SetOfCities) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
-}
-
-func (s *SetOfCities) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
 }
 
 func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err error) {
@@ -134,8 +133,13 @@ func (c *City) Show(w *World) (view CityView) {
 	view.Name = c.Name
 	view.Owner.Id = c.Owner
 	view.Deputy.Id = c.Deputy
-	view.Buildings = make([]BuildingView, 0, len(c.Buildings))
-	view.Units = make([]UnitView, 0, len(c.Units))
+	view.Buildings = make([]BuildingView, 0, len(c.buildings))
+	view.Units = make([]UnitView, 0, len(c.units))
+	view.Armies = make([]NamedItem, 0)
+
+	for _, a := range c.armies {
+		view.Armies = append(view.Armies, NamedItem{Id: a.Id, Name: a.Name})
+	}
 
 	// Compute the modifiers
 	for i := 0; i < ResourceMax; i++ {
@@ -147,7 +151,7 @@ func (c *City) Show(w *World) (view CityView) {
 		view.Stock.Troops.Mult[i] = 1.0
 	}
 
-	for _, b := range c.Buildings {
+	for _, b := range c.buildings {
 		v := BuildingView{}
 		v.Id = b.Id
 		v.Type = *w.GetBuildingType(b.Type)
@@ -159,8 +163,7 @@ func (c *City) Show(w *World) (view CityView) {
 			view.Stock.Buildings.Mult[i] *= v.Type.Stock.Mult[i]
 		}
 	}
-	for _, unitId := range c.Units {
-		u := w.UnitGet(unitId)
+	for _, u := range c.units {
 		v := UnitView{}
 		v.Id = u.Id
 		v.Type = *w.UnitGetType(u.Type)
@@ -216,7 +219,7 @@ func (c *City) Produce(w *World) {
 
 	post.Add(&view.Production.Actual)
 
-	for _, b := range c.Buildings {
+	for _, b := range c.buildings {
 		if b.Ticks > 0 {
 			bt := w.GetBuildingType(b.Id)
 			if post.GreaterOrEqualTo(&bt.Cost) {
@@ -226,8 +229,7 @@ func (c *City) Produce(w *World) {
 		}
 	}
 
-	for _, uid := range c.Units {
-		u := w.UnitGet(uid)
+	for _, u := range c.units {
 		if u.Ticks > 0 {
 			ut := w.UnitGetType(u.Type)
 			if post.GreaterOrEqualTo(&ut.Cost) {

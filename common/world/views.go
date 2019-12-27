@@ -68,6 +68,7 @@ type CityView struct {
 	Stock      StockView
 	Units      []UnitView
 	Buildings  []BuildingView
+	Armies     []NamedItem
 }
 
 func (cv *CityView) GetNamed() NamedItem {
