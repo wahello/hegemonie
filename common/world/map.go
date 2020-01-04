@@ -14,82 +14,39 @@ import (
 	"sync/atomic"
 )
 
-// A Road is a Directed Vertex in the transport graph
-type Road struct {
-	// Unique identifier of the source Cell
-	SrcCell uint64
-	// Unique identifier of the destination Cell
-	DstCell uint64
-	// May the road be used by Units
-	Open bool
-}
-
-// A MapCell is a Node is the directed graph of the transport network.
-type MapCell struct {
-	// The unique identifier of the current cell.
-	Id uint64
-
-	// The unique ID of the city present at this location.
-	City uint64
-
-	// An array of the the Id of the Unit that are present on the cell.
-	Units []uint64
-
-	// Biome in which the cell is
-	Biome uint64
-}
-
-type SetOfCells []MapCell
-
-func (r *SetOfCells) Len() int {
+func (r *SetOfNodes) Len() int {
 	return len(*r)
 }
 
-func (r *SetOfCells) Swap(i, j int) {
+func (r *SetOfNodes) Swap(i, j int) {
 	tmp := (*r)[i]
 	(*r)[i] = (*r)[j]
 	(*r)[j] = tmp
 }
 
-func (r *SetOfCells) Less(i, j int) bool {
+func (r *SetOfNodes) Less(i, j int) bool {
 	return (*r)[i].Id < (*r)[j].Id
 }
 
-type SetOfRoads []Road
-
-func (r *SetOfRoads) Len() int {
+func (r *SetOfVertices) Len() int {
 	return len(*r)
 }
 
-func (r *SetOfRoads) Swap(i, j int) {
+func (r *SetOfVertices) Swap(i, j int) {
 	tmp := (*r)[i]
 	(*r)[i] = (*r)[j]
 	(*r)[j] = tmp
 }
 
-func (r *SetOfRoads) Less(i, j int) bool {
+func (r *SetOfVertices) Less(i, j int) bool {
 	s := (*r)[i]
 	d := (*r)[j]
-	return s.SrcCell < d.SrcCell || (s.SrcCell == d.SrcCell && s.DstCell < d.DstCell)
-}
-
-// A Map is a directed graph destined to be used as a transport network,
-// organised as an adjacency list.
-type Map struct {
-	Cells  SetOfCells
-	Roads  SetOfRoads
-	NextId uint64
-
-	steps      map[vector]uint64
-	dirtyRoads bool
-	dirtyCells bool
-
-	rw sync.RWMutex
+	return s.S < d.S || (s.S == d.S && s.D < d.D)
 }
 
 func (m *Map) Init() {
-	m.Cells = make([]MapCell, 0)
-	m.Roads = make([]Road, 0)
+	m.Cells = make([]MapNode, 0)
+	m.Roads = make([]MapVertex, 0)
 }
 
 func (m *Map) ReadLocker() sync.Locker {
@@ -100,7 +57,7 @@ func (m *Map) getNextId() uint64 {
 	return atomic.AddUint64(&m.NextId, 1)
 }
 
-func (m *Map) HasLocation(loc uint64) bool {
+func (m *Map) NodeGet(loc uint64) bool {
 	if loc == 0 {
 		return false
 	}
@@ -119,16 +76,35 @@ func (m *Map) HasLocation(loc uint64) bool {
 	}
 }
 
-func (m *Map) CreateLocation() (uint64, error) {
+func (m *Map) NodeHas(loc uint64) bool {
+	if loc == 0 {
+		return false
+	}
+	if m.dirtyCells {
+		for _, l := range m.Cells {
+			if l.Id == loc {
+				return true
+			}
+		}
+		return false
+	} else {
+		i := sort.Search(len(m.Cells), func(i int) bool {
+			return m.Cells[i].Id >= loc
+		})
+		return i < len(m.Cells) && m.Cells[i].Id == loc
+	}
+}
+
+func (m *Map) NodeCreate() (uint64, error) {
 	m.rw.Lock()
 	defer m.rw.Unlock()
 
 	loc := m.getNextId()
-	m.Cells = append(m.Cells, MapCell{Id: loc})
+	m.Cells = append(m.Cells, MapNode{Id: loc})
 	return loc, nil
 }
 
-func (m *Map) ConnectRaw(src, dst uint64) error {
+func (m *Map) VertexCreateNoCheck(src, dst uint64) error {
 	if src == dst || src == 0 || dst == 0 {
 		return errors.New("EINVAL")
 	}
@@ -136,7 +112,7 @@ func (m *Map) ConnectRaw(src, dst uint64) error {
 	m.rw.Lock()
 	defer m.rw.Unlock()
 
-	m.Roads = append(m.Roads, Road{src, dst, true})
+	m.Roads = append(m.Roads, MapVertex{src, dst, true})
 	m.dirtyRoads = true
 	return nil
 }
@@ -145,12 +121,12 @@ func (m *Map) firstAdjacentIndex(src uint64) int {
 	m.lazySort()
 	i := sort.Search(len(m.Roads), func(i int) bool {
 		r := m.Roads[i]
-		return r.SrcCell >= src
+		return r.S >= src
 	})
 	return i
 }
 
-func (m *Map) Connect(src, dst uint64, check bool) error {
+func (m *Map) VertexCreate(src, dst uint64, check bool) error {
 	if src == dst || src == 0 || dst == 0 {
 		return errors.New("EINVAL")
 	}
@@ -158,34 +134,34 @@ func (m *Map) Connect(src, dst uint64, check bool) error {
 	m.rw.Lock()
 	defer m.rw.Unlock()
 
-	if check && !m.HasLocation(src) {
+	if check && !m.NodeHas(src) {
 		return errors.New("Source not found")
 	}
-	if check && !m.HasLocation(dst) {
+	if check && !m.NodeHas(dst) {
 		return errors.New("Destination not found")
 	}
 
 	for i := m.firstAdjacentIndex(src); i < len(m.Roads); i++ {
 		r := m.Roads[i]
-		if r.SrcCell != src {
+		if r.S != src {
 			break
 		}
-		if r.DstCell == dst {
-			if r.Open {
-				return errors.New("Road exists")
+		if r.D == dst {
+			if r.Deleted {
+				return errors.New("MapVertex exists")
 			} else {
-				r.Open = true
+				r.Deleted = true
 				return nil
 			}
 		}
 	}
 
-	m.Roads = append(m.Roads, Road{src, dst, true})
+	m.Roads = append(m.Roads, MapVertex{src, dst, true})
 	m.dirtyRoads = true
 	return nil
 }
 
-func (m *Map) Disconnect(src, dst uint64, check bool) error {
+func (m *Map) VertexDelete(src, dst uint64, check bool) error {
 	if src == dst || src == 0 || dst == 0 {
 		return errors.New("EINVAL")
 	}
@@ -193,32 +169,32 @@ func (m *Map) Disconnect(src, dst uint64, check bool) error {
 	m.rw.Lock()
 	defer m.rw.Unlock()
 
-	if check && !m.HasLocation(src) {
+	if check && !m.NodeHas(src) {
 		return errors.New("Source not found")
 	}
-	if check && !m.HasLocation(dst) {
+	if check && !m.NodeHas(dst) {
 		return errors.New("Destination not found")
 	}
 
 	for i := m.firstAdjacentIndex(src); i < len(m.Roads); i++ {
 		r := m.Roads[i]
-		if r.SrcCell != src {
+		if r.S != src {
 			break
 		}
-		if r.DstCell == dst {
-			if r.Open {
-				r.Open = false
+		if r.D == dst {
+			if r.Deleted {
+				r.Deleted = false
 				return nil
 			} else {
-				return errors.New("Road closed")
+				return errors.New("MapVertex closed")
 			}
 		}
 	}
 
-	return errors.New("Road not found")
+	return errors.New("MapVertex not found")
 }
 
-func (m *Map) NextStep(src, dst uint64) (uint64, error) {
+func (m *Map) NodeGetStep(src, dst uint64) (uint64, error) {
 	if src == dst || src == 0 || dst == 0 {
 		return 0, errors.New("EINVAL")
 	}
@@ -231,15 +207,15 @@ func (m *Map) NextStep(src, dst uint64) (uint64, error) {
 	}
 }
 
-func (m *Map) Adjacent(src uint64) []uint64 {
+func (m *Map) NodeAdjacency(src uint64) []uint64 {
 	adj := make([]uint64, 0)
 
 	for i := m.firstAdjacentIndex(src); i < len(m.Roads); i++ {
 		r := m.Roads[i]
-		if r.SrcCell != src {
+		if r.S != src {
 			break
 		}
-		adj = append(adj, r.DstCell)
+		adj = append(adj, r.D)
 	}
 
 	return adj
@@ -259,9 +235,9 @@ func (m *Map) Dot() string {
 	}
 	for _, r := range m.Roads {
 		sb.WriteRune(' ')
-		sb.WriteString("n" + strconv.FormatUint(r.SrcCell, 10))
+		sb.WriteString("n" + strconv.FormatUint(r.S, 10))
 		sb.WriteString(" -> ")
-		sb.WriteString("n" + strconv.FormatUint(r.DstCell, 10))
+		sb.WriteString("n" + strconv.FormatUint(r.D, 10))
 		sb.WriteRune(';')
 		sb.WriteRune('\n')
 	}
@@ -291,7 +267,7 @@ func (m *Map) Rehash() {
 
 	// Fill with the immediate neighbors
 	for _, r := range m.Roads {
-		next[vector{r.SrcCell, r.DstCell}] = r.DstCell
+		next[vector{r.S, r.D}] = r.D
 	}
 
 	add := func(src, dst, step uint64) {
@@ -307,7 +283,7 @@ func (m *Map) Rehash() {
 		q := newQueue()
 
 		// Bootstrap the DFS with adjacent nodes
-		for _, next := range m.Adjacent(cell.Id) {
+		for _, next := range m.NodeAdjacency(cell.Id) {
 			q.push(next, next)
 			already[next] = true
 			// No need to add this in the known routes, we already did it
@@ -316,7 +292,7 @@ func (m *Map) Rehash() {
 
 		for !q.empty() {
 			current, first := q.pop()
-			neighbors := m.Adjacent(current)
+			neighbors := m.NodeAdjacency(current)
 			// TODO(jfs): shuffle the neighbors
 			for _, next := range neighbors {
 				if !already[next] {

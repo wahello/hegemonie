@@ -20,20 +20,20 @@ func (w *World) UserCreate(mail, pass string) (uint64, error) {
 	defer w.rw.Unlock()
 
 	h := w.hashPassword(pass)
-	for _, u := range w.Users {
+	for _, u := range w.Auth.Users {
 		if u.Email == mail && u.Password == h {
 			return 0, errors.New("User exists")
 		}
 	}
 
 	u := User{Id: w.getNextId(), Name: "No-Name", Email: mail, Password: pass}
-	w.Users = append(w.Users, &u)
+	w.Auth.Users = append(w.Auth.Users, &u)
 	return u.Id, nil
 }
 
 func (w *World) UserGet(id uint64) *User {
 	// TODO(jfs): lookup in the sorted array
-	for _, u := range w.Users {
+	for _, u := range w.Auth.Users {
 		if u.Id == id {
 			return u
 		}
@@ -51,7 +51,7 @@ func (w *World) UserAuth(mail, pass string) (uint64, error) {
 	defer w.rw.RUnlock()
 
 	h := w.hashPassword(pass)
-	for _, u := range w.Users {
+	for _, u := range w.Auth.Users {
 		if u.Email == mail {
 			if u.Password == h {
 				// Hashed password matches
@@ -69,7 +69,7 @@ func (w *World) UserAuth(mail, pass string) (uint64, error) {
 }
 
 func (w *World) UserGetCharacters(id uint64, hook func(*Character)) {
-	for _, c := range w.Characters {
+	for _, c := range w.Auth.Characters {
 		if c.User == id {
 			hook(c)
 		}

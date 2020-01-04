@@ -6,10 +6,12 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"github.com/go-macaron/binding"
 	"gopkg.in/macaron.v1"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -174,12 +176,12 @@ func routes(w *World, m *macaron.Macaron) {
 
 	m.Get("/world/cities",
 		func(ctx *macaron.Context) {
-			ctx.JSON(200, &w.Cities)
+			ctx.JSON(200, &w.Live.Cities)
 		})
 
 	m.Get("/world/armies",
 		func(ctx *macaron.Context) {
-			ctx.JSON(200, &w.Armies)
+			ctx.JSON(200, &w.Live.Armies)
 		})
 }
 
@@ -211,14 +213,32 @@ func main() {
 	}
 
 	if pathLoad != "" {
-		in, err := os.Open(pathLoad)
-		if err != nil {
-			log.Fatalf("Failed to load the World from [%s]: %s", pathLoad, err.Error())
+		type cfgSection struct {
+			suffix string
+			obj    interface{}
 		}
-		err = w.LoadJSON(in)
-		in.Close()
+		cfgSections := []cfgSection{
+			{"defs.json", &w.Definitions},
+			{"map.json", &w.Places},
+			{"auth.json", &w.Auth},
+			{"live.json", &w.Live},
+		}
+		for _, section := range cfgSections {
+			var in io.ReadCloser
+			p := pathLoad + "/" + section.suffix
+			in, err = os.Open(p)
+			if err != nil {
+				log.Fatalf("Failed to load the World from [%s]: %s", p, err.Error())
+			}
+			err = json.NewDecoder(in).Decode(section.obj)
+			in.Close()
+			if err != nil {
+				log.Fatalf("Failed to load the World from [%s]: %s", p, err.Error())
+			}
+		}
+		err = w.PostLoad()
 		if err != nil {
-			log.Fatalf("Failed to load the World from [%s]: %s", pathLoad, err.Error())
+			log.Fatalf("Inconsistent World from [%s]: %s", pathLoad, err.Error())
 		}
 	}
 

@@ -26,8 +26,18 @@ func (s *SetOfArmies) Add(a *Army) {
 	sort.Sort(s)
 }
 
+func (w *World) ArmyCreate(c *City) (uint64, error) {
+	a := &Army{
+		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
+		Units: make(SetOfUnits, 0),
+	}
+	w.Live.Armies.Add(a)
+	c.armies.Add(a)
+	return a.Id, nil
+}
+
 func (w *World) ArmyGet(id uint64) *Army {
-	for _, a := range w.Armies {
+	for _, a := range w.Live.Armies {
 		if a.Id == id {
 			return a
 		}
@@ -38,7 +48,7 @@ func (w *World) ArmyGet(id uint64) *Army {
 func (a *Army) Move(w *World) error {
 	src := a.Cell
 	dst := a.Target
-	nxt, err := w.Places.NextStep(src, dst)
+	nxt, err := w.Places.NodeGetStep(src, dst)
 	if err != nil {
 		return err
 	}

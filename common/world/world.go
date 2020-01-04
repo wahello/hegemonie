@@ -24,13 +24,13 @@ func (w *World) Init() {
 	if w.NextId <= 0 {
 		w.NextId = 1
 	}
-	w.Armies = make([]*Army, 0)
-	w.Users = make([]*User, 0)
-	w.Characters = make([]*Character, 0)
-	w.Cities = make([]*City, 0)
-	w.Units = make([]*Unit, 0)
-	w.UnitTypes = make([]*UnitType, 0)
-	w.BuildingTypes = make([]*BuildingType, 0)
+	w.Auth.Users = make(SetOfUsers, 0)
+	w.Auth.Characters = make(SetOfCharacters, 0)
+	w.Live.Armies = make(SetOfArmies, 0)
+	w.Live.Cities = make(SetOfCities, 0)
+	w.Definitions.Units = make(SetOfUnitTypes, 0)
+	w.Definitions.Buildings = make(SetOfBuildingTypes, 0)
+	w.Definitions.Knowledges = make(SetOfKnowledgeTypes, 0)
 }
 
 func (w *World) Check() error {
@@ -40,28 +40,28 @@ func (w *World) Check() error {
 		return err
 	}
 
-	if !sort.IsSorted(&w.Users) {
+	if !sort.IsSorted(&w.Auth.Users) {
 		return errors.New("user sequence: unsorted")
 	}
-	for i, u := range w.Users {
+	for i, u := range w.Auth.Users {
 		if uint64(i)+1 != u.Id {
 			return errors.New(fmt.Sprintf("user sequence: hole at %d", i))
 		}
 	}
 
-	if !sort.IsSorted(&w.Characters) {
+	if !sort.IsSorted(&w.Auth.Characters) {
 		return errors.New("character sequence: unsorted")
 	}
-	for i, c := range w.Characters {
+	for i, c := range w.Auth.Characters {
 		if uint64(i)+1 != c.Id {
 			return errors.New(fmt.Sprintf("character sequence: hole at %d", i))
 		}
 	}
 
-	if !sort.IsSorted(&w.Cities) {
+	if !sort.IsSorted(&w.Live.Cities) {
 		return errors.New("city sequence: unsorted")
 	}
-	for i, c := range w.Cities {
+	for i, c := range w.Live.Cities {
 		if uint64(i)+1 != c.Id {
 			return errors.New(fmt.Sprintf("City sequence: hole at %d", i))
 		}
@@ -82,40 +82,21 @@ func (w *World) DumpJSON(dst io.Writer) error {
 	return json.NewEncoder(dst).Encode(w)
 }
 
-func (w *World) LoadJSON(src io.Reader) error {
-	err := json.NewDecoder(src).Decode(w)
-	if err != nil {
-		return err
-	}
-	sort.Sort(&w.Armies)
-	sort.Sort(&w.Users)
-	sort.Sort(&w.Characters)
-	sort.Sort(&w.Cities)
-	sort.Sort(&w.Units)
+func (w *World) PostLoad() error {
+	sort.Sort(&w.Auth.Users)
+	sort.Sort(&w.Auth.Characters)
+	sort.Sort(&w.Definitions.Knowledges)
+	sort.Sort(&w.Definitions.Buildings)
+	sort.Sort(&w.Definitions.Units)
+	sort.Sort(&w.Live.Armies)
+	sort.Sort(&w.Live.Cities)
 
-	// Link Units and Armies
-	for _, u := range w.Units {
-		if u.Army != 0 {
-			a := w.ArmyGet(u.Army)
-			if a == nil {
-				return errors.New(fmt.Sprintf("Unit %v points to ghost Army", u))
-			} else {
-				u.Incorporate(a, w)
-			}
-		} else if u.City != 0 {
-			c := w.CityGet(u.City)
-			if c == nil {
-				return errors.New(fmt.Sprintf("Unit %v points to ghost City", u))
-			} else {
-				u.Defend(c, w)
-			}
-		} else {
-			return errors.New(fmt.Sprintf("Unit %v points to no City and no Army", u))
-		}
+	for _, a := range w.Live.Armies {
+		sort.Sort(&a.Units)
 	}
 
 	// Link Armies and Cities
-	for _, a := range w.Armies {
+	for _, a := range w.Live.Armies {
 		if a.City == 0 {
 			return errors.New(fmt.Sprintf("Army %v points to no City", a))
 		} else if c := w.CityGet(a.City); c == nil {
@@ -132,7 +113,7 @@ func (w *World) Produce() {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
-	for _, c := range w.Cities {
+	for _, c := range w.Live.Cities {
 		c.Produce(w)
 	}
 }
@@ -141,7 +122,7 @@ func (w *World) Move() {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
-	for _, a := range w.Armies {
+	for _, a := range w.Live.Armies {
 		a.Move(w)
 	}
 }

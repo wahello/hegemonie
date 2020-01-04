@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ResourceMax = 4
+	ResourceMax = 6
 )
 
 type Resources [ResourceMax]uint64
@@ -28,19 +28,38 @@ type Army struct {
 	// The unique ID of the current Army
 	Id uint64
 
-	// The ID of the City that controls the current Army
-	City uint64
-
-	// The ID of the Cell the Army is on
-	Cell uint64
-
-	// The goal
-	Target uint64
-
 	// A display name for the current City
 	Name string
 
-	units SetOfUnits
+	// The ID of the City that controls the current Army
+	City uint64 `json:",omitempty"`
+
+	// The ID of the Cell the Army is on
+	Cell uint64 `json:",omitempty"`
+
+	// The IS of a Cell of the Map that is a goal of the current movement of the Army
+	Target uint64 `json:",omitempty"`
+
+	// How many resources are carried by that Army
+	Stock Resources
+
+	Units SetOfUnits
+}
+
+type KnowledgeType struct {
+	Id        uint64
+	Name      string
+	Ticks     uint `json:",omitempty"`
+	Cost      Resources
+	Requires  []uint64
+	Conflicts []uint64
+}
+
+type Knowledge struct {
+	Id    uint64
+	Type  uint64
+	City  uint64
+	Ticks uint `json:",omitempty"`
 }
 
 type BuildingType struct {
@@ -51,7 +70,7 @@ type BuildingType struct {
 	Name string
 
 	// How many ticks for the construction
-	Ticks uint
+	Ticks uint `json:",omitempty"`
 
 	// How much does the production cost
 	Cost Resources
@@ -61,6 +80,14 @@ type BuildingType struct {
 
 	// Increment of resources produced by this building.
 	Prod ResourceModifiers
+
+	// A set of KnowledgeType ID that must all be present in a City to let that City start
+	// this kind of building.
+	Requires []uint64
+
+	// A set of KnowledgeType ID that must all be absent in a City to let that City start
+	// this kind of building.
+	Conflicts []uint64
 }
 
 type Building struct {
@@ -71,7 +98,10 @@ type Building struct {
 	Type uint64
 
 	// How many construction rounds remain before the building's achievement
-	Ticks uint
+	Ticks uint `json:",omitempty"`
+
+	// Display name of the current Building. It supersedes the name of the BuildingType
+	Name string `json:",omitempty"`
 }
 
 type Character struct {
@@ -94,7 +124,7 @@ type City struct {
 	Owner uint64
 
 	// The unique ID of a second Character in charge of the City.
-	Deputy uint64
+	Deputy uint64 `json:",omitempty"`
 
 	// The unique ID of the Cell the current City is built on.
 	// This is redundant with the City field in the Cell structure.
@@ -116,12 +146,18 @@ type City struct {
 	Production Resources
 
 	// Is the city still usable
-	Deleted bool
+	Deleted bool `json:",omitempty"`
+
+	Knowledges SetOfKnowledges
+
+	Buildings SetOfBuildings
+
+	// Units directly defending the current City
+	Units SetOfUnits
 
 	// PRIVATE
-	buildings SetOfBuildings
-	units     SetOfUnits
-	armies    SetOfArmies
+	// Armies under the responsibility of the current City
+	armies SetOfArmies
 }
 
 type UnitType struct {
@@ -158,20 +194,14 @@ type Unit struct {
 	// Unique Id of the Unit
 	Id uint64
 
-	// The number of health points of the unit, Health should be less or equal to HealthMax
-	Health uint
-
 	// A copy of the definition for the current Unit.
 	Type uint64
 
-	// The unique Id of the map cell the current Unit is on.
-	Army uint64
-
-	// The unique Id of the City the Unit is in.
-	City uint64
-
 	// How many ticks remain before the Troop training is finished
 	Ticks uint
+
+	// The number of health points of the unit, Health should be less or equal to HealthMax
+	Health uint
 }
 
 type User struct {
@@ -194,26 +224,87 @@ type User struct {
 	Inactive bool `json:",omitempty"`
 }
 
+// A MapVertex is a Directed Vertex in the transport graph
+type MapVertex struct {
+	// Unique identifier of the source Cell
+	S uint64
+
+	// Unique identifier of the destination Cell
+	D uint64
+
+	// May the road be used by Units
+	Deleted bool `json:",omitempty"`
+}
+
+// A MapNode is a Node is the directed graph of the transport network.
+type MapNode struct {
+	// The unique identifier of the current cell.
+	Id uint64
+
+	// Biome in which the cell is
+	Biome uint64
+
+	// The unique ID of the city present at this location.
+	City uint64 `json:",omitempty"`
+}
+
+// A Map is a directed graph destined to be used as a transport network,
+// organised as an adjacency list.
+type Map struct {
+	Cells  SetOfNodes
+	Roads  SetOfVertices
+	NextId uint64
+
+	steps      map[vector]uint64
+	dirtyRoads bool
+	dirtyCells bool
+	rw         sync.RWMutex
+}
+
 type SetOfArmies []*Army
 
 type SetOfUnits []*Unit
+
+type SetOfUnitTypes []*UnitType
 
 type SetOfUsers []*User
 
 type SetOfBuildings []*Building
 
+type SetOfBuildingTypes []*BuildingType
+
+type SetOfKnowledges []*Knowledge
+
+type SetOfKnowledgeTypes []*KnowledgeType
+
 type SetOfCharacters []*Character
 
 type SetOfCities []*City
 
+type SetOfNodes []MapNode
+
+type SetOfVertices []MapVertex
+
+type AuthBase struct {
+	Users      SetOfUsers
+	Characters SetOfCharacters
+}
+
+type DefinitionsBase struct {
+	Units      SetOfUnitTypes
+	Buildings  SetOfBuildingTypes
+	Knowledges SetOfKnowledgeTypes
+}
+
+type LiveBase struct {
+	Armies SetOfArmies
+	Cities SetOfCities
+}
+
 type World struct {
-	Armies        SetOfArmies
-	Users         SetOfUsers
-	Characters    SetOfCharacters
-	Cities        SetOfCities
-	Units         SetOfUnits
-	UnitTypes     []*UnitType
-	BuildingTypes []*BuildingType
+	Auth        AuthBase
+	Definitions DefinitionsBase
+	Live        LiveBase
 
 	NextId uint64
 	Salt   string

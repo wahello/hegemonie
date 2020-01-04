@@ -1,0 +1,47 @@
+{
+    "Cities": [
+        {
+            "Id": 1, "Cell": 1, "Owner": 4, "Deputy": 4,
+            "Name": "Fleury-Mérogis",
+            "Stock": [ 250, 13, 22, 37 ],
+            "StockCapacity": [ 1000, 1000, 1000, 1000 ],
+            "Production": [ 10, 10, 10, 10 ],
+            "Buildings": [
+                {"Id": 1, "Type": 1, "Ticks": 0}
+            ],
+            "Knowledges": [
+                {"Id": 1, "Type": 1, "Ticks": 0}
+            ],
+            "Units": []
+        },
+        {
+            "Id": 2, "Cell": 14, "Owner": 1, "Deputy": 2,
+            "Name": "Ironforge",
+            "Stock": [ 250, 13, 22, 37 ],
+            "StockCapacity": [ 1000, 1000, 1000, 1000 ],
+            "Production": [ 10, 10, 10, 10 ],
+            "Buildings": [
+                {"Id": 1, "Type": 1, "Ticks": 0}
+            ],
+            "Knowledges": [
+                {"Id": 1, "Type": 1, "Ticks": 0},
+                {"Id": 1, "Type": 2, "Ticks": 0}
+            ],
+            "Units": [
+                {"Id": 1, "Type": 1, "Ticks": 0}
+            ]
+        }
+    ],
+    "Armies": [
+        {
+            "Id": 1, "City": 2, "Cell": 1, "Target": 0, "Name": "Les chacals",
+            "Stock": [0, 0, 0, 0, 0, 0],
+            "Units": []
+        },
+        {
+            "Id": 2, "City": 2, "Cell": 2, "Target": 0, "Name": "Les chacaux",
+            "Stock": [0, 0, 0, 0, 0, 0],
+            "Units": []
+        }
+    ]
+}

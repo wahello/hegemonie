@@ -68,14 +68,14 @@ section.col2 div {
     border: 2px solid #202080;
     margin: 2px;
     padding: 10px;
-    width: 600px;
+    width: 900px;
 }
 
 @media screen {
     @media (min-width: 1366px) {
         section.col2 {
             display: grid;
-            grid-template-columns: auto auto auto;
+            grid-template-columns: auto auto;
         }
     }
     @media (min-width: 800px) and (max-width: 1366px) {

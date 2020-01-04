@@ -38,4 +38,4 @@ test:
 	go test $(BASE)/hege-front
 
 try: hege-front hege-world
-	ci/run.sh $$PWD/ci/bootstrap-empty.json
+	ci/run.sh $$PWD/ci/bootstrap

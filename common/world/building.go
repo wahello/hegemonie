@@ -7,6 +7,34 @@ package world
 
 import "sort"
 
+func (s *SetOfBuildingTypes) Len() int {
+	return len(*s)
+}
+
+func (s *SetOfBuildingTypes) Less(i, j int) bool {
+	return (*s)[i].Id < (*s)[j].Id
+}
+
+func (s *SetOfBuildingTypes) Swap(i, j int) {
+	tmp := (*s)[i]
+	(*s)[i] = (*s)[j]
+	(*s)[j] = tmp
+}
+
+func (s *SetOfBuildingTypes) Add(b *BuildingType) {
+	*s = append(*s, b)
+	sort.Sort(s)
+}
+
+func (w *World) GetBuildingType(id uint64) *BuildingType {
+	for _, i := range w.Definitions.Buildings {
+		if i.Id == id {
+			return i
+		}
+	}
+	return nil
+}
+
 func (s *SetOfBuildings) Len() int {
 	return len(*s)
 }
@@ -26,11 +54,37 @@ func (s *SetOfBuildings) Add(b *Building) {
 	sort.Sort(s)
 }
 
-func (w *World) GetBuildingType(id uint64) *BuildingType {
-	for _, i := range w.BuildingTypes {
-		if i.Id == id {
-			return i
+// TODO(jfs): Maybe speed the execution with a reverse index of Requires
+func (w *World) BuildingGetFrontier(owned []*Knowledge) []*BuildingType {
+	pending := make(map[uint64]bool)
+	finished := make(map[uint64]bool)
+	for _, k := range owned {
+		if k.Ticks == 0 {
+			finished[k.Type] = true
+		} else {
+			pending[k.Type] = true
 		}
 	}
-	return nil
+
+	valid := func(bt *BuildingType) bool {
+		for _, c := range bt.Conflicts {
+			if finished[c] || pending[c] {
+				return false
+			}
+		}
+		for _, c := range bt.Requires {
+			if !finished[c] {
+				return false
+			}
+		}
+		return true
+	}
+
+	result := make([]*BuildingType, 0)
+	for _, bt := range w.Definitions.Buildings {
+		if valid(bt) {
+			result = append(result, bt)
+		}
+	}
+	return result
 }

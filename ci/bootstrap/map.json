@@ -1,0 +1,22 @@
+{
+    "Cells": [
+        {"biome": 1, "id": 0},
+        {"biome": 1, "id": 1},
+        {"biome": 1, "id": 2},
+        {"biome": 1, "id": 3},
+        {"biome": 1, "id": 4},
+        {"biome": 3, "id": 5},
+        {"biome": 3, "id": 6},
+        {"biome": 3, "id": 7},
+        {"biome": 1, "id": 8},
+        {"biome": 2, "id": 9},
+        {"biome": 2, "id": 10},
+        {"biome": 2, "id": 11},
+        {"biome": 1, "id": 12},
+        {"biome": 1, "id": 13},
+        {"biome": 1, "id": 14},
+        {"biome": 1, "id": 15}
+    ],
+    "Roads": [
+    ]
+}

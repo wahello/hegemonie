@@ -51,49 +51,38 @@ func (s *SetOfUnits) Remove(u *Unit) {
 	}
 }
 
-func (w *World) UnitGet(id uint64) *Unit {
-	for _, c := range w.Units {
-		if c.Id == id {
-			return c
-		}
+func (w *World) UnitGet(city, id uint64) *Unit {
+	c := w.CityGet(city)
+	if c != nil {
+		return c.Unit(id)
 	}
 	return nil
+}
+
+func (s *SetOfUnitTypes) Len() int {
+	return len(*s)
+}
+
+func (s *SetOfUnitTypes) Less(i, j int) bool {
+	return (*s)[i].Id < (*s)[j].Id
+}
+
+func (s *SetOfUnitTypes) Swap(i, j int) {
+	tmp := (*s)[i]
+	(*s)[i] = (*s)[j]
+	(*s)[j] = tmp
+}
+
+func (s *SetOfUnitTypes) Add(u *UnitType) {
+	*s = append(*s, u)
+	sort.Sort(s)
 }
 
 func (w *World) UnitGetType(id uint64) *UnitType {
-	for _, c := range w.UnitTypes {
-		if c.Id == id {
-			return c
+	for _, ut := range w.Definitions.Units {
+		if ut.Id == id {
+			return ut
 		}
 	}
 	return nil
-}
-
-func (u *Unit) insulate(w *World) {
-	if u.Army != 0 {
-		a := w.ArmyGet(u.Army)
-		if a != nil {
-			a.units.Remove(u)
-		}
-	}
-	if u.City != 0 {
-		c := w.CityGet(u.City)
-		if c != nil {
-			c.units.Remove(u)
-		}
-	}
-	u.Army = 0
-	u.City = 0
-}
-
-func (u *Unit) Incorporate(a *Army, w *World) {
-	u.insulate(w)
-	u.Army = a.Id
-	a.units.Add(u)
-}
-
-func (u *Unit) Defend(c *City, w *World) {
-	u.insulate(w)
-	u.City = c.Id
-	c.units.Add(u)
 }

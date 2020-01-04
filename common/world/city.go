@@ -24,7 +24,7 @@ func (s *SetOfCities) Swap(i, j int) {
 }
 
 func (w *World) CityGet(id uint64) *City {
-	for _, c := range w.Cities {
+	for _, c := range w.Live.Cities {
 		if c.Id == id {
 			return c
 		}
@@ -40,8 +40,13 @@ func (w *World) CityCreate(loc uint64) (uint64, error) {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
-	c := City{Id: w.getNextId(), Cell: loc, units: make(SetOfUnits, 0)}
-	w.Cities = append(w.Cities, &c)
+	c := &City{
+		Id: w.getNextId(), Cell: loc,
+		Units:      make(SetOfUnits, 0),
+		Buildings:  make(SetOfBuildings, 0),
+		Knowledges: make(SetOfKnowledges, 0),
+	}
+	w.Live.Cities = append(w.Live.Cities, c)
 	return c.Id, nil
 }
 
@@ -59,14 +64,31 @@ func (w *World) CitySpawnUnit(idCity, idType uint64) error {
 		return errors.New("Unit type not found")
 	}
 
-	unit := &Unit{Id: w.getNextId(), Health: t.Health, Type: t.Id, City: idCity}
-	w.Units.Add(unit)
-	unit.Defend(c, w)
+	unit := &Unit{Id: w.getNextId(), Type: t.Id, Health: t.Health}
+	c.Units.Add(unit)
+	return nil
+}
+
+func (c *City) Unit(id uint64) *Unit {
+	for _, b := range c.Units {
+		if id == b.Id {
+			return b
+		}
+	}
 	return nil
 }
 
 func (c *City) CityGetBuilding(id uint64) *Building {
-	for _, b := range c.buildings {
+	for _, b := range c.Buildings {
+		if id == b.Id {
+			return b
+		}
+	}
+	return nil
+}
+
+func (c *City) CityGetKnowledge(id uint64) *Knowledge {
+	for _, b := range c.Knowledges {
 		if id == b.Id {
 			return b
 		}
@@ -91,7 +113,7 @@ func (w *World) CitySpawnBuilding(idCity, idType uint64) error {
 	// TODO(jfs): consume the resources
 
 	b := &Building{Id: w.getNextId(), Type: idType}
-	c.buildings.Add(b)
+	c.Buildings.Add(b)
 	return nil
 }
 
@@ -133,9 +155,10 @@ func (c *City) Show(w *World) (view CityView) {
 	view.Name = c.Name
 	view.Owner.Id = c.Owner
 	view.Deputy.Id = c.Deputy
-	view.Buildings = make([]BuildingView, 0, len(c.buildings))
-	view.Units = make([]UnitView, 0, len(c.units))
+	view.Buildings = make([]BuildingView, 0, len(c.Buildings))
+	view.Units = make([]UnitView, 0, len(c.Units))
 	view.Armies = make([]NamedItem, 0)
+	view.Knowledges = make([]KnowledgeView, 0)
 
 	for _, a := range c.armies {
 		view.Armies = append(view.Armies, NamedItem{Id: a.Id, Name: a.Name})
@@ -151,7 +174,13 @@ func (c *City) Show(w *World) (view CityView) {
 		view.Stock.Troops.Mult[i] = 1.0
 	}
 
-	for _, b := range c.buildings {
+	for _, k := range c.Knowledges {
+		v := KnowledgeView{}
+		v.Id = k.Id
+		v.Type = *w.KnowledgeTypeGet(k.Type)
+		view.Knowledges = append(view.Knowledges, v)
+	}
+	for _, b := range c.Buildings {
 		v := BuildingView{}
 		v.Id = b.Id
 		v.Type = *w.GetBuildingType(b.Type)
@@ -163,7 +192,7 @@ func (c *City) Show(w *World) (view CityView) {
 			view.Stock.Buildings.Mult[i] *= v.Type.Stock.Mult[i]
 		}
 	}
-	for _, u := range c.units {
+	for _, u := range c.Units {
 		v := UnitView{}
 		v.Id = u.Id
 		v.Type = *w.UnitGetType(u.Type)
@@ -219,7 +248,7 @@ func (c *City) Produce(w *World) {
 
 	post.Add(&view.Production.Actual)
 
-	for _, b := range c.buildings {
+	for _, b := range c.Buildings {
 		if b.Ticks > 0 {
 			bt := w.GetBuildingType(b.Id)
 			if post.GreaterOrEqualTo(&bt.Cost) {
@@ -229,7 +258,7 @@ func (c *City) Produce(w *World) {
 		}
 	}
 
-	for _, u := range c.units {
+	for _, u := range c.Units {
 		if u.Ticks > 0 {
 			ut := w.UnitGetType(u.Type)
 			if post.GreaterOrEqualTo(&ut.Cost) {
@@ -241,4 +270,32 @@ func (c *City) Produce(w *World) {
 
 	post.TrimTo(&view.Stock.Actual)
 	c.Stock = post
+}
+
+func (w *World) CitySpawnArmy(idUser, idChar, idCity uint64) (id uint64, err error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	u := w.UserGet(idUser)
+	p := w.CharacterGet(idChar)
+	c := w.CityGet(idCity)
+	if c == nil || u == nil || p == nil {
+		err = errors.New("Not found")
+		return
+	}
+	if u.Id != p.User || (c.Deputy != p.Id && c.Owner != p.Id) {
+		err = errors.New("Forbidden")
+		return
+	}
+
+	id, err = w.ArmyCreate(c)
+	return
+}
+
+func (c *City) KnowledgeFrontier(w *World) []*KnowledgeType {
+	return w.KnowledgeGetFrontier(c.Knowledges)
+}
+
+func (c *City) BuildingFrontier(w *World) []*BuildingType {
+	return w.BuildingGetFrontier(c.Knowledges)
 }

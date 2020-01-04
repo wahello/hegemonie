@@ -9,7 +9,7 @@ import "github.com/juju/errors"
 
 func (w *World) CharacterGet(cid uint64) *Character {
 	// TODO(jfs): lookup in the sorted array
-	for _, c := range w.Characters {
+	for _, c := range w.Auth.Characters {
 		if c.Id == cid {
 			return c
 		}
@@ -26,7 +26,7 @@ func (w *World) CharacterGetCities(id uint64, owner func(*City), deputy func(*Ci
 	w.rw.RLock()
 	defer w.rw.RUnlock()
 
-	for _, c := range w.Cities {
+	for _, c := range w.Live.Cities {
 		if c.Owner == id {
 			owner(c)
 		} else if c.Deputy == id {

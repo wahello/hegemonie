@@ -47,6 +47,15 @@ func (cv *UnitView) GetNamed() NamedItem {
 	return NamedItem{Id: cv.Id, Name: cv.Type.Name}
 }
 
+type KnowledgeView struct {
+	Id   uint64
+	Type KnowledgeType
+}
+
+func (cv *KnowledgeView) GetNamed() NamedItem {
+	return NamedItem{Id: cv.Id, Name: cv.Type.Name}
+}
+
 // Read-Only hydrated version of a Building
 type BuildingView struct {
 	Id   uint64
@@ -68,6 +77,7 @@ type CityView struct {
 	Stock      StockView
 	Units      []UnitView
 	Buildings  []BuildingView
+	Knowledges []KnowledgeView
 	Armies     []NamedItem
 }
 
