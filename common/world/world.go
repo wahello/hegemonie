@@ -43,27 +43,45 @@ func (w *World) Check() error {
 	if !sort.IsSorted(&w.Auth.Users) {
 		return errors.New("user sequence: unsorted")
 	}
-	for i, u := range w.Auth.Users {
-		if uint64(i)+1 != u.Id {
-			return errors.New(fmt.Sprintf("user sequence: hole at %d", i))
-		}
-	}
 
 	if !sort.IsSorted(&w.Auth.Characters) {
 		return errors.New("character sequence: unsorted")
 	}
-	for i, c := range w.Auth.Characters {
-		if uint64(i)+1 != c.Id {
-			return errors.New(fmt.Sprintf("character sequence: hole at %d", i))
-		}
+
+	if !sort.IsSorted(&w.Definitions.Knowledges) {
+		return errors.New("knowledge sequence: unsorted")
+	}
+
+	if !sort.IsSorted(&w.Definitions.Buildings) {
+		return errors.New("building sequence: unsorted")
+	}
+
+	if !sort.IsSorted(&w.Definitions.Units) {
+		return errors.New("unit sequence: unsorted")
 	}
 
 	if !sort.IsSorted(&w.Live.Cities) {
 		return errors.New("city sequence: unsorted")
 	}
-	for i, c := range w.Live.Cities {
-		if uint64(i)+1 != c.Id {
-			return errors.New(fmt.Sprintf("City sequence: hole at %d", i))
+
+	if !sort.IsSorted(&w.Live.Armies) {
+		return errors.New("army sequence: unsorted")
+	}
+
+	for _, a := range w.Live.Armies {
+		if !sort.IsSorted(&a.Units) {
+			return errors.New("unit sequence: unsorted")
+		}
+	}
+	for _, a := range w.Live.Cities {
+		if !sort.IsSorted(&a.Knowledges) {
+			return errors.New("knowledge sequence: unsorted")
+		}
+		if !sort.IsSorted(&a.Buildings) {
+			return errors.New("building sequence: unsorted")
+		}
+		if !sort.IsSorted(&a.Units) {
+			return errors.New("unit sequence: unsorted")
 		}
 	}
 
@@ -83,6 +101,7 @@ func (w *World) DumpJSON(dst io.Writer) error {
 }
 
 func (w *World) PostLoad() error {
+	// Sort all the lookup arrays
 	sort.Sort(&w.Auth.Users)
 	sort.Sort(&w.Auth.Characters)
 	sort.Sort(&w.Definitions.Knowledges)
@@ -90,9 +109,13 @@ func (w *World) PostLoad() error {
 	sort.Sort(&w.Definitions.Units)
 	sort.Sort(&w.Live.Armies)
 	sort.Sort(&w.Live.Cities)
-
 	for _, a := range w.Live.Armies {
 		sort.Sort(&a.Units)
+	}
+	for _, c := range w.Live.Cities {
+		sort.Sort(&c.Knowledges)
+		sort.Sort(&c.Buildings)
+		sort.Sort(&c.Units)
 	}
 
 	// Link Armies and Cities
@@ -106,6 +129,80 @@ func (w *World) PostLoad() error {
 		}
 	}
 
+	// Compute the highest unique ID
+	maxId := w.NextId
+	if len(w.Auth.Users) > 0 {
+		last := w.Auth.Users[len(w.Auth.Users)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	if len(w.Auth.Characters) > 0 {
+		last := w.Auth.Characters[len(w.Auth.Characters)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	if len(w.Definitions.Units) > 0 {
+		last := w.Definitions.Units[len(w.Definitions.Units)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	if len(w.Definitions.Buildings) > 0 {
+		last := w.Definitions.Buildings[len(w.Definitions.Buildings)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	if len(w.Definitions.Knowledges) > 0 {
+		last := w.Definitions.Knowledges[len(w.Definitions.Knowledges)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	if len(w.Live.Armies) > 0 {
+		last := w.Live.Armies[len(w.Live.Armies)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	if len(w.Live.Cities) > 0 {
+		last := w.Live.Cities[len(w.Live.Cities)-1]
+		if last.Id > maxId {
+			maxId = last.Id + 1
+		}
+	}
+	for _, c := range w.Live.Cities {
+		if len(c.Knowledges) > 0 {
+			last := c.Knowledges[len(c.Knowledges)-1]
+			if last.Id > maxId {
+				maxId = last.Id + 1
+			}
+		}
+		if len(c.Units) > 0 {
+			last := c.Units[len(c.Units)-1]
+			if last.Id > maxId {
+				maxId = last.Id + 1
+			}
+		}
+		if len(c.Buildings) > 0 {
+			last := c.Buildings[len(c.Buildings)-1]
+			if last.Id > maxId {
+				maxId = last.Id + 1
+			}
+		}
+	}
+	for _, a := range w.Live.Armies {
+		if len(a.Units) > 0 {
+			last := a.Units[len(a.Units)-1]
+			if last.Id > maxId {
+				maxId = last.Id + 1
+			}
+		}
+	}
+
+	w.NextId = maxId
 	return nil
 }
 
