@@ -26,14 +26,24 @@ type Region interface {
 	// Start a new building
 	CityBuild(args *CityBuildArgs, reply *CityBuildReply) error
 
+	// Returns a string representation of the Map in the "dot" format
+	// See https://graphviz.org for more information.
 	MapDot(args *MapDotArgs, reply *MapDotReply) error
+
+	// Perform an integrity check of the map
 	MapCheck(args *MapCheckArgs, reply *MapCheckReply) error
+
+	// Recompute secondary information when the definition of the Map has changed.
 	MapRehash(args *MapRehashArgs, reply *MapRehashReply) error
+
 	MapPlaces(args *MapPlacesArgs, reply *MapPlacesReply) error
 	MapCities(args *MapCitiesArgs, reply *MapCitiesReply) error
 	MapArmies(args *MapArmiesArgs, reply *MapArmiesReply) error
 
+	// Persist the whole game information
 	AdminSave(args *AdminSaveArgs, reply *AdminSaveReply) error
+
+	// Perform an integrity check on the whole game information
 	AdminCheck(args *AdminCheckArgs, reply *AdminCheckReply) error
 
 	RoundProduce(args *RoundProduceArgs, reply *RoundProduceReply) error
