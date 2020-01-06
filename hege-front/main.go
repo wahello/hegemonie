@@ -6,28 +6,43 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/pongo2"
 	"github.com/go-macaron/session"
 	. "github.com/jfsmig/hegemonie/common/client"
 	"github.com/jfsmig/hegemonie/common/mapper"
-	. "github.com/jfsmig/hegemonie/common/world"
 	"gopkg.in/macaron.v1"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
 )
 
-type LoginForm struct {
+type FormLogin struct {
 	UserMail string `form:"email" binding:"Required"`
 	UserPass string `form:"password" binding:"Required"`
+}
+
+type FormCityStudy struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	KnowledgeId uint64 `form:"kid" binding:"Required"`
+}
+
+type FormCityBuild struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	BuildingId  uint64 `form:"bid" binding:"Required"`
+}
+
+type FormCityTrain struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	UnitId      uint64 `form:"uid" binding:"Required"`
 }
 
 type front struct {
@@ -35,12 +50,34 @@ type front struct {
 	endpointWorld string
 	dirTemplates  string
 	dirStatic     string
+
+	region *RegionClientTcp
+}
+
+func utoa(u uint64) string {
+	return strconv.FormatUint(u, 10)
+}
+
+func atou(s string) uint64 {
+	u, err := strconv.ParseUint(s, 10, 63)
+	if err != nil {
+		return 0
+	} else {
+		return u
+	}
+}
+
+func ptou(p interface{}) uint64 {
+	if p == nil {
+		return 0
+	}
+	return atou(p.(string))
 }
 
 func (f *front) routePages(m *macaron.Macaron) {
 	m.Get("/",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-			ctx.Data["userid"] = sess.Get("uid")
+			ctx.Data["userid"] = sess.Get("userid")
 			ctx.HTML(200, "index")
 		})
 	m.Get("/admin",
@@ -50,105 +87,77 @@ func (f *front) routePages(m *macaron.Macaron) {
 	m.Get("/game/user",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 			// Validate the input
-			sessid := sess.Get("userid")
-			if sessid == nil {
+			userid := ptou(sess.Get("userid"))
+			if userid == 0 {
 				flash.Error("Invalid session")
 				ctx.Redirect("/")
 				return
 			}
-			strid := sessid.(string)
 
 			// Query the World server for the user
-			resp, err := http.Get("http://" + f.endpointWorld + "/user/show?uid=" + strid)
+			args := UserShowArgs{UserId: userid}
+			reply := UserShowReply{}
+			err := f.region.UserShow(&args, &reply)
 			if err != nil {
-				flash.Warning("User error: " + err.Error())
-				ctx.Redirect("/")
-				return
+				flash.Warning("Backend error error: " + err.Error())
+				ctx.Redirect("/game/user")
+			} else {
+				ctx.Data["userid"] = utoa(userid)
+				ctx.Data["User"] = &reply.View
+				ctx.HTML(200, "user")
 			}
-			// Unpack the user
-			var view UserView
-			view.Characters = make([]NamedItem, 0)
-			if err = json.NewDecoder(resp.Body).Decode(&view); err != nil {
-				flash.Error("World problem: " + err.Error())
-				ctx.Redirect("/")
-				return
-			}
-
-			ctx.Data["userid"] = view.Id
-			ctx.Data["User"] = &view
-			ctx.HTML(200, "user")
 		})
 	m.Get("/game/character",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 			// Validate the input
-			sessid := sess.Get("userid")
-			if sessid == nil {
+			userid := ptou(sess.Get("userid"))
+			charid := atou(ctx.Query("cid"))
+			if userid == 0 || charid == 0 {
 				flash.Error("Invalid session")
 				ctx.Redirect("/")
 				return
 			}
-			userid := sessid.(string)
-			charid := ctx.Query("cid")
 
 			// Query the World server for the Character
-			resp, err := http.Get("http://" + f.endpointWorld + "/character/show?uid=" + userid + "&cid=" + charid)
+			args := CharacterShowArgs{UserId: userid, CharacterId: charid}
+			reply := CharacterShowReply{}
+			err := f.region.CharacterShow(&args, &reply)
 			if err != nil {
-				flash.Warning("Character error: " + err.Error())
-				ctx.Redirect("/")
-				return
+				flash.Warning("Backend error: " + err.Error())
+				ctx.Redirect("/game/user")
+			} else {
+				ctx.Data["userid"] = utoa(userid)
+				ctx.Data["cid"] = utoa(charid)
+				ctx.Data["Character"] = &reply.View
+				ctx.HTML(200, "character")
 			}
-
-			// Unpack the character
-			var view CharacterView
-			if err = json.NewDecoder(resp.Body).Decode(&view); err != nil {
-				flash.Error("World problem: " + err.Error())
-				ctx.Redirect("/")
-				return
-			}
-
-			ctx.Data["userid"] = userid
-			ctx.Data["cid"] = charid
-			ctx.Data["Character"] = &view
-			ctx.HTML(200, "character")
 		})
 	m.Get("/game/land",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 			// Validate the input
-			sessid := sess.Get("userid")
-			if sessid == nil {
+			userid := ptou(sess.Get("userid"))
+			charid := atou(ctx.Query("cid"))
+			landid := atou(ctx.Query("lid"))
+			if userid == 0 || charid == 0 || landid == 0 {
 				flash.Error("Invalid session")
-				ctx.Redirect("/")
-				return
-			}
-			userid := sessid.(string)
-			charid := ctx.Query("cid")
-			landid := ctx.Query("lid")
-			if userid == "" || charid == "" || landid == "" {
-				flash.Error("Page error: " + "Missing fields")
 				ctx.Redirect("/")
 				return
 			}
 
 			// Query the World server for the Character
-			resp, err := http.Get("http://" + f.endpointWorld + "/land/show?uid=" + userid + "&cid=" + charid + "&lid=" + landid)
+			args := CityShowArgs{UserId: userid, CharacterId: charid, CityId: landid}
+			reply := CityShowReply{}
+			err := f.region.CityShow(&args, &reply)
 			if err != nil {
 				flash.Warning("Character error: " + err.Error())
-				ctx.Redirect("/")
-				return
+				ctx.Redirect("/game/user")
+			} else {
+				ctx.Data["userid"] = utoa(userid)
+				ctx.Data["cid"] = utoa(charid)
+				ctx.Data["lid"] = utoa(landid)
+				ctx.Data["Land"] = &reply.View
+				ctx.HTML(200, "land")
 			}
-			// Unpack the character
-			var view CityView
-			if err = json.NewDecoder(resp.Body).Decode(&view); err != nil {
-				flash.Error("World problem: " + err.Error())
-				ctx.Redirect("/")
-				return
-			}
-
-			ctx.Data["userid"] = userid
-			ctx.Data["cid"] = charid
-			ctx.Data["lid"] = landid
-			ctx.Data["Land"] = view
-			ctx.HTML(200, "land")
 		})
 	m.Get("/game/map",
 		func(ctx *macaron.Context, s session.Store) {
@@ -207,33 +216,26 @@ func (f *front) routePages(m *macaron.Macaron) {
 }
 
 func (f *front) routeForms(m *macaron.Macaron) {
-	doLogIn := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info LoginForm) {
+	doLogIn := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormLogin) {
 		// Cleanup a previous session
 		sess.Flush()
 
 		// Authenticate the user by the world-server
-		var payload AuthReply
-		var form url.Values = make(map[string][]string)
-		form.Set("email", info.UserMail)
-		form.Set("password", info.UserPass)
-		resp, err := http.PostForm("http://"+f.endpointWorld+"/user/auth", form)
+		reply := AuthReply{}
+		args := AuthArgs{UserMail: info.UserMail, UserPass: info.UserPass}
+		err := f.region.Auth(&args, &reply)
 		if err != nil {
 			flash.Error("Authentication error: " + err.Error())
 			ctx.Redirect("/")
-		} else if resp.StatusCode/100 != 2 {
-			flash.Warning("Authentication failed")
-			ctx.Redirect("/")
-		} else if err = json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-			flash.Warning("Authentication problem: " + err.Error())
-			ctx.Redirect("/")
 		} else {
 			// Establish a session for the user
-			strid := strconv.FormatUint(payload.Id, 10)
+			strid := utoa(reply.Id)
 			ctx.SetSecureCookie("session", strid)
 			sess.Set("userid", strid)
 			ctx.Redirect("/game/user")
 		}
 	}
+
 	doLogOut := func(ctx *macaron.Context, s session.Store) {
 		ctx.SetSecureCookie("session", "")
 		s.Flush()
@@ -241,30 +243,74 @@ func (f *front) routeForms(m *macaron.Macaron) {
 	}
 
 	doMove := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		resp, err := http.Post("http://"+f.endpointWorld+"/move", "text/plain", nil)
+		err := f.region.RoundMove(&RoundMoveArgs{}, &RoundMoveReply{})
 		if err != nil {
 			flash.Error("Action error: " + err.Error())
-		} else if resp.StatusCode/100 != 2 {
-			flash.Warning("Action failed")
 		}
 		ctx.Redirect("/game/user")
 	}
 
 	doProduce := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		resp, err := http.Post("http://"+f.endpointWorld+"/produce", "text/plain", nil)
+		err := f.region.RoundProduce(&RoundProduceArgs{}, &RoundProduceReply{})
 		if err != nil {
 			flash.Error("Action error: " + err.Error())
-		} else if resp.StatusCode/100 != 2 {
-			flash.Warning("Action failed")
 		}
 		ctx.Redirect("/game/user")
 	}
 
-	m.Post("/action/login", binding.Bind(LoginForm{}), doLogIn)
+	doCityStudy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityStudy) {
+		reply := CityStudyReply{}
+		args := CityStudyArgs{
+			UserId:      ptou(sess.Get("userid")),
+			CharacterId: info.CharacterId,
+			CityId:      info.CityId,
+			KnowledgeId: info.KnowledgeId,
+		}
+		err := f.region.CityStudy(&args, &reply)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		}
+		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
+	doCityBuild := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityBuild) {
+		reply := CityBuildReply{}
+		args := CityBuildArgs{
+			UserId:      ptou(sess.Get("userid")),
+			CharacterId: info.CharacterId,
+			CityId:      info.CityId,
+			BuildingId:  info.BuildingId,
+		}
+		err := f.region.CityBuild(&args, &reply)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		}
+		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
+	doCityTrain := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityTrain) {
+		reply := CityTrainReply{}
+		args := CityTrainArgs{
+			UserId:      ptou(sess.Get("userid")),
+			CharacterId: info.CharacterId,
+			CityId:      info.CityId,
+			UnitId:      info.UnitId,
+		}
+		err := f.region.CityTrain(&args, &reply)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		}
+		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
+	m.Post("/action/login", binding.Bind(FormLogin{}), doLogIn)
 	m.Post("/action/logout", doLogOut)
 	m.Get("/action/logout", doLogOut)
 	m.Post("/action/move", doMove)
 	m.Post("/action/produce", doProduce)
+	m.Post("/action/city/study", binding.Bind(FormCityStudy{}), doCityStudy)
+	m.Post("/action/city/build", binding.Bind(FormCityBuild{}), doCityBuild)
+	m.Post("/action/city/train", binding.Bind(FormCityTrain{}), doCityTrain)
 }
 
 func (f *front) routeMiddlewares(m *macaron.Macaron) {
@@ -319,6 +365,7 @@ func main() {
 	flag.Parse()
 
 	m := macaron.Classic()
+	f.region = DialClientTcp(f.endpointWorld)
 	f.routeMiddlewares(m)
 	f.routeForms(m)
 	f.routePages(m)

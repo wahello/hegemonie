@@ -59,7 +59,7 @@ func (w *World) CitySpawnUnit(idCity, idType uint64) error {
 		return errors.New("City not found")
 	}
 
-	t := w.UnitGetType(idType)
+	t := w.UnitTypeGet(idType)
 	if t == nil {
 		return errors.New("Unit type not found")
 	}
@@ -67,6 +67,39 @@ func (w *World) CitySpawnUnit(idCity, idType uint64) error {
 	unit := &Unit{Id: w.getNextId(), Type: t.Id, Health: t.Health}
 	c.Units.Add(unit)
 	return nil
+}
+
+func (w *World) CityTrain(userId, characterId, cityId, uId uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
+	if err != nil {
+		return 0, err
+	}
+	return pCity.Train(w, uId)
+}
+
+func (w *World) CityBuild(userId, characterId, cityId, bId uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
+	if err != nil {
+		return 0, err
+	}
+	return pCity.Build(w, bId)
+}
+
+func (w *World) CityStudy(userId, characterId, cityId, kId uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
+	if err != nil {
+		return 0, err
+	}
+	return pCity.Study(w, kId)
 }
 
 func (c *City) Unit(id uint64) *Unit {
@@ -96,51 +129,36 @@ func (c *City) CityGetKnowledge(id uint64) *Knowledge {
 	return nil
 }
 
-func (w *World) CitySpawnBuilding(idCity, idType uint64) error {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	c := w.CityGet(idCity)
-	if c == nil {
-		return errors.New("City not found")
-	}
-
-	t := w.GetBuildingType(idType)
-	if t == nil {
-		return errors.New("Building tye not found")
-	}
-
-	// TODO(jfs): consume the resources
-
-	b := &Building{Id: w.getNextId(), Type: idType}
-	c.Buildings.Add(b)
-	return nil
-}
-
-func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err error) {
-	w.rw.RLock()
-	defer w.rw.RUnlock()
-
+func (w *World) CityGetAndCheck(userId, characterId, cityId uint64) (*City, *Character, *Character, error) {
 	// Fetch + sanity checks about the city
 	pCity := w.CityGet(cityId)
 	if pCity == nil {
-		err = errors.New("Not Found")
-		return
+		return nil, nil, nil, errors.New("Not Found")
 	}
 	if pCity.Deputy != characterId && pCity.Owner != characterId {
-		err = errors.New("Forbidden")
-		return
+		return nil, nil, nil, errors.New("Forbidden")
 	}
 
 	// Fetch + senity checks about the City
 	pOwner := w.CharacterGet(pCity.Owner)
 	pDeputy := w.CharacterGet(pCity.Deputy)
 	if pOwner == nil || pDeputy == nil {
-		err = errors.New("Not Found")
-		return
+		return nil, nil, nil, errors.New("Not Found")
 	}
 	if pOwner.User != userId && pDeputy.User != userId {
-		err = errors.New("Forbidden")
+		return nil, nil, nil, errors.New("Forbidden")
+	}
+
+	return pCity, pOwner, pDeputy, nil
+}
+
+func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err error) {
+	w.rw.RLock()
+	defer w.rw.RUnlock()
+
+	pCity, pOwner, pDeputy, e := w.CityGetAndCheck(userId, characterId, cityId)
+	if e != nil {
+		err = e
 		return
 	}
 
@@ -159,6 +177,9 @@ func (c *City) Show(w *World) (view CityView) {
 	view.Units = make([]UnitView, 0, len(c.Units))
 	view.Armies = make([]NamedItem, 0)
 	view.Knowledges = make([]KnowledgeView, 0)
+	view.KFrontier = make([]KnowledgeType, 0)
+	view.BFrontier = make([]BuildingType, 0)
+	view.UFrontier = make([]UnitType, 0)
 
 	for _, a := range c.armies {
 		view.Armies = append(view.Armies, NamedItem{Id: a.Id, Name: a.Name})
@@ -195,12 +216,22 @@ func (c *City) Show(w *World) (view CityView) {
 	for _, u := range c.Units {
 		v := UnitView{}
 		v.Id = u.Id
-		v.Type = *w.UnitGetType(u.Type)
+		v.Type = *w.UnitTypeGet(u.Type)
 		view.Units = append(view.Units, v)
 		for i := 0; i < ResourceMax; i++ {
 			view.Production.Troops.Plus[i] += v.Type.Prod.Plus[i]
 			view.Production.Troops.Mult[i] *= v.Type.Prod.Mult[i]
 		}
+	}
+
+	for _, kt := range c.KnowledgeFrontier(w) {
+		view.KFrontier = append(view.KFrontier, *kt)
+	}
+	for _, bt := range c.BuildingFrontier(w) {
+		view.BFrontier = append(view.BFrontier, *bt)
+	}
+	for _, ut := range c.UnitFrontier(w) {
+		view.UFrontier = append(view.UFrontier, *ut)
 	}
 
 	// Apply all the modifiers on the production
@@ -260,7 +291,7 @@ func (c *City) Produce(w *World) {
 
 	for _, u := range c.Units {
 		if u.Ticks > 0 {
-			ut := w.UnitGetType(u.Type)
+			ut := w.UnitTypeGet(u.Type)
 			if post.GreaterOrEqualTo(&ut.Cost) {
 				post.Remove(&ut.Cost)
 				u.Ticks--
@@ -272,24 +303,16 @@ func (c *City) Produce(w *World) {
 	c.Stock = post
 }
 
-func (w *World) CitySpawnArmy(idUser, idChar, idCity uint64) (id uint64, err error) {
+func (w *World) CitySpawnArmy(idUser, idChar, idCity uint64) (uint64, error) {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
-	u := w.UserGet(idUser)
-	p := w.CharacterGet(idChar)
-	c := w.CityGet(idCity)
-	if c == nil || u == nil || p == nil {
-		err = errors.New("Not found")
-		return
-	}
-	if u.Id != p.User || (c.Deputy != p.Id && c.Owner != p.Id) {
-		err = errors.New("Forbidden")
-		return
+	pCity, _, _, err := w.CityGetAndCheck(idUser, idChar, idCity)
+	if err != nil {
+		return 0, err
 	}
 
-	id, err = w.ArmyCreate(c)
-	return
+	return w.ArmyCreate(pCity)
 }
 
 func (c *City) KnowledgeFrontier(w *World) []*KnowledgeType {
@@ -297,5 +320,92 @@ func (c *City) KnowledgeFrontier(w *World) []*KnowledgeType {
 }
 
 func (c *City) BuildingFrontier(w *World) []*BuildingType {
-	return w.BuildingGetFrontier(c.Knowledges)
+	return w.BuildingGetFrontier(c.Buildings, c.Knowledges)
+}
+
+func (c *City) UnitFrontier(w *World) []*UnitType {
+	return w.UnitGetFrontier(c.Buildings)
+}
+
+func (c *City) Train(w *World, uId uint64) (uint64, error) {
+	pType := w.UnitTypeGet(uId)
+	if pType == nil {
+		return 0, errors.New("Unit Type not found")
+	}
+	found := false
+	for _, b := range c.Buildings {
+		if b.Type == pType.RequiredBuilding {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return 0, errors.New("Precondition Failed: no suitable building")
+	}
+
+	id := w.getNextId()
+	c.Units.Add(&Unit{Id: id, Type: uId, Ticks: pType.Ticks, Health: pType.Health})
+	return id, nil
+}
+
+func (c *City) Study(w *World, kId uint64) (uint64, error) {
+	pType := w.KnowledgeTypeGet(kId)
+	if pType == nil {
+		return 0, errors.New("Knowledge Type not found")
+	}
+	owned := make(map[uint64]bool)
+	for _, k := range c.Knowledges {
+		if kId == k.Type {
+			return 0, errors.New("Already started")
+		}
+		owned[k.Type] = true
+	}
+	for _, k := range pType.Conflicts {
+		if owned[k] {
+			return 0, errors.New("Conflict")
+		}
+	}
+	for _, k := range pType.Requires {
+		if !owned[k] {
+			return 0, errors.New("Precondition Failed")
+		}
+	}
+
+	id := w.getNextId()
+	c.Knowledges.Add(&Knowledge{Id: id, Type: kId, Ticks: pType.Ticks})
+	return id, nil
+}
+
+func (c *City) Build(w *World, bId uint64) (uint64, error) {
+	pType := w.GetBuildingType(bId)
+	if pType == nil {
+		return 0, errors.New("Building Type not found")
+	}
+	if pType.Unique {
+		for _, b := range c.Buildings {
+			if b.Type == bId {
+				return 0, errors.New("Building already present")
+			}
+		}
+	}
+
+	// Check the knowledge requirements are met
+	owned := make(map[uint64]bool)
+	for _, k := range c.Knowledges {
+		owned[k.Type] = true
+	}
+	for _, k := range pType.Conflicts {
+		if owned[k] {
+			return 0, errors.New("Conflict")
+		}
+	}
+	for _, k := range pType.Requires {
+		if !owned[k] {
+			return 0, errors.New("Precondition Failed")
+		}
+	}
+
+	id := w.getNextId()
+	c.Buildings.Add(&Building{Id: id, Type: bId, Ticks: pType.Ticks})
+	return id, nil
 }

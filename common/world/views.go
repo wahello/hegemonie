@@ -75,10 +75,17 @@ type CityView struct {
 	Deputy     NamedItem
 	Production ProductionView
 	Stock      StockView
+
+	// Live assets
 	Units      []UnitView
 	Buildings  []BuildingView
 	Knowledges []KnowledgeView
 	Armies     []NamedItem
+
+	// Allowed definitions of the new assets
+	KFrontier []KnowledgeType
+	BFrontier []BuildingType
+	UFrontier []UnitType
 }
 
 func (cv *CityView) GetNamed() NamedItem {

@@ -25,10 +25,14 @@
             ],
             "Knowledges": [
                 {"Id": 1, "Type": 1, "Ticks": 0},
-                {"Id": 1, "Type": 2, "Ticks": 0}
+                {"Id": 2, "Type": 2, "Ticks": 0}
             ],
             "Units": [
-                {"Id": 1, "Type": 1, "Ticks": 0}
+                {"Id": 1, "Type": 1, "Ticks": 0, "H": 100},
+                {"Id": 2, "Type": 1, "Ticks": 0, "H": 100},
+                {"Id": 3, "Type": 1, "Ticks": 0, "H": 100},
+                {"Id": 4, "Type": 1, "Ticks": 0, "H": 100},
+                {"Id": 5, "Type": 1, "Ticks": 0, "H": 100}
             ]
         }
     ],

@@ -63,7 +63,7 @@
             "Requires": [1]
         },
         {
-            "Id": 3, "Name": "Althérophilie", "Ticks": 7,
+            "Id": 3, "Name": "Haltérophilie", "Ticks": 7,
             "Cost": [ 0, 0, 0, 10, 0, 0 ],
             "Stock": {"Plus":[ 0, 0, 0, 0, 0, 0 ], "Mult": [1.0, 1.1, 1.1, 1.1, 1.1, 1.1]},
             "Prod": {"Plus":[ 0, 0, 0, 0, 0, 0 ], "Mult": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},

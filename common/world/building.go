@@ -55,7 +55,8 @@ func (s *SetOfBuildings) Add(b *Building) {
 }
 
 // TODO(jfs): Maybe speed the execution with a reverse index of Requires
-func (w *World) BuildingGetFrontier(owned []*Knowledge) []*BuildingType {
+func (w *World) BuildingGetFrontier(built []*Building, owned []*Knowledge) []*BuildingType {
+	bmap := make(map[uint64]bool)
 	pending := make(map[uint64]bool)
 	finished := make(map[uint64]bool)
 	for _, k := range owned {
@@ -65,8 +66,15 @@ func (w *World) BuildingGetFrontier(owned []*Knowledge) []*BuildingType {
 			pending[k.Type] = true
 		}
 	}
+	for _, b := range built {
+		bmap[b.Type] = true
+	}
 
 	valid := func(bt *BuildingType) bool {
+		// TODO(jfs): Manage not only singleton
+		if bmap[bt.Id] {
+			return false
+		}
 		for _, c := range bt.Conflicts {
 			if finished[c] || pending[c] {
 				return false

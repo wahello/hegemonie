@@ -2,6 +2,8 @@
 
 <h1>The cities managed by {{Character.Meta.Name}}</h1>
 
+<p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p>
+
 <ul>{% for c in Character.OwnerOf %}
     <li><a href="/game/land?cid={{Character.Id}}&lid={{c.Id}}">{{c.Name}}</a></li>{% endfor %}
 </ul>

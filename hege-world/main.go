@@ -9,14 +9,12 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"github.com/go-macaron/binding"
-	"gopkg.in/macaron.v1"
 	"io"
 	"log"
 	"net/http"
+	"net/rpc"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	. "github.com/jfsmig/hegemonie/common/client"
@@ -55,141 +53,97 @@ func save(w *World) error {
 	return nil
 }
 
-type AuthRequest struct {
-	UserMail string `form:"email" binding:"Required"`
-	UserPass string `form:"password" binding:"Required"`
+type RegionService struct {
+	w *World
 }
 
-func routes(w *World, m *macaron.Macaron) {
-	m.Post("/user/auth", binding.Bind(AuthRequest{}),
-		func(ctx *macaron.Context, form AuthRequest) {
-			id, err := w.UserAuth(form.UserMail, form.UserPass)
-			if id != 0 {
-				ctx.JSON(200, AuthReply{Id: id})
-			} else if err == nil {
-				ctx.JSON(403, AuthReply{Id: 0})
-			} else {
-				ctx.JSON(500, AuthReply{Id: 0, Msg: err.Error()})
-			}
-		})
-
-	m.Get("/user/show",
-		func(ctx *macaron.Context) {
-			struid := ctx.Query("uid")
-			if id, err := strconv.ParseUint(struid, 10, 63); err != nil {
-				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed User ID"})
-			} else if userView, err := w.UserShow(id); err != nil {
-				ctx.JSON(404, ErrorReply{Code: 400, Msg: err.Error()})
-			} else {
-				ctx.JSON(200, &userView)
-			}
-		})
-
-	m.Get("/character/show",
-		func(ctx *macaron.Context) {
-			struid := ctx.Query("uid")
-			strcid := ctx.Query("cid")
-			if uid, err := strconv.ParseUint(struid, 10, 63); err != nil {
-				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed User ID"})
-			} else if cid, err := strconv.ParseUint(strcid, 10, 63); err != nil {
-				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed Character ID"})
-			} else if charView, err := w.CharacterShow(uid, cid); err != nil {
-				ctx.JSON(404, ErrorReply{Code: 400, Msg: err.Error()})
-			} else {
-				ctx.JSON(200, &charView)
-			}
-		})
-
-	m.Get("/land/show",
-		func(ctx *macaron.Context) {
-			struid := ctx.Query("uid")
-			strcid := ctx.Query("cid")
-			strlid := ctx.Query("lid")
-			if uid, err := strconv.ParseUint(struid, 10, 63); err != nil {
-				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed User ID"})
-			} else if cid, err := strconv.ParseUint(strcid, 10, 63); err != nil {
-				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed Character ID"})
-			} else if lid, err := strconv.ParseUint(strlid, 10, 63); err != nil {
-				ctx.JSON(400, ErrorReply{Code: 400, Msg: "Malformed Land ID"})
-			} else if cityView, err := w.CityShow(uid, cid, lid); err != nil {
-				ctx.JSON(404, ErrorReply{Code: 400, Msg: err.Error()})
-			} else {
-				ctx.JSON(200, &cityView)
-			}
-		})
-
-	m.Get("/map/dot",
-		func(ctx *macaron.Context) (int, string) {
-			return 200, w.Places.Dot()
-		})
-
-	m.Post("/map/rehash",
-		func(ctx *macaron.Context) (int, string) {
-			w.Places.Rehash()
-			return 204, ""
-		})
-
-	m.Post("/map/check",
-		func(ctx *macaron.Context) (int, string) {
-			if err := w.Places.Check(w); err == nil {
-				return 204, ""
-			} else {
-				return 502, err.Error()
-			}
-		})
-
-	m.Post("/check",
-		func(ctx *macaron.Context) (int, string) {
-			if err := w.Check(); err == nil {
-				return 204, ""
-			} else {
-				return 502, err.Error()
-			}
-		})
-
-	m.Post("/save",
-		func(ctx *macaron.Context) (int, string) {
-			if err := save(w); err == nil {
-				return 204, ""
-			} else {
-				return 501, err.Error()
-			}
-		})
-
-	m.Post("/produce",
-		func(ctx *macaron.Context) int {
-			w.Produce()
-			return 201
-		})
-
-	m.Post("/move",
-		func(ctx *macaron.Context) int {
-			w.Move()
-			return 201
-		})
-
-	// Mapping routes
-	m.Get("/world/places",
-		func(ctx *macaron.Context) {
-			ctx.JSON(200, &w.Places)
-		})
-
-	m.Get("/world/cities",
-		func(ctx *macaron.Context) {
-			ctx.JSON(200, &w.Live.Cities)
-		})
-
-	m.Get("/world/armies",
-		func(ctx *macaron.Context) {
-			ctx.JSON(200, &w.Live.Armies)
-		})
+func (s *RegionService) Auth(args *AuthArgs, reply *AuthReply) error {
+	id, err := s.w.UserAuth(args.UserMail, args.UserPass)
+	reply.Id = id
+	return err
 }
 
-func runServer(w *World, north string) error {
-	m := macaron.Classic()
-	m.Use(macaron.Renderer())
-	routes(w, m)
-	return http.ListenAndServe(north, m)
+func (s *RegionService) UserShow(args *UserShowArgs, reply *UserShowReply) error {
+	v, err := s.w.UserShow(args.UserId)
+	reply.View = v
+	return err
+}
+
+func (s *RegionService) CharacterShow(args *CharacterShowArgs, reply *CharacterShowReply) error {
+	v, err := s.w.CharacterShow(args.UserId, args.CharacterId)
+	reply.View = v
+	return err
+}
+
+func (s *RegionService) CityShow(args *CityShowArgs, reply *CityShowReply) error {
+	v, err := s.w.CityShow(args.UserId, args.CharacterId, args.CityId)
+	reply.View = v
+	return err
+}
+
+func (s *RegionService) CityStudy(args *CityStudyArgs, reply *CityStudyReply) error {
+	id, err := s.w.CityStudy(args.UserId, args.CharacterId, args.CityId, args.KnowledgeId)
+	reply.Id = id
+	return err
+}
+
+func (s *RegionService) CityBuild(args *CityBuildArgs, reply *CityBuildReply) error {
+	id, err := s.w.CityBuild(args.UserId, args.CharacterId, args.CityId, args.BuildingId)
+	reply.Id = id
+	return err
+}
+
+func (s *RegionService) CityTrain(args *CityTrainArgs, reply *CityTrainReply) error {
+	id, err := s.w.CityTrain(args.UserId, args.CharacterId, args.CityId, args.UnitId)
+	reply.Id = id
+	return err
+}
+
+func (s *RegionService) MapDot(args *MapDotArgs, reply *MapDotReply) error {
+	reply.Dot = s.w.Places.Dot()
+	return nil
+}
+
+func (s *RegionService) MapCheck(args *MapCheckArgs, reply *MapCheckReply) error {
+	s.w.Places.Rehash()
+	return nil
+}
+
+func (s *RegionService) MapRehash(args *MapRehashArgs, reply *MapRehashReply) error {
+	return s.w.Places.Check(s.w)
+}
+
+func (s *RegionService) MapPlaces(args *MapPlacesArgs, reply *MapPlacesReply) error {
+	reply.Items = s.w.Places
+	return nil
+}
+
+func (s *RegionService) MapCities(args *MapCitiesArgs, reply *MapCitiesReply) error {
+	reply.Items = s.w.Live.Cities
+	return nil
+}
+
+func (s *RegionService) MapArmies(args *MapArmiesArgs, reply *MapArmiesReply) error {
+	reply.Items = s.w.Live.Armies
+	return nil
+}
+
+func (s *RegionService) AdminSave(args *AdminSaveArgs, reply *AdminSaveReply) error {
+	return save(s.w)
+}
+
+func (s *RegionService) AdminCheck(args *AdminCheckArgs, reply *AdminCheckReply) error {
+	return s.w.Check()
+}
+
+func (s *RegionService) RoundProduce(args *RoundProduceArgs, reply *RoundProduceReply) error {
+	s.w.Produce()
+	return nil
+}
+
+func (s *RegionService) RoundMove(args *RoundMoveArgs, reply *RoundMoveReply) error {
+	s.w.Move()
+	return nil
 }
 
 func main() {
@@ -247,7 +201,16 @@ func main() {
 		log.Fatalf("Inconsistent World: %s", err.Error())
 	}
 
-	err = runServer(&w, north)
+	var srv Region = &RegionService{w: &w}
+
+	err = rpc.RegisterName("Region", srv)
+	if err != nil {
+		log.Fatalf("RPC error: %s", err.Error())
+	}
+
+	rpc.HandleHTTP()
+	err = http.ListenAndServe(north, nil)
+
 	if err != nil {
 		log.Printf("Server error: %s", err.Error())
 	}

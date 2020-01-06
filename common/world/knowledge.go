@@ -44,9 +44,7 @@ func (s *SetOfKnowledges) Len() int {
 }
 
 func (s *SetOfKnowledges) Less(i, j int) bool {
-	k1 := (*s)[i]
-	k2 := (*s)[2]
-	return k1.City < k2.City || (k1.City == k2.City && k1.Id < k2.Id)
+	return (*s)[i].Id < (*s)[j].Id
 }
 
 func (s *SetOfKnowledges) Swap(i, j int) {
@@ -77,6 +75,9 @@ func (w *World) KnowledgeGetFrontier(owned []*Knowledge) []*KnowledgeType {
 	}
 
 	valid := func(kt *KnowledgeType) bool {
+		if finished[kt.Id] || pending[kt.Id] {
+			return false
+		}
 		for _, c := range kt.Conflicts {
 			if finished[c] || pending[c] {
 				return false

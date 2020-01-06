@@ -58,7 +58,6 @@ type KnowledgeType struct {
 type Knowledge struct {
 	Id    uint64
 	Type  uint64
-	City  uint64
 	Ticks uint `json:",omitempty"`
 }
 
@@ -74,6 +73,9 @@ type BuildingType struct {
 
 	// How much does the production cost
 	Cost Resources
+
+	// Has the building to be unique a the City
+	Unique bool `json:",omitempty"`
 
 	// Impat of the current Building on the total storage capacity of the City.
 	Stock ResourceModifiers
@@ -99,9 +101,6 @@ type Building struct {
 
 	// How many construction rounds remain before the building's achievement
 	Ticks uint `json:",omitempty"`
-
-	// Display name of the current Building. It supersedes the name of the BuildingType
-	Name string `json:",omitempty"`
 }
 
 type Character struct {
@@ -148,6 +147,12 @@ type City struct {
 	// Is the city still usable
 	Deleted bool `json:",omitempty"`
 
+	// Tells if the City is in automatic mode.
+	// The "auto" mode is intented for inactive or absent players.
+	// The armies come home to defend the City, no new building or unit is spawned.
+	// In the plans: a conservative behavior should be automated
+	Auto bool `json:",omitempty"`
+
 	Knowledges SetOfKnowledges
 
 	Buildings SetOfBuildings
@@ -187,6 +192,9 @@ type UnitType struct {
 
 	// Might positive (resource boost) or more commonly negative (maintenance cost)
 	Prod ResourceModifiers
+
+	// A UnitType is only dependant on the presence of a Building of that BuildingType.
+	RequiredBuilding uint64
 }
 
 // Both Cell and City must not be 0, and have a non-0 value
@@ -201,7 +209,7 @@ type Unit struct {
 	Ticks uint
 
 	// The number of health points of the unit, Health should be less or equal to HealthMax
-	Health uint
+	Health uint `json:"H,omitempty"`
 }
 
 type User struct {

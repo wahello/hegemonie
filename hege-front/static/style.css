@@ -64,24 +64,29 @@ footer p {
     color: #999999;
 }
 
+main section {
+    margin: auto;
+    width: 1024px;
+}
+
 section.col2 div {
     border: 2px solid #202080;
     margin: 2px;
     padding: 10px;
-    width: 900px;
+    width: 100%;
 }
 
 @media screen {
     @media (min-width: 1366px) {
         section.col2 {
             display: grid;
-            grid-template-columns: auto auto;
+            grid-template-columns: auto;
         }
     }
     @media (min-width: 800px) and (max-width: 1366px) {
         section.col2 {
             display: grid;
-            grid-template-columns: auto auto;
+            grid-template-columns: auto;
         }
     }
     @media (max-width: 800px) {

@@ -78,11 +78,25 @@ func (s *SetOfUnitTypes) Add(u *UnitType) {
 	sort.Sort(s)
 }
 
-func (w *World) UnitGetType(id uint64) *UnitType {
+func (w *World) UnitTypeGet(id uint64) *UnitType {
 	for _, ut := range w.Definitions.Units {
 		if ut.Id == id {
 			return ut
 		}
 	}
 	return nil
+}
+
+func (w *World) UnitGetFrontier(owned []*Building) []*UnitType {
+	bIndex := make(map[uint64]bool)
+	for _, b := range owned {
+		bIndex[b.Type] = true
+	}
+	result := make([]*UnitType, 0)
+	for _, kt := range w.Definitions.Units {
+		if bIndex[kt.Id] {
+			result = append(result, kt)
+		}
+	}
+	return result
 }

@@ -1,4 +1,6 @@
 {% include "header.tpl" %}
+<p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p>
+
 <section class="col2">
     <div>
         <h2>Stocks</h2>
@@ -46,12 +48,32 @@
         <ul>
             {% for b in Land.Buildings %}<li>{{b.Type.Name}} (id {{b.Id}})</li>{% endfor %}
         </ul>
+        <form action="/action/city/build" method="post">
+            <select name="bid">
+                {% for b in Land.BFrontier %}
+                <option value="{{b.Id}}">{{b.Name}}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="cid" value="{{cid}}"/>
+            <input type="hidden" name="lid" value="{{lid}}"/>
+            <input type="submit" value="Build!"/>
+        </form>
     </div>
     <div>
         <h2>Knowledges of {{Land.Name}}</h2>
         <ul>
-            {% for a in Land.Knowledges %}<li>{{a.Type.Name}} (id {{a.Id}})</li>{% endfor %}
+            {% for k in Land.Knowledges %}<li>{{k.Type.Name}} (id {{k.Id}})</li>{% endfor %}
         </ul>
+        <form action="/action/city/study" method="post">
+            <select name="kid">
+                {% for b in Land.KFrontier %}
+                <option value="{{b.Id}}">{{b.Name}}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="cid" value="{{cid}}"/>
+            <input type="hidden" name="lid" value="{{lid}}"/>
+            <input type="submit" value="Study!"/>
+        </form>
     </div>
 
     <div>
@@ -59,11 +81,21 @@
         <ul>
             {% for u in Land.Units %}<li>{{u.Type.Name}} (id {{u.Id}})</li>{% endfor %}
         </ul>
+        <form action="/action/city/train" method="post">
+            <select name="uid">
+                {% for b in Land.UFrontier %}
+                <option value="{{b.Id}}">{{b.Name}}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="cid" value="{{cid}}"/>
+            <input type="hidden" name="lid" value="{{lid}}"/>
+            <input type="submit" value="Hire!"/>
+        </form>
     </div>
     <div>
         <h2>Armies of {{Land.Name}}</h2>
         <ul>
-            {% for u in Land.Armies %}<li>{{u.Name}} (id {{u.Id}})</li>{% endfor %}
+            {% for a in Land.Armies %}<li>{{a.Name}} (id {{a.Id}})</li>{% endfor %}
         </ul>
     </div>
 
