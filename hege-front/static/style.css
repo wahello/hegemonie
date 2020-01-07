@@ -71,16 +71,19 @@ main section {
 
 section.col2 div {
     border: 2px solid #202080;
-    margin: 2px;
-    padding: 10px;
-    width: 100%;
+    margin: 1%;
+    padding: 1%;
+    width: 96%;
 }
 
 @media screen {
     @media (min-width: 1366px) {
         section.col2 {
             display: grid;
-            grid-template-columns: auto;
+            grid-template-columns: auto auto;
+        }
+        section.col2 div.large {
+            grid-column: 1 / 3;
         }
     }
     @media (min-width: 800px) and (max-width: 1366px) {

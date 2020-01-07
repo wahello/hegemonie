@@ -77,6 +77,7 @@ func ptou(p interface{}) uint64 {
 func (f *front) routePages(m *macaron.Macaron) {
 	m.Get("/",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
+			ctx.Data["Title"] = "Hegemonie"
 			ctx.Data["userid"] = sess.Get("userid")
 			ctx.HTML(200, "index")
 		})
@@ -102,6 +103,7 @@ func (f *front) routePages(m *macaron.Macaron) {
 				flash.Warning("Backend error error: " + err.Error())
 				ctx.Redirect("/game/user")
 			} else {
+				ctx.Data["Title"] = reply.View.Name
 				ctx.Data["userid"] = utoa(userid)
 				ctx.Data["User"] = &reply.View
 				ctx.HTML(200, "user")
@@ -126,6 +128,7 @@ func (f *front) routePages(m *macaron.Macaron) {
 				flash.Warning("Backend error: " + err.Error())
 				ctx.Redirect("/game/user")
 			} else {
+				ctx.Data["Title"] = reply.View.Name
 				ctx.Data["userid"] = utoa(userid)
 				ctx.Data["cid"] = utoa(charid)
 				ctx.Data["Character"] = &reply.View
@@ -152,6 +155,7 @@ func (f *front) routePages(m *macaron.Macaron) {
 				flash.Warning("Character error: " + err.Error())
 				ctx.Redirect("/game/user")
 			} else {
+				ctx.Data["Title"] = reply.View.Name
 				ctx.Data["userid"] = utoa(userid)
 				ctx.Data["cid"] = utoa(charid)
 				ctx.Data["lid"] = utoa(landid)

@@ -14,7 +14,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 <link rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-<header><h1>Hegemonie</h1></header>
+<header><h1>{{Title}}</h1></header>
 <main>
     <nav>
         {% if userid %}<a href="/game/user">User</a>{% endif %}
