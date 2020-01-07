@@ -4,77 +4,53 @@ Hegemonie is an online management, strategy and diplomacy RPG. The current
 repository is a reboot of what [Hegemonie](http://www.hegemonie.be) was
 between 1999 and 2003. It is under heavily inactive construction.
 
-A Web interface manages the authentication of the players, displays the
-status of the country managed by each player and proposes actions (as HTML forms)
-to mpact the world.
-
-Meanwhile, the game engine is managed by a standalone daemon that makes
-the world evolve with external triggers: long term actions progress a bit
-toward their completion, the movements are executed, attacks started, resources
-produced, etc etc.
+The game engine is a [4X](https://en.wikipedia.org/wiki/4X) technical basis
+for larger RPG games. The description of the game will sound familiar to RPG
+players:
+* Each **user** manages characters, each **character** manages cities
+* Each **city** produces **resources**, grows a **knowledge** tree, evolves with **building** and trains **troops**.
+* **Armies** can be setup to gather some troops and execute orders across the map.
 
 
-## Build & Install
+## Getting Started
 
-Build, the ugly way:
-
-```
-git clone https://github.com/jfsmig/hegemonie.git
-cd hegemonie
-make
-```
-
-Build, the pretty way:
+Simply build & install like this: 
 
 ```
 BASE=github.com/jfsmig/hegemonie
-go install $BASE/hege-front
-go install $BASE/hege-world
+go install "${BASE}/hege-front"
+go install "${BASE}/hege-world"
 ```
 
-Then install, the only way:
+For more information, please refer to the [TECH.md](./TECH.md) page.
 
-```
-DESTDIR=/usr/local/bin
-/usr/bin/install $GOPATH/bin/hege-world $DESTDIR
-/usr/bin/install $GOPATH/bin/hege-front $DESTDIR
-```
 
-## Technical facts
+## How To Contribute
 
-1. Written in 100% in Golang: for the sake of Simplicity and Portability. The
-   code mostly depends on [Go-Macaron](https://go-macaron.com) and the Golang
-   [standard library](https://golang.org/pkg). At the moment no special
-   attention has been paid to the performance of the whole thing: this will
-   happen after the release of a very first MVP.
-2. No database required: the system has all its components in RAM while it is
-   alive, it periodically persist its state and restore it at the startup.
-   The status is written in [JSON](https://json.org) to ease the daily
-   administration.
-3. Notifications will be emitted upon special events in the game.
-   No technical solution has been chosen yet.
-   It is likely to be split into a collect by either [Redis](https://redis.io),
-   [Kafka](https://kafka.apache.org) or [Beanstalkd](https://beanstalkd.github.io),
-   and then forwarded to any IM (instant messenging) application like
-   [Discord](https://discord.io/), [Slack](https://slack.com),
-   [RocketChat](https://rocket.chat), [Riot](https://riot.im) or whatever.
+Contributions are what make the open source community such an amazing place.
+Any contributions you make are greatly appreciated.
 
-A game instance for a small community is lightweight enough to run on a small
-ARM-based board.
+1. Fork the Project
+2. Create your Feature Branch (git checkout -b feature/AmazingFeature)
+3. Commit your Changes (git commit -m 'Add some AmazingFeature')
+4. Push to the Branch (git push origin feature/AmazingFeature)
+5. Open a Pull Request
 
-### Architecture
 
-* **hege-front** serves HTTP pages for the human beings
-* **hege-world** manage the game's world through a simple HTTP/JSON API
-* **hege-ticker** triggers the rounds in the game's world.
-* ``haproxy`` is OPTIONAL but recommanded as an SSL termination frontend.
-* ``cron`` is OPTINAL but recommanded to trigger the ticker.
+## License
 
-### Scalability
+Distributed under the MPLv2 License. See [LICENSE](./LICENSE) for more information.
 
-This is not the topic yet.
+We strongly believe in Open Source for many reasons.
+ 
 
-However there are a few opportunities:
-* The front service is stateless, you might deploy many of them.
-* The world service is stateful and it manages all the game entities.
+## Contact
 
+Follow the development on GitHub with the [jfsmig/hegemonie](https://github.com/jfsmig/hegemonie) project.
+
+Follow the community on our Facebook page [Hegemonie.be](https://www.facebook.com/hegemonie.be).
+
+
+## Acknowledgements
+
+We welcome any volunteer and we already have a list of [amazing authors of Hegemonie](./AUTHORS.md).

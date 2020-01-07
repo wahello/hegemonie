@@ -26,10 +26,10 @@ func (s *SetOfArmies) Add(a *Army) {
 	sort.Sort(s)
 }
 
-func (w *World) ArmyCreate(c *City) (uint64, error) {
+func (w *World) ArmyCreate(c *City, name string) (uint64, error) {
 	a := &Army{
 		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
-		Units: make(SetOfUnits, 0),
+		Name: name, Units: make(SetOfUnits, 0),
 	}
 	w.Live.Armies.Add(a)
 	c.armies.Add(a)

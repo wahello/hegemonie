@@ -26,6 +26,15 @@ type Region interface {
 	// Start a new building
 	CityBuild(args *CityBuildArgs, reply *CityBuildReply) error
 
+	// Create an empty army
+	CityCreateArmy(args *CityCreateArmyArgs, reply *CityCreateArmyReply) error
+
+	// Move in the given Army a Unit that must be ready and contained in the given City.
+	CityTransferUnit(args *CityTransferUnitArgs, reply *CityTransferUnitReply) error
+
+	// Push a new command for the Army.
+	CityCommandArmy(args *CityCommandArmyArgs, reply *CityCommandArmyReply) error
+
 	// Returns a string representation of the Map in the "dot" format
 	// See https://graphviz.org for more information.
 	MapDot(args *MapDotArgs, reply *MapDotReply) error
@@ -46,7 +55,10 @@ type Region interface {
 	// Perform an integrity check on the whole game information
 	AdminCheck(args *AdminCheckArgs, reply *AdminCheckReply) error
 
+	// Produce the resources in each City
 	RoundProduce(args *RoundProduceArgs, reply *RoundProduceReply) error
+
+	// Pley one movement step for each concerned Army
 	RoundMove(args *RoundMoveArgs, reply *RoundMoveReply) error
 }
 
@@ -69,11 +81,24 @@ type CityShowReply struct {
 	View world.CityView
 }
 
+type CityCommandArmyArgs struct {
+	UserId      uint64
+	CharacterId uint64
+	CityId      uint64
+
+	ArmyId uint64
+	Cell   uint64
+	Action uint64
+}
+
+type CityCommandArmyReply struct{}
+
 type CityBuildArgs struct {
 	UserId      uint64
 	CharacterId uint64
 	CityId      uint64
-	BuildingId  uint64
+
+	BuildingId uint64
 }
 
 type CityBuildReply struct {
@@ -84,7 +109,8 @@ type CityTrainArgs struct {
 	UserId      uint64
 	CharacterId uint64
 	CityId      uint64
-	UnitId      uint64
+
+	UnitId uint64
 }
 
 type CityTrainReply struct {
@@ -95,12 +121,36 @@ type CityStudyArgs struct {
 	UserId      uint64
 	CharacterId uint64
 	CityId      uint64
+
 	KnowledgeId uint64
 }
 
 type CityStudyReply struct {
 	Id uint64
 }
+
+type CityCreateArmyArgs struct {
+	UserId      uint64
+	CharacterId uint64
+	CityId      uint64
+
+	Name string
+}
+
+type CityCreateArmyReply struct {
+	Id uint64
+}
+
+type CityTransferUnitArgs struct {
+	UserId      uint64
+	CharacterId uint64
+	CityId      uint64
+
+	UnitId uint64
+	ArmyId uint64
+}
+
+type CityTransferUnitReply struct{}
 
 type MapRehashArgs struct{}
 

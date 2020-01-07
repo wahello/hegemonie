@@ -1,41 +1,20 @@
 BASE=github.com/jfsmig/hegemonie
+GO=go
 
-main: hege-front hege-world
-all: hege-front hege-world world client mapper
+all:
+	$(GO) install $(BASE)
 
 clean:
-	-rm -f hege-front hege-world hege-ticker
+	$(GO) clean $(BASE)
 
-install: all
-	install /usr/local/bin hege-front hege-world
-
-.PHONY: all clean install test fmt try \
+.PHONY: all clean test fmt try \
 	world client mapper hege-front hege-world
 
-mapper:
-	go install $(BASE)/common/mapper
-world:
-	go install $(BASE)/common/world
-client:
-	go install $(BASE)/common/client
-hege-front:
-	go install $(BASE)/hege-front
-hege-world:
-	go install $(BASE)/hege-world
-
 fmt:
-	go fmt $(BASE)/common/world
-	go fmt $(BASE)/common/client
-	go fmt $(BASE)/common/mapper
-	go fmt $(BASE)/hege-world
-	go fmt $(BASE)/hege-front
+	$(GO) fmt $(BASE)
 
 test:
-	go test $(BASE)/common/world
-	go test $(BASE)/common/client
-	go test $(BASE)/common/mapper
-	go test $(BASE)/hege-world
-	go test $(BASE)/hege-front
+	$(GO) test $(BASE)
 
-try: hege-front hege-world
-	ci/run.sh $$PWD/ci/bootstrap
+try: all
+	./ci/run.sh $$PWD/ci/bootstrap

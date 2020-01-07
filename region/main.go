@@ -3,12 +3,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package main
+package region
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
+	"github.com/google/subcommands"
 	"io"
 	"log"
 	"net/http"
@@ -21,40 +23,43 @@ import (
 	. "github.com/jfsmig/hegemonie/common/world"
 )
 
-var (
+type RegionCommand struct {
+	north string
+	pathLoad string
+	srv RegionService
+}
+
+type RegionService struct {
+	w *World
 	pathSave string
-)
+}
 
 func makeSaveFilename() string {
 	now := time.Now().Round(1 * time.Second)
 	return "save-" + now.Format("20060102_030405")
 }
 
-func save(w *World) error {
-	if pathSave == "" {
+func (self *RegionService) save() error {
+	if self.pathSave == "" {
 		return errors.New("No save path configured")
 	}
-	p := pathSave + "/" + makeSaveFilename()
+	p := self.pathSave + "/" + makeSaveFilename()
 	p = filepath.Clean(p)
 	out, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
-	err = w.DumpJSON(out)
+	err = self.w.DumpJSON(out)
 	out.Close()
 	if err != nil {
 		_ = os.Remove(p)
 		return err
 	}
 
-	latest := pathSave + "/latest"
+	latest := self.pathSave + "/latest"
 	_ = os.Remove(latest)
 	_ = os.Symlink(p, latest)
 	return nil
-}
-
-type RegionService struct {
-	w *World
 }
 
 func (s *RegionService) Auth(args *AuthArgs, reply *AuthReply) error {
@@ -99,6 +104,21 @@ func (s *RegionService) CityTrain(args *CityTrainArgs, reply *CityTrainReply) er
 	return err
 }
 
+func (s *RegionService) CityCreateArmy(args *CityCreateArmyArgs, reply *CityCreateArmyReply) error {
+	id, err := s.w.CityCreateArmy(args.UserId, args.CharacterId, args.CityId, args.Name)
+	reply.Id = id
+	return err
+}
+
+func (s *RegionService) CityTransferUnit(args *CityTransferUnitArgs, reply *CityTransferUnitReply) error {
+	return s.w.CityTransferUnit(args.UserId, args.CharacterId, args.CityId, args.UnitId, args.ArmyId)
+}
+
+func (s *RegionService) CityCommandArmy(args *CityCommandArmyArgs, reply *CityCommandArmyReply) error {
+	//return s.w.CityCommandArmy(args.UserId, args.CharacterId, args.CityId, args.UnitId, args.ArmyId)
+	return errors.New("NYI")
+}
+
 func (s *RegionService) MapDot(args *MapDotArgs, reply *MapDotReply) error {
 	reply.Dot = s.w.Places.Dot()
 	return nil
@@ -129,7 +149,7 @@ func (s *RegionService) MapArmies(args *MapArmiesArgs, reply *MapArmiesReply) er
 }
 
 func (s *RegionService) AdminSave(args *AdminSaveArgs, reply *AdminSaveReply) error {
-	return save(s.w)
+	return s.save()
 }
 
 func (s *RegionService) AdminCheck(args *AdminCheckArgs, reply *AdminCheckReply) error {
@@ -146,40 +166,43 @@ func (s *RegionService) RoundMove(args *RoundMoveArgs, reply *RoundMoveReply) er
 	return nil
 }
 
-func main() {
+func (self *RegionCommand) Name() string     { return "region" }
+func (self *RegionCommand) Synopsis() string { return "Start a region service." }
+func (self *RegionCommand) Usage() string { return "region ENDPOINT\n" }
+
+func (self *RegionCommand) SetFlags(f *flag.FlagSet) {
+	f.StringVar(&self.north, "north", ":8081", "File to be loaded")
+	f.StringVar(&self.pathLoad, "load", "", "File to be loaded")
+	f.StringVar(&self.srv.pathSave, "save", "/tmp/hegemonie/data", "Directory for persistent")
+}
+
+func (self *RegionCommand) Execute(_ context.Context, f0 *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	var err error
-	var w World
 
-	w.Init()
+	self.srv.w = new(World)
+	self.srv.w.Init()
 
-	var north string
-	var pathLoad string
-	flag.StringVar(&north, "north", "127.0.0.1:8081", "File to be loaded")
-	flag.StringVar(&pathLoad, "load", "", "File to be loaded")
-	flag.StringVar(&pathSave, "save", "/tmp/hegemonie/data", "Directory for persistent")
-	flag.Parse()
-
-	if pathSave != "" {
-		err = os.MkdirAll(pathSave, 0755)
+	if self.srv.pathSave != "" {
+		err = os.MkdirAll(self.srv.pathSave, 0755)
 		if err != nil {
-			log.Fatalf("Failed to create [%s]: %s", pathSave, err.Error())
+			log.Fatalf("Failed to create [%s]: %s", self.srv.pathSave, err.Error())
 		}
 	}
 
-	if pathLoad != "" {
+	if self.pathLoad != "" {
 		type cfgSection struct {
 			suffix string
 			obj    interface{}
 		}
 		cfgSections := []cfgSection{
-			{"defs.json", &w.Definitions},
-			{"map.json", &w.Places},
-			{"auth.json", &w.Auth},
-			{"live.json", &w.Live},
+			{"defs.json", &self.srv.w.Definitions},
+			{"map.json", &self.srv.w.Places},
+			{"auth.json", &self.srv.w.Auth},
+			{"live.json", &self.srv.w.Live},
 		}
 		for _, section := range cfgSections {
 			var in io.ReadCloser
-			p := pathLoad + "/" + section.suffix
+			p := self.pathLoad + "/" + section.suffix
 			in, err = os.Open(p)
 			if err != nil {
 				log.Fatalf("Failed to load the World from [%s]: %s", p, err.Error())
@@ -190,18 +213,18 @@ func main() {
 				log.Fatalf("Failed to load the World from [%s]: %s", p, err.Error())
 			}
 		}
-		err = w.PostLoad()
+		err = self.srv.w.PostLoad()
 		if err != nil {
-			log.Fatalf("Inconsistent World from [%s]: %s", pathLoad, err.Error())
+			log.Fatalf("Inconsistent World from [%s]: %s", self.pathLoad, err.Error())
 		}
 	}
 
-	err = w.Check()
+	err = self.srv.w.Check()
 	if err != nil {
 		log.Fatalf("Inconsistent World: %s", err.Error())
 	}
 
-	var srv Region = &RegionService{w: &w}
+	var srv Region = &RegionService{w: self.srv.w}
 
 	err = rpc.RegisterName("Region", srv)
 	if err != nil {
@@ -209,16 +232,18 @@ func main() {
 	}
 
 	rpc.HandleHTTP()
-	err = http.ListenAndServe(north, nil)
+	err = http.ListenAndServe(self.north, nil)
 
 	if err != nil {
 		log.Printf("Server error: %s", err.Error())
 	}
 
-	if pathSave != "" {
-		err = save(&w)
+	if self.srv.pathSave != "" {
+		err = self.srv.save()
 		if err != nil {
 			log.Fatalf("Failed to save the World at exit: %s", err.Error())
 		}
 	}
+
+	return subcommands.ExitSuccess
 }

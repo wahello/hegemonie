@@ -86,6 +86,33 @@ func (s *RegionClientTcp) CityBuild(args *CityBuildArgs, reply *CityBuildReply) 
 	return cnx.Call(kPrefix+"CityBuild", args, reply)
 }
 
+func (s *RegionClientTcp) CityCreateArmy(args *CityCreateArmyArgs, reply *CityCreateArmyReply) error {
+	cnx, err := rpc.DialHTTP("tcp", s.endpoint)
+	if err != nil {
+		return err
+	}
+	defer cnx.Close()
+	return cnx.Call(kPrefix+"CreateArmy", args, reply)
+}
+
+func (s *RegionClientTcp) CityCommandArmy(args *CityCommandArmyArgs, reply *CityCommandArmyReply) error {
+	cnx, err := rpc.DialHTTP("tcp", s.endpoint)
+	if err != nil {
+		return err
+	}
+	defer cnx.Close()
+	return cnx.Call(kPrefix+"CommandArmy", args, reply)
+}
+
+func (s *RegionClientTcp) CityTransferUnit(args *CityTransferUnitArgs, reply *CityTransferUnitReply) error {
+	cnx, err := rpc.DialHTTP("tcp", s.endpoint)
+	if err != nil {
+		return err
+	}
+	defer cnx.Close()
+	return cnx.Call(kPrefix+"TransferUnit", args, reply)
+}
+
 func (s *RegionClientTcp) MapDot(args *MapDotArgs, reply *MapDotReply) error {
 	cnx, err := rpc.DialHTTP("tcp", s.endpoint)
 	if err != nil {

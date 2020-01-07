@@ -50,25 +50,6 @@ func (w *World) CityCreate(loc uint64) (uint64, error) {
 	return c.Id, nil
 }
 
-func (w *World) CitySpawnUnit(idCity, idType uint64) error {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	c := w.CityGet(idCity)
-	if c == nil {
-		return errors.New("City not found")
-	}
-
-	t := w.UnitTypeGet(idType)
-	if t == nil {
-		return errors.New("Unit type not found")
-	}
-
-	unit := &Unit{Id: w.getNextId(), Type: t.Id, Health: t.Health}
-	c.Units.Add(unit)
-	return nil
-}
-
 func (w *World) CityTrain(userId, characterId, cityId, uId uint64) (uint64, error) {
 	w.rw.Lock()
 	defer w.rw.Unlock()
@@ -111,7 +92,7 @@ func (c *City) Unit(id uint64) *Unit {
 	return nil
 }
 
-func (c *City) CityGetBuilding(id uint64) *Building {
+func (c *City) Building(id uint64) *Building {
 	for _, b := range c.Buildings {
 		if id == b.Id {
 			return b
@@ -120,7 +101,7 @@ func (c *City) CityGetBuilding(id uint64) *Building {
 	return nil
 }
 
-func (c *City) CityGetKnowledge(id uint64) *Knowledge {
+func (c *City) Knowledge(id uint64) *Knowledge {
 	for _, b := range c.Knowledges {
 		if id == b.Id {
 			return b
@@ -303,7 +284,43 @@ func (c *City) Produce(w *World) {
 	c.Stock = post
 }
 
-func (w *World) CitySpawnArmy(idUser, idChar, idCity uint64) (uint64, error) {
+// Transfer a Unit from the City to the given Army.
+// No check is performed if the City controls the Army.
+func (c *City) TransferUnit(w *World, a *Army, idUnit uint64) error {
+	pUnit := c.Unit(idUnit)
+	if pUnit == nil {
+		return errors.New("Unit not found")
+	}
+
+	c.Units.Remove(pUnit)
+	a.Units.Add(pUnit)
+	return nil
+}
+
+// Transfer a Unit from the City to the given Army.
+// The chain of ownerships (Charcater, City, Army, Unit) is checked.
+func (w *World) CityTransferUnit(idUser, idChar, idCity uint64, idUnit, idArmy uint64) error {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(idUser, idChar, idCity)
+	if err != nil {
+		return err
+	}
+
+	pArmy := w.ArmyGet(idArmy)
+	if pArmy == nil {
+		return errors.New("Army not found")
+	}
+
+	if pArmy.City != pCity.Id {
+		return errors.New("")
+	}
+
+	return pCity.TransferUnit(w, pArmy, idUnit)
+}
+
+func (w *World) CityCreateArmy(idUser, idChar, idCity uint64, name string) (uint64, error) {
 	w.rw.Lock()
 	defer w.rw.Unlock()
 
@@ -312,7 +329,7 @@ func (w *World) CitySpawnArmy(idUser, idChar, idCity uint64) (uint64, error) {
 		return 0, err
 	}
 
-	return w.ArmyCreate(pCity)
+	return w.ArmyCreate(pCity, name)
 }
 
 func (c *City) KnowledgeFrontier(w *World) []*KnowledgeType {
@@ -323,29 +340,48 @@ func (c *City) BuildingFrontier(w *World) []*BuildingType {
 	return w.BuildingGetFrontier(c.Buildings, c.Knowledges)
 }
 
+// Return a collection of UnitType that may be trained by the current City
+// because all the requirements are met.
+// Each UnitType 'p' returned validates 'c.UnitAllowed(p)'.
 func (c *City) UnitFrontier(w *World) []*UnitType {
 	return w.UnitGetFrontier(c.Buildings)
 }
 
-func (c *City) Train(w *World, uId uint64) (uint64, error) {
-	pType := w.UnitTypeGet(uId)
+// Check the current City has all the requirements to train a Unti of the
+// given UnitType.
+func (c *City) UnitAllowed(pType *UnitType) bool {
+	if pType.RequiredBuilding == 0 {
+		return true
+	}
+	for _, b := range c.Buildings {
+		if b.Type == pType.RequiredBuilding {
+			return true
+		}
+	}
+	return false
+}
+
+// Create a Unit of the given UnitType.
+// No check is performed to verify the City has all the requirements.
+func (c *City) UnitCreate(w *World, pType *UnitType) uint64 {
+	id := w.getNextId()
+	u := &Unit{Id: id, Type: pType.Id, Ticks: pType.Ticks, Health: pType.Health}
+	c.Units.Add(u)
+	return id
+}
+
+// Start the training of a Unit of the given UnitType (id).
+// The whole chain of requirements will be checked.
+func (c *City) Train(w *World, idType uint64) (uint64, error) {
+	pType := w.UnitTypeGet(idType)
 	if pType == nil {
 		return 0, errors.New("Unit Type not found")
 	}
-	found := false
-	for _, b := range c.Buildings {
-		if b.Type == pType.RequiredBuilding {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if !c.UnitAllowed(pType) {
 		return 0, errors.New("Precondition Failed: no suitable building")
 	}
 
-	id := w.getNextId()
-	c.Units.Add(&Unit{Id: id, Type: uId, Ticks: pType.Ticks, Health: pType.Health})
-	return id, nil
+	return c.UnitCreate(w, pType), nil
 }
 
 func (c *City) Study(w *World, kId uint64) (uint64, error) {

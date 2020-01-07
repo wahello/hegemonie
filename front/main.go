@@ -3,13 +3,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package main
+package front
 
 import (
+	"context"
 	"flag"
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/pongo2"
 	"github.com/go-macaron/session"
+	"github.com/google/subcommands"
 	. "github.com/jfsmig/hegemonie/common/client"
 	"github.com/jfsmig/hegemonie/common/mapper"
 	"gopkg.in/macaron.v1"
@@ -45,7 +47,29 @@ type FormCityTrain struct {
 	UnitId      uint64 `form:"uid" binding:"Required"`
 }
 
-type front struct {
+type FormCityUnitTransfer struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	UnitId      uint64 `form:"uid" binding:"Required"`
+	ArmyId      uint64 `form:"aid" binding:"Required"`
+}
+
+type FormCityArmyCreate struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	Name        string `form:"name" binding:"Required"`
+}
+
+type FormCityArmyCommand struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	ArmyId      uint64 `form:"aid" binding:"Required"`
+
+	Cell   uint64 `form:"cell" binding:"Required"`
+	Action uint64 `form:"what" binding:"Required"`
+}
+
+type FrontService struct {
 	endpointNorth string
 	endpointWorld string
 	dirTemplates  string
@@ -74,7 +98,7 @@ func ptou(p interface{}) uint64 {
 	return atou(p.(string))
 }
 
-func (f *front) routePages(m *macaron.Macaron) {
+func (f *FrontService) routePages(m *macaron.Macaron) {
 	m.Get("/",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 			ctx.Data["Title"] = "Hegemonie"
@@ -175,7 +199,7 @@ func (f *front) routePages(m *macaron.Macaron) {
 			// ctx.HTML(200, "map")
 
 			// TODO: VDO: handle error
-			resp, _ := http.Get("http://" + f.endpointWorld + "/world/places")
+			resp, _ := http.Get("http://" + f.endpointWorld + "/region/places")
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				// Backend error
@@ -184,7 +208,7 @@ func (f *front) routePages(m *macaron.Macaron) {
 			}
 			mapBytes, _ := ioutil.ReadAll(resp.Body)
 
-			resp2, _ := http.Get("http://" + f.endpointWorld + "/world/cities")
+			resp2, _ := http.Get("http://" + f.endpointWorld + "/region/cities")
 			defer resp2.Body.Close()
 			if resp2.StatusCode != http.StatusOK {
 				// Backend error
@@ -219,12 +243,12 @@ func (f *front) routePages(m *macaron.Macaron) {
 		})
 }
 
-func (f *front) routeForms(m *macaron.Macaron) {
+func (f *FrontService) routeForms(m *macaron.Macaron) {
 	doLogIn := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormLogin) {
 		// Cleanup a previous session
 		sess.Flush()
 
-		// Authenticate the user by the world-server
+		// Authenticate the user by the region-server
 		reply := AuthReply{}
 		args := AuthArgs{UserMail: info.UserMail, UserPass: info.UserPass}
 		err := f.region.Auth(&args, &reply)
@@ -307,6 +331,54 @@ func (f *front) routeForms(m *macaron.Macaron) {
 		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
+	doCityCreateArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCreate) {
+		reply := CityCreateArmyReply{}
+		args := CityCreateArmyArgs{
+			UserId:      ptou(sess.Get("userid")),
+			CharacterId: info.CharacterId,
+			CityId:      info.CityId,
+			Name:        info.Name,
+		}
+		err := f.region.CityCreateArmy(&args, &reply)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		}
+		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
+	doCityTransferUnit := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityUnitTransfer) {
+		reply := CityTransferUnitReply{}
+		args := CityTransferUnitArgs{
+			UserId:      ptou(sess.Get("userid")),
+			CharacterId: info.CharacterId,
+			CityId:      info.CityId,
+			UnitId:      info.UnitId,
+			ArmyId:      info.ArmyId,
+		}
+		err := f.region.CityTransferUnit(&args, &reply)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		}
+		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
+	doCityCommandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCommand) {
+		reply := CityCommandArmyReply{}
+		args := CityCommandArmyArgs{
+			UserId:      ptou(sess.Get("userid")),
+			CharacterId: info.CharacterId,
+			CityId:      info.CityId,
+			ArmyId:      info.ArmyId,
+			Cell:        info.Cell,
+			Action:      info.Action,
+		}
+		err := f.region.CityCommandArmy(&args, &reply)
+		if err != nil {
+			flash.Error("Action error: " + err.Error())
+		}
+		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
 	m.Post("/action/login", binding.Bind(FormLogin{}), doLogIn)
 	m.Post("/action/logout", doLogOut)
 	m.Get("/action/logout", doLogOut)
@@ -315,9 +387,12 @@ func (f *front) routeForms(m *macaron.Macaron) {
 	m.Post("/action/city/study", binding.Bind(FormCityStudy{}), doCityStudy)
 	m.Post("/action/city/build", binding.Bind(FormCityBuild{}), doCityBuild)
 	m.Post("/action/city/train", binding.Bind(FormCityTrain{}), doCityTrain)
+	m.Post("/action/city/army/command", binding.Bind(FormCityArmyCommand{}), doCityCommandArmy)
+	m.Post("/action/city/army/create", binding.Bind(FormCityArmyCreate{}), doCityCreateArmy)
+	m.Post("/action/city/unit/transfer", binding.Bind(FormCityUnitTransfer{}), doCityTransferUnit)
 }
 
-func (f *front) routeMiddlewares(m *macaron.Macaron) {
+func (f *FrontService) routeMiddlewares(m *macaron.Macaron) {
 	// TODO(jfs): The secret has to be shared among all the running instances
 	m.SetDefaultCookieSecret(randomSecret())
 	m.Use(macaron.Static(f.dirStatic, macaron.StaticOptions{
@@ -358,24 +433,31 @@ func randomSecret() string {
 	return sb.String()
 }
 
-func main() {
-	var err error
-	var f front
+func (self *FrontService) Name() string     { return "front" }
+func (self *FrontService) Synopsis() string { return "Start a front service." }
+func (self *FrontService) Usage() string { return "front\n" }
 
-	flag.StringVar(&f.endpointNorth, "north", "127.0.0.1:8080", "TCP/IP North endpoint")
-	flag.StringVar(&f.endpointWorld, "world", "127.0.0.1:8081", "World Server to be contacted")
-	flag.StringVar(&f.dirTemplates, "templates", "/var/lib/hegemonie/templates", "Directory with the HTML tmeplates")
-	flag.StringVar(&f.dirStatic, "static", "/var/lib/hegemonie/static", "Directory with the static files")
-	flag.Parse()
+func (self *FrontService) SetFlags(f *flag.FlagSet) {
+	f.StringVar(&self.endpointNorth, "north", ":8080", "TCP/IP North endpoint")
+	f.StringVar(&self.endpointWorld, "region", "127.0.0.1:8081", "World Server to be contacted")
+	f.StringVar(&self.dirTemplates, "templates", "/var/lib/hegemonie/templates", "Directory with the HTML tmeplates")
+	f.StringVar(&self.dirStatic, "static", "/var/lib/hegemonie/static", "Directory with the static files")
+}
+
+func (p *FrontService) Execute(_ context.Context, f0 *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+	var err error
 
 	m := macaron.Classic()
-	f.region = DialClientTcp(f.endpointWorld)
-	f.routeMiddlewares(m)
-	f.routeForms(m)
-	f.routePages(m)
+	p.region = DialClientTcp(p.endpointWorld)
+	p.routeMiddlewares(m)
+	p.routeForms(m)
+	p.routePages(m)
 
-	err = http.ListenAndServe(f.endpointNorth, m)
+	err = http.ListenAndServe(p.endpointNorth, m)
 	if err != nil {
 		log.Printf("Server error: %s", err.Error())
+		return subcommands.ExitFailure
+	} else {
+		return subcommands.ExitSuccess
 	}
 }

@@ -11,12 +11,12 @@ function finish() {
 	wait
 }
 
-hege-front \
-	-templates $PWD/hege-front/templates \
-	-static $PWD/hege-front/static \
+hegemonie front \
+	-templates $PWD/front/templates \
+	-static $PWD/front/static \
 	&
 
-hege-world \
+hegemonie region \
 	-load $CONFIG \
 	&
 

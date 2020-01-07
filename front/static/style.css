@@ -1,0 +1,144 @@
+body {
+    background-color: #444;
+}
+
+* {
+    font-family: Helvetica, Tahoma, sans-serif;
+    color: black;
+}
+
+h1 {
+    font-size: 32px;
+}
+
+header h1 {
+    font-size: 48px;
+    color: cyan;
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+
+h2 {
+    font-size: 24px;
+}
+
+h3 {
+    font-size: 16px;
+}
+
+p, li {
+    font-size: 14px;
+}
+
+a {
+    color: orangered;
+}
+
+em {
+    color: #000000;
+    font-weight: bold;
+}
+
+td {
+    font-size: 14px;
+    padding: 0px 5px 0px 5px;
+    text-align: right;
+}
+
+thead td {
+    border-bottom: 1px solid black;
+}
+
+thead td {
+    font-weight: bold;
+}
+
+tfoot td {
+    font-weight: bold;
+    border-top: 1px solid black;
+}
+
+td.title {
+    padding: 0px 20px 0px 5px;
+}
+
+footer {
+    width: 500px;
+    margin: auto;
+}
+
+footer p {
+    text-align: center;
+}
+
+main section {
+    margin: auto;
+    width: 1024px;
+}
+
+nav {
+    position: fixed;
+    text-align: left;
+    left: 0;
+    top: 100px;
+}
+
+nav a {
+    display: block;
+    color: yellow;
+    font-weight: bolder;
+    font-size: 24px;
+    text-decoration: none;
+}
+
+div {
+    background-color: white;
+}
+
+div h2 {
+    /*line-height: 20px;*/
+    padding: 5px;
+    margin: 0px;
+    color: deeppink;
+}
+
+@media screen {
+    @media (min-width: 1366px) {
+        main section {
+            width: 1000px;
+            margin: auto;
+        }
+
+        section.col2 {
+            display: grid;
+            grid-template-columns: auto auto;
+        }
+
+        section.col2 div {
+            border-left:   9px solid darkgray;
+            border-right:  9px solid lightgray;
+            border-top:    9px solid white;
+            border-bottom: 9px solid gray;
+            margin: 5px;
+            padding: 10px;
+            width: 460px;
+        }
+
+        section.col2 div.large {
+            grid-column: 1 / 3;
+            width: 960px;
+        }
+    }
+    @media (max-width: 1366px) {
+        main section {
+            width: 100%;
+            margin: 0;
+        }
+
+        section.col2 {
+            display: grid;
+            grid-template-columns: auto;
+        }
+    }
+}
