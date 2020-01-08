@@ -10,6 +10,7 @@ import (
 	"flag"
 	"github.com/google/subcommands"
 	"os"
+
 	"github.com/jfsmig/hegemonie/region"
 	"github.com/jfsmig/hegemonie/front"
 )

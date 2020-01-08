@@ -19,8 +19,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/jfsmig/hegemonie/common/world"
 	. "github.com/jfsmig/hegemonie/common/client"
-	. "github.com/jfsmig/hegemonie/common/world"
 )
 
 type RegionCommand struct {
@@ -30,7 +30,7 @@ type RegionCommand struct {
 }
 
 type RegionService struct {
-	w *World
+	w *world.World
 	pathSave string
 }
 
@@ -171,21 +171,22 @@ func (self *RegionCommand) Synopsis() string { return "Start a region service." 
 func (self *RegionCommand) Usage() string { return "region ENDPOINT\n" }
 
 func (self *RegionCommand) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&self.north, "north", ":8081", "File to be loaded")
-	f.StringVar(&self.pathLoad, "load", "", "File to be loaded")
-	f.StringVar(&self.srv.pathSave, "save", "/tmp/hegemonie/data", "Directory for persistent")
+	f.StringVar(&self.north, "north", ":8080", "File to be loaded")
+	f.StringVar(&self.pathLoad, "load", "/data/defs", "File to be loaded")
+	f.StringVar(&self.srv.pathSave, "save", "/data/dump", "Directory for persistent")
 }
 
 func (self *RegionCommand) Execute(_ context.Context, f0 *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	var err error
 
-	self.srv.w = new(World)
+	self.srv.w = new(world.World)
 	self.srv.w.Init()
 
 	if self.srv.pathSave != "" {
 		err = os.MkdirAll(self.srv.pathSave, 0755)
 		if err != nil {
-			log.Fatalf("Failed to create [%s]: %s", self.srv.pathSave, err.Error())
+			log.Printf("Failed to create [%s]: %s", self.srv.pathSave, err.Error())
+			return subcommands.ExitFailure
 		}
 	}
 
@@ -205,30 +206,35 @@ func (self *RegionCommand) Execute(_ context.Context, f0 *flag.FlagSet, _ ...int
 			p := self.pathLoad + "/" + section.suffix
 			in, err = os.Open(p)
 			if err != nil {
-				log.Fatalf("Failed to load the World from [%s]: %s", p, err.Error())
+				log.Printf("Failed to load the World from [%s]: %s", p, err.Error())
+				return subcommands.ExitFailure
 			}
 			err = json.NewDecoder(in).Decode(section.obj)
 			in.Close()
 			if err != nil {
-				log.Fatalf("Failed to load the World from [%s]: %s", p, err.Error())
+				log.Printf("Failed to load the World from [%s]: %s", p, err.Error())
+				return subcommands.ExitFailure
 			}
 		}
 		err = self.srv.w.PostLoad()
 		if err != nil {
-			log.Fatalf("Inconsistent World from [%s]: %s", self.pathLoad, err.Error())
+			log.Printf("Inconsistent World from [%s]: %s", self.pathLoad, err.Error())
+			return subcommands.ExitFailure
 		}
 	}
 
 	err = self.srv.w.Check()
 	if err != nil {
-		log.Fatalf("Inconsistent World: %s", err.Error())
+		log.Printf("Inconsistent World: %s", err.Error())
+		return subcommands.ExitFailure
 	}
 
 	var srv Region = &RegionService{w: self.srv.w}
 
 	err = rpc.RegisterName("Region", srv)
 	if err != nil {
-		log.Fatalf("RPC error: %s", err.Error())
+		log.Printf("RPC error: %s", err.Error())
+		return subcommands.ExitFailure
 	}
 
 	rpc.HandleHTTP()
@@ -236,12 +242,14 @@ func (self *RegionCommand) Execute(_ context.Context, f0 *flag.FlagSet, _ ...int
 
 	if err != nil {
 		log.Printf("Server error: %s", err.Error())
+		return subcommands.ExitFailure
 	}
 
 	if self.srv.pathSave != "" {
 		err = self.srv.save()
 		if err != nil {
-			log.Fatalf("Failed to save the World at exit: %s", err.Error())
+			log.Printf("Failed to save the World at exit: %s", err.Error())
+			return subcommands.ExitFailure
 		}
 	}
 

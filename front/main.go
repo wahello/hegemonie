@@ -12,8 +12,6 @@ import (
 	"github.com/go-macaron/pongo2"
 	"github.com/go-macaron/session"
 	"github.com/google/subcommands"
-	. "github.com/jfsmig/hegemonie/common/client"
-	"github.com/jfsmig/hegemonie/common/mapper"
 	"gopkg.in/macaron.v1"
 	"io/ioutil"
 	"log"
@@ -22,6 +20,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jfsmig/hegemonie/common/client"
+	"github.com/jfsmig/hegemonie/common/mapper"
 )
 
 type FormLogin struct {
@@ -75,7 +76,7 @@ type FrontService struct {
 	dirTemplates  string
 	dirStatic     string
 
-	region *RegionClientTcp
+	region *hclient.RegionClientTcp
 }
 
 func utoa(u uint64) string {
@@ -120,8 +121,8 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 			}
 
 			// Query the World server for the user
-			args := UserShowArgs{UserId: userid}
-			reply := UserShowReply{}
+			args := hclient.UserShowArgs{UserId: userid}
+			reply := hclient.UserShowReply{}
 			err := f.region.UserShow(&args, &reply)
 			if err != nil {
 				flash.Warning("Backend error error: " + err.Error())
@@ -145,8 +146,8 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 			}
 
 			// Query the World server for the Character
-			args := CharacterShowArgs{UserId: userid, CharacterId: charid}
-			reply := CharacterShowReply{}
+			args := hclient.CharacterShowArgs{UserId: userid, CharacterId: charid}
+			reply := hclient.CharacterShowReply{}
 			err := f.region.CharacterShow(&args, &reply)
 			if err != nil {
 				flash.Warning("Backend error: " + err.Error())
@@ -172,8 +173,8 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 			}
 
 			// Query the World server for the Character
-			args := CityShowArgs{UserId: userid, CharacterId: charid, CityId: landid}
-			reply := CityShowReply{}
+			args := hclient.CityShowArgs{UserId: userid, CharacterId: charid, CityId: landid}
+			reply := hclient.CityShowReply{}
 			err := f.region.CityShow(&args, &reply)
 			if err != nil {
 				flash.Warning("Character error: " + err.Error())
@@ -249,8 +250,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		sess.Flush()
 
 		// Authenticate the user by the region-server
-		reply := AuthReply{}
-		args := AuthArgs{UserMail: info.UserMail, UserPass: info.UserPass}
+		reply := hclient.AuthReply{}
+		args := hclient.AuthArgs{UserMail: info.UserMail, UserPass: info.UserPass}
 		err := f.region.Auth(&args, &reply)
 		if err != nil {
 			flash.Error("Authentication error: " + err.Error())
@@ -271,7 +272,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doMove := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		err := f.region.RoundMove(&RoundMoveArgs{}, &RoundMoveReply{})
+		err := f.region.RoundMove(&hclient.RoundMoveArgs{}, &hclient.RoundMoveReply{})
 		if err != nil {
 			flash.Error("Action error: " + err.Error())
 		}
@@ -279,7 +280,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doProduce := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		err := f.region.RoundProduce(&RoundProduceArgs{}, &RoundProduceReply{})
+		err := f.region.RoundProduce(&hclient.RoundProduceArgs{}, &hclient.RoundProduceReply{})
 		if err != nil {
 			flash.Error("Action error: " + err.Error())
 		}
@@ -287,8 +288,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityStudy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityStudy) {
-		reply := CityStudyReply{}
-		args := CityStudyArgs{
+		reply := hclient.CityStudyReply{}
+		args := hclient.CityStudyArgs{
 			UserId:      ptou(sess.Get("userid")),
 			CharacterId: info.CharacterId,
 			CityId:      info.CityId,
@@ -302,8 +303,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityBuild := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityBuild) {
-		reply := CityBuildReply{}
-		args := CityBuildArgs{
+		reply := hclient.CityBuildReply{}
+		args := hclient.CityBuildArgs{
 			UserId:      ptou(sess.Get("userid")),
 			CharacterId: info.CharacterId,
 			CityId:      info.CityId,
@@ -317,8 +318,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityTrain := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityTrain) {
-		reply := CityTrainReply{}
-		args := CityTrainArgs{
+		reply := hclient.CityTrainReply{}
+		args := hclient.CityTrainArgs{
 			UserId:      ptou(sess.Get("userid")),
 			CharacterId: info.CharacterId,
 			CityId:      info.CityId,
@@ -332,8 +333,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityCreateArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCreate) {
-		reply := CityCreateArmyReply{}
-		args := CityCreateArmyArgs{
+		reply := hclient.CityCreateArmyReply{}
+		args := hclient.CityCreateArmyArgs{
 			UserId:      ptou(sess.Get("userid")),
 			CharacterId: info.CharacterId,
 			CityId:      info.CityId,
@@ -347,8 +348,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityTransferUnit := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityUnitTransfer) {
-		reply := CityTransferUnitReply{}
-		args := CityTransferUnitArgs{
+		reply := hclient.CityTransferUnitReply{}
+		args := hclient.CityTransferUnitArgs{
 			UserId:      ptou(sess.Get("userid")),
 			CharacterId: info.CharacterId,
 			CityId:      info.CityId,
@@ -363,8 +364,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityCommandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCommand) {
-		reply := CityCommandArmyReply{}
-		args := CityCommandArmyArgs{
+		reply := hclient.CityCommandArmyReply{}
+		args := hclient.CityCommandArmyArgs{
 			UserId:      ptou(sess.Get("userid")),
 			CharacterId: info.CharacterId,
 			CityId:      info.CityId,
@@ -399,7 +400,7 @@ func (f *FrontService) routeMiddlewares(m *macaron.Macaron) {
 		Prefix: "static",
 	}))
 	m.Use(pongo2.Pongoer(pongo2.Options{
-		Directory:       f.dirTemplates,
+		Directory:       f.dirTemplates + "/default",
 		Extensions:      []string{".tpl", ".html", ".tmpl"},
 		HTMLContentType: "text/html",
 		Charset:         "UTF-8",
@@ -439,16 +440,23 @@ func (self *FrontService) Usage() string { return "front\n" }
 
 func (self *FrontService) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&self.endpointNorth, "north", ":8080", "TCP/IP North endpoint")
-	f.StringVar(&self.endpointWorld, "region", "127.0.0.1:8081", "World Server to be contacted")
-	f.StringVar(&self.dirTemplates, "templates", "/var/lib/hegemonie/templates", "Directory with the HTML tmeplates")
-	f.StringVar(&self.dirStatic, "static", "/var/lib/hegemonie/static", "Directory with the static files")
+	f.StringVar(&self.endpointWorld, "region", "", "World Server to be contacted")
+	f.StringVar(&self.dirTemplates, "templates", "/data/templates", "Directory with the HTML tmeplates")
+	f.StringVar(&self.dirStatic, "static", "/data/static", "Directory with the static files")
 }
 
 func (p *FrontService) Execute(_ context.Context, f0 *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	var err error
 
+	if p.endpointWorld == "" {
+		log.Println("Missing region URL")
+		return subcommands.ExitFailure
+	}
+	// TODO(jfs): check the /static directory exists
+	// TODO(jfs): check the /templates directory exists
+
 	m := macaron.Classic()
-	p.region = DialClientTcp(p.endpointWorld)
+	p.region = hclient.DialClientTcp(p.endpointWorld)
 	p.routeMiddlewares(m)
 	p.routeForms(m)
 	p.routePages(m)
@@ -457,7 +465,7 @@ func (p *FrontService) Execute(_ context.Context, f0 *flag.FlagSet, _ ...interfa
 	if err != nil {
 		log.Printf("Server error: %s", err.Error())
 		return subcommands.ExitFailure
-	} else {
-		return subcommands.ExitSuccess
 	}
+
+	return subcommands.ExitSuccess
 }

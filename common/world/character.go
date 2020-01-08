@@ -5,7 +5,9 @@
 
 package world
 
-import "github.com/juju/errors"
+import (
+	"errors"
+)
 
 func (w *World) CharacterGet(cid uint64) *Character {
 	// TODO(jfs): lookup in the sorted array
