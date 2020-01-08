@@ -400,7 +400,7 @@ func (f *FrontService) routeMiddlewares(m *macaron.Macaron) {
 		Prefix: "static",
 	}))
 	m.Use(pongo2.Pongoer(pongo2.Options{
-		Directory:       f.dirTemplates + "/default",
+		Directory:       f.dirTemplates,
 		Extensions:      []string{".tpl", ".html", ".tmpl"},
 		HTMLContentType: "text/html",
 		Charset:         "UTF-8",
