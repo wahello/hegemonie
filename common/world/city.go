@@ -23,6 +23,40 @@ func (s *SetOfCities) Swap(i, j int) {
 	(*s)[j] = tmp
 }
 
+// Return total Popularity of the current City (permanent + transient)
+func (c *City) Popularity(w *World) int64 {
+	var pop int64 = c.Pop
+
+	// Add Transient values for Units in the Armies
+	for _, a := range c.armies {
+		for _, u := range a.Units {
+			ut := w.UnitTypeGet(u.Type)
+			pop += ut.PopBonus
+		}
+		pop += w.Definitions.PopBonusArmyAlive
+	}
+
+	// Add Transient values for Units in the City
+	for _, u := range c.Units {
+		ut := w.UnitTypeGet(u.Type)
+		pop += ut.PopBonus
+	}
+
+	// Add Transient values for Buildings
+	for _, b := range c.Buildings {
+		bt := w.BuildingTypeGet(b.Type)
+		pop += bt.PopBonus
+	}
+
+	// Add Transient values for Knowledges
+	for _, k := range c.Knowledges {
+		kt := w.KnowledgeTypeGet(k.Type)
+		pop += kt.PopBonus
+	}
+
+	return pop
+}
+
 func (w *World) CityGet(id uint64) *City {
 	for _, c := range w.Live.Cities {
 		if c.Id == id {
@@ -185,7 +219,7 @@ func (c *City) Show(w *World) (view CityView) {
 	for _, b := range c.Buildings {
 		v := BuildingView{}
 		v.Id = b.Id
-		v.Type = *w.GetBuildingType(b.Type)
+		v.Type = *w.BuildingTypeGet(b.Type)
 		view.Buildings = append(view.Buildings, v)
 		for i := 0; i < ResourceMax; i++ {
 			view.Production.Buildings.Plus[i] += v.Type.Prod.Plus[i]
@@ -262,7 +296,7 @@ func (c *City) Produce(w *World) {
 
 	for _, b := range c.Buildings {
 		if b.Ticks > 0 {
-			bt := w.GetBuildingType(b.Id)
+			bt := w.BuildingTypeGet(b.Id)
 			if post.GreaterOrEqualTo(&bt.Cost) {
 				post.Remove(&bt.Cost)
 				b.Ticks--
@@ -413,7 +447,7 @@ func (c *City) Study(w *World, kId uint64) (uint64, error) {
 }
 
 func (c *City) Build(w *World, bId uint64) (uint64, error) {
-	pType := w.GetBuildingType(bId)
+	pType := w.BuildingTypeGet(bId)
 	if pType == nil {
 		return 0, errors.New("Building Type not found")
 	}
@@ -444,4 +478,15 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 	id := w.getNextId()
 	c.Buildings.Add(&Building{Id: id, Type: bId, Ticks: pType.Ticks})
 	return id, nil
+}
+
+func (w *World) ScoreBoardCompute() CityScoreBoard {
+	w.rw.RLock()
+	defer w.rw.RUnlock()
+
+	csb := make(CityScoreBoard, 0, len(w.Live.Cities))
+	for _, c := range w.Live.Cities {
+		csb = append(csb, CityScore{Id: c.Id, Name: c.Name, Score: c.Popularity(w)})
+	}
+	return csb
 }

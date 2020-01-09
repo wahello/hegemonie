@@ -60,8 +60,11 @@ type Region interface {
 	// Produce the resources in each City
 	RoundProduce(args *RoundProduceArgs, reply *RoundProduceReply) error
 
-	// Pley one movement step for each concerned Army
+	// Play one movement step for each concerned Army
 	RoundMove(args *RoundMoveArgs, reply *RoundMoveReply) error
+
+	// Return the current ScoreBoard of the whole Region.
+	GetScoreBoard(args *GetScoreBoardArgs, reply *GetScoreBoardReply) error
 }
 
 type AuthArgs struct {
@@ -218,3 +221,10 @@ type CharacterShowArgs struct {
 type CharacterShowReply struct {
 	View world.CharacterView
 }
+
+type GetScoreBoardArgs struct{}
+
+type GetScoreBoardReply struct{
+	Board world.CityScoreBoard
+}
+

@@ -166,6 +166,11 @@ func (s *RegionService) RoundMove(args *RoundMoveArgs, reply *RoundMoveReply) er
 	return nil
 }
 
+func (s *RegionService) GetScoreBoard(args *GetScoreBoardArgs, reply *GetScoreBoardReply) error {
+	reply.Board = s.w.ScoreBoardCompute()
+	return nil
+}
+
 func (self *RegionCommand) Name() string     { return "region" }
 func (self *RegionCommand) Synopsis() string { return "Start a region service." }
 func (self *RegionCommand) Usage() string { return "region ENDPOINT\n" }

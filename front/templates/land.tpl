@@ -1,5 +1,4 @@
 {% include "header.tpl" %}
-<p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p>
 
 <section class="col2">
     <div>

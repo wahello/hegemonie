@@ -121,18 +121,27 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 			}
 
 			// Query the World server for the user
-			args := hclient.UserShowArgs{UserId: userid}
 			reply := hclient.UserShowReply{}
-			err := f.region.UserShow(&args, &reply)
+			err := f.region.UserShow(&hclient.UserShowArgs{UserId: userid}, &reply)
 			if err != nil {
 				flash.Warning("Backend error error: " + err.Error())
 				ctx.Redirect("/game/user")
-			} else {
-				ctx.Data["Title"] = reply.View.Name
-				ctx.Data["userid"] = utoa(userid)
-				ctx.Data["User"] = &reply.View
-				ctx.HTML(200, "user")
+				return
 			}
+
+			sReply := hclient.GetScoreBoardReply{}
+			err = f.region.GetScoreBoard(&hclient.GetScoreBoardArgs{}, &sReply)
+			if err != nil {
+				flash.Warning("Backend error error: " + err.Error())
+				ctx.Redirect("/game/user")
+				return
+			}
+
+			ctx.Data["Title"] = reply.View.Name
+			ctx.Data["userid"] = utoa(userid)
+			ctx.Data["User"] = &reply.View
+			ctx.Data["Score"] = &sReply.Board
+			ctx.HTML(200, "user")
 		})
 	m.Get("/game/character",
 		func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {

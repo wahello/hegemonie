@@ -11,8 +11,8 @@ import (
 	"github.com/google/subcommands"
 	"os"
 
-	"github.com/jfsmig/hegemonie/region"
 	"github.com/jfsmig/hegemonie/front"
+	"github.com/jfsmig/hegemonie/region"
 )
 
 func main() {
@@ -21,8 +21,8 @@ func main() {
 	subcommands.Register(subcommands.CommandsCommand(), "Helpers")
 	subcommands.Register(&front.FrontService{}, "Actions")
 	subcommands.Register(&region.RegionCommand{}, "Actions")
-    flag.Parse()
+	flag.Parse()
 
-    ctx := context.Background()
-    os.Exit(int(subcommands.Execute(ctx)))
+	ctx := context.Background()
+	os.Exit(int(subcommands.Execute(ctx)))
 }

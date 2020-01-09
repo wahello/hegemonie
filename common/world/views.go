@@ -111,3 +111,12 @@ type StockView struct {
 	// including the implicit town hall.
 	Usage Resources
 }
+
+type CityScore struct {
+	Id    uint64
+	Name  string
+	Score int64
+}
+
+type CityScoreBoard []CityScore
+

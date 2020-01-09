@@ -50,6 +50,19 @@ type KnowledgeType struct {
 	Id        uint64
 	Name      string
 	Ticks     uint `json:",omitempty"`
+
+	// Transient bonus of Popularity, when the Knowledge is present
+	PopBonus int64
+
+	// Permanent bonus of Popularity when the Knowledge is achieved
+	PopBonusLearn int64
+
+	// Permanent bonus of Popularity (to the owner) when the Knowledge is stolen
+	PopBonusStealVictim int64
+
+	// Permanent bonus of Popularity (to the robber) when the Knowledge is stolen
+	PopBonusStealActor int64
+
 	Cost      Resources
 	Requires  []uint64
 	Conflicts []uint64
@@ -76,6 +89,21 @@ type BuildingType struct {
 
 	// Has the building to be unique a the City
 	Unique bool `json:",omitempty"`
+
+	// Transient bonus of Popularity, when the Building is alive
+	PopBonus int64
+
+	// Permanent bonus of Popularity given when the Building is achieved
+	PopBonusBuild int64
+
+	// Permanent bonus of Popularity given to the owner of the Building when it is destroyed.
+	PopBonusFall int64
+
+	// Permanent bonus of Popularity given to the destroyer of the Building
+	PopBonusDestroy int64
+
+	// Permanent bonus of Popularity given to the owner of the Building when it is dismantled.
+	PopBonusDismantle int64
 
 	// Impat of the current Building on the total storage capacity of the City.
 	Stock ResourceModifiers
@@ -132,6 +160,10 @@ type City struct {
 
 	// The display name of the current City
 	Name string
+
+	// Permanent Popularity of the current City
+	// The total value is the permanent value plus several "transient" bonus
+	Pop int64
 
 	// Resources stock owned by the current City
 	Stock Resources
@@ -190,8 +222,26 @@ type UnitType struct {
 	// Instantiation cost of the current UnitType
 	Cost Resources
 
+	// Transient bonus of Popularity, when the Unit is alive
+	PopBonus int64
+
+	// Permanent bonus of Popularity given when the Unit's training is done
+	PopBonusTrain int64
+
+	// Permanent bonus of Popularity given to the owner of the Unit when it dies
+	PopBonusDeath int64
+
+	// Permanent bonus of Popularity given to the killer of the Unit
+	PopBonusKill int64
+
+	// Permanent bonus of Popularity given to the ownerof the Unit when it is disbanded.
+	PopBonusDisband int64
+
 	// Might positive (resource boost) or more commonly negative (maintenance cost)
 	Prod ResourceModifiers
+
+	// Required Popularity to start trzaining this type of troop
+	ReqPop int64
 
 	// A UnitType is only dependant on the presence of a Building of that BuildingType.
 	RequiredBuilding uint64
@@ -302,6 +352,15 @@ type DefinitionsBase struct {
 	Units      SetOfUnitTypes
 	Buildings  SetOfBuildingTypes
 	Knowledges SetOfKnowledgeTypes
+
+	// Permanent bonus to the Popularity when a City creates an Army
+	PopBonusArmyCreate int64
+
+	// Permanent bonus to the Popularity when a City disband an Army
+	PopBonusArmyDisband int64
+
+	// Transient bonus to the Popularity of a City for each of its live Army
+	PopBonusArmyAlive int64
 }
 
 type LiveBase struct {

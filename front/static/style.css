@@ -1,5 +1,5 @@
 body {
-    background-color: #444;
+    background-color: gray;
 }
 
 * {
@@ -13,7 +13,7 @@ h1 {
 
 header h1 {
     font-size: 48px;
-    color: cyan;
+    color: darkslategray;
     position: fixed;
     left: 0;
     top: 0;
@@ -32,7 +32,7 @@ p, li {
 }
 
 a {
-    color: orangered;
+    color: seagreen;
 }
 
 em {
@@ -72,9 +72,26 @@ footer p {
     text-align: center;
 }
 
+footer a {
+    color: yellowgreen;
+}
+
 main section {
     margin: auto;
     width: 1024px;
+}
+
+aside {
+    position: fixed;
+    text-align: left;
+    left: 0;
+    top: 400px;
+}
+
+aside p {
+    color: orange;
+    font-weight: bold;
+    font-size: 24px;
 }
 
 nav {
@@ -86,21 +103,29 @@ nav {
 
 nav a {
     display: block;
-    color: yellow;
+    color: yellowgreen;
     font-weight: bolder;
     font-size: 24px;
     text-decoration: none;
 }
 
 div {
-    background-color: white;
+    background-color: #F0F0F0;
 }
 
 div h2 {
     /*line-height: 20px;*/
     padding: 5px;
     margin: 0px;
-    color: deeppink;
+    color: darkslategray;
+}
+
+form * {
+    border: 1px solid yellowgreen;
+    padding: 5px;
+    margin: 5px;
+    color: darkgreen;
+    font-weight: bold;
 }
 
 @media screen {
@@ -116,10 +141,7 @@ div h2 {
         }
 
         section.col2 div {
-            border-left:   9px solid darkgray;
-            border-right:  9px solid lightgray;
-            border-top:    9px solid white;
-            border-bottom: 9px solid gray;
+            border: 2px solid darkslategray;
             margin: 5px;
             padding: 10px;
             width: 460px;

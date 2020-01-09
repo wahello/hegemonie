@@ -26,7 +26,7 @@ func (s *SetOfBuildingTypes) Add(b *BuildingType) {
 	sort.Sort(s)
 }
 
-func (w *World) GetBuildingType(id uint64) *BuildingType {
+func (w *World) BuildingTypeGet(id uint64) *BuildingType {
 	for _, i := range w.Definitions.Buildings {
 		if i.Id == id {
 			return i

@@ -202,3 +202,12 @@ func (s *RegionClientTcp) RoundMove(args *RoundMoveArgs, reply *RoundMoveReply) 
 	defer cnx.Close()
 	return cnx.Call(kPrefix+"RoundMove", args, reply)
 }
+
+func (s *RegionClientTcp) GetScoreBoard(args *GetScoreBoardArgs, reply *GetScoreBoardReply) error {
+	cnx, err := rpc.DialHTTP("tcp", s.endpoint)
+	if err != nil {
+		return err
+	}
+	defer cnx.Close()
+	return cnx.Call(kPrefix+"GetScoreBoard", args, reply)
+}

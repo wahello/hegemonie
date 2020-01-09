@@ -1,7 +1,5 @@
 {% include "header.tpl" %}
 
-<p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p>
-
 <section class="col2">
     <div>
         <h2>Characters</h2>
@@ -15,6 +13,28 @@
         <h2>Admin</h2>
         <form action="/action/produce" method="post"><input type="submit" value="Produce"/></form>
         <form action="/action/move" method="post"><input type="submit" value="Movement"/></form>
+    </div>
+
+    <div class="large">
+        <h2>Scoreboard</h2>
+        <table>
+            <thead>
+            <tr>
+                <td>Id</td>
+                <td>Name</td>
+                <td>Score</td>
+            </tr>
+            </thead>
+            <tbody>
+            {% for s in Score %}
+            <tr>
+                <td>{{s.Id}}</td>
+                <td>{{s.Name}}</td>
+                <td>{{s.Score}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </section>
 
