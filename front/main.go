@@ -338,6 +338,8 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		err := f.region.CityTrain(&args, &reply)
 		if err != nil {
 			flash.Error("Action error: " + err.Error())
+		} else {
+			flash.Info("Started!")
 		}
 		ctx.Redirect("/game/land?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}

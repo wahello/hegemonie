@@ -14,12 +14,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 <link rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-<header><h1>{{Title}}</h1></header>
+    <header>
+        <h1>{{Title}}</h1>
+    </header>
     <nav>
         {% if userid %}<a href="/game/user">User</a>{% endif %}
         {% if cid %}<a href="/game/character?cid={{ cid }}">Character</a>{% endif %}
         {% if lid %}<a href="/game/land?cid={{ cid }}&lid={{ lid }}">Land</a>{% endif %}
         {% if userid %}<a href="/action/logout">Log-Out</a>{% endif %}
     </nav>
-    <aside><p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p></aside>
-<main>
+    <aside>
+        <p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p>
+    </aside>
+    <main>

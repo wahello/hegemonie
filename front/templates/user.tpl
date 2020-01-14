@@ -1,6 +1,5 @@
 {% include "header.tpl" %}
 
-<section class="col2">
     <div>
         <h2>Characters</h2>
         <ul>
@@ -36,6 +35,5 @@
             </tbody>
         </table>
     </div>
-</section>
 
 {% include "footer.tpl" %}
