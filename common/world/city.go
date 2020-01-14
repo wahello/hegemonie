@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,20 +7,50 @@ package world
 
 import (
 	"errors"
+	"sort"
 )
 
-func (s *SetOfCities) Len() int {
-	return len(*s)
+func (s SetOfCities) Len() int           { return len(s) }
+func (s SetOfCities) Less(i, j int) bool { return s[i].Id < s[j].Id }
+func (s SetOfCities) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+func (s SetOfCities) Get(id uint64) *City {
+	for _, c := range s {
+		if c.Id == id {
+			return c
+		}
+	}
+	return nil
 }
 
-func (s *SetOfCities) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
+func (s *SetOfCities) Add(city *City) {
+	*s = append(*s, city)
+	sort.Sort(*s)
 }
 
-func (s *SetOfCities) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
+func (s *SetOfCities) Create(id, loc uint64) {
+	c := &City{
+		Id: id, Cell: loc,
+		Units:      make(SetOfUnits, 0),
+		Buildings:  make(SetOfBuildings, 0),
+		Knowledges: make(SetOfKnowledges, 0),
+	}
+	s.Add(c)
+}
+
+// Return a Unit owned by the current City, given the Unit ID
+func (c *City) Unit(id uint64) *Unit {
+	return c.Units.Get(id)
+}
+
+// Return a Building owned by the current City, given the Building ID
+func (c *City) Building(id uint64) *Building {
+	return c.Buildings.Get(id)
+}
+
+// Return a Knowledge owned by the current City, given the Knowledge ID
+func (c *City) Knowledge(id uint64) *Knowledge {
+	return c.Knowledges.Get(id)
 }
 
 // Return total Popularity of the current City (permanent + transient)
@@ -55,132 +85,6 @@ func (c *City) Popularity(w *World) int64 {
 	}
 
 	return pop
-}
-
-func (w *World) CityGet(id uint64) *City {
-	for _, c := range w.Live.Cities {
-		if c.Id == id {
-			return c
-		}
-	}
-	return nil
-}
-
-func (w *World) CityCheck(id uint64) bool {
-	return w.CityGet(id) != nil
-}
-
-func (w *World) CityCreate(loc uint64) (uint64, error) {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	c := &City{
-		Id: w.getNextId(), Cell: loc,
-		Units:      make(SetOfUnits, 0),
-		Buildings:  make(SetOfBuildings, 0),
-		Knowledges: make(SetOfKnowledges, 0),
-	}
-	w.Live.Cities = append(w.Live.Cities, c)
-	return c.Id, nil
-}
-
-func (w *World) CityTrain(userId, characterId, cityId, uId uint64) (uint64, error) {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
-	if err != nil {
-		return 0, err
-	}
-	return pCity.Train(w, uId)
-}
-
-func (w *World) CityBuild(userId, characterId, cityId, bId uint64) (uint64, error) {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
-	if err != nil {
-		return 0, err
-	}
-	return pCity.Build(w, bId)
-}
-
-func (w *World) CityStudy(userId, characterId, cityId, kId uint64) (uint64, error) {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
-	if err != nil {
-		return 0, err
-	}
-	return pCity.Study(w, kId)
-}
-
-func (c *City) Unit(id uint64) *Unit {
-	for _, b := range c.Units {
-		if id == b.Id {
-			return b
-		}
-	}
-	return nil
-}
-
-func (c *City) Building(id uint64) *Building {
-	for _, b := range c.Buildings {
-		if id == b.Id {
-			return b
-		}
-	}
-	return nil
-}
-
-func (c *City) Knowledge(id uint64) *Knowledge {
-	for _, b := range c.Knowledges {
-		if id == b.Id {
-			return b
-		}
-	}
-	return nil
-}
-
-func (w *World) CityGetAndCheck(userId, characterId, cityId uint64) (*City, *Character, *Character, error) {
-	// Fetch + sanity checks about the city
-	pCity := w.CityGet(cityId)
-	if pCity == nil {
-		return nil, nil, nil, errors.New("Not Found")
-	}
-	if pCity.Deputy != characterId && pCity.Owner != characterId {
-		return nil, nil, nil, errors.New("Forbidden")
-	}
-
-	// Fetch + senity checks about the City
-	pOwner := w.CharacterGet(pCity.Owner)
-	pDeputy := w.CharacterGet(pCity.Deputy)
-	if pOwner == nil || pDeputy == nil {
-		return nil, nil, nil, errors.New("Not Found")
-	}
-	if pOwner.User != userId && pDeputy.User != userId {
-		return nil, nil, nil, errors.New("Forbidden")
-	}
-
-	return pCity, pOwner, pDeputy, nil
-}
-
-func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err error) {
-	w.rw.RLock()
-	defer w.rw.RUnlock()
-
-	pCity, pOwner, pDeputy, e := w.CityGetAndCheck(userId, characterId, cityId)
-	if e != nil {
-		err = e
-		return
-	}
-
-	view = pCity.Show(w)
-	view.Owner.Name = pOwner.Name
-	view.Deputy.Name = pDeputy.Name
-	return
 }
 
 func (c *City) Show(w *World) (view CityView) {
@@ -292,13 +196,36 @@ func (c *City) Produce(w *World) {
 	view := c.Show(w)
 	post := view.Stock.Usage
 
-	post.Add(&view.Production.Actual)
+	post.Add(view.Production.Actual)
+
+	if c.Overlord != 0 {
+		if c.pOverlord != nil {
+			// Copy the expected Tax, ensure it is inferior to the current Stock
+			// level, to avoid a negative stock amount, then preempt it.
+			var tax Resources = view.Production.Actual
+			tax.Multiply(c.TaxRate)
+			tax.TrimTo(post)
+			post.Remove(tax)
+
+			// TODO(jfs): check for potential shortage
+			//  shortage := c.Tax.GreaterThan(tax)
+
+			if w.Definitions.InstantTransfers {
+				c.pOverlord.Stock.Add(tax)
+			} else {
+				c.TransferResourcesTo(w, c.pOverlord, tax)
+			}
+
+			// FIXME(jfs): notify overlord
+			// FIXME(jfs): notify c
+		}
+	}
 
 	for _, b := range c.Buildings {
 		if b.Ticks > 0 {
 			bt := w.BuildingTypeGet(b.Id)
-			if post.GreaterOrEqualTo(&bt.Cost) {
-				post.Remove(&bt.Cost)
+			if post.GreaterOrEqualTo(bt.Cost) {
+				post.Remove(bt.Cost)
 				b.Ticks--
 			}
 		}
@@ -307,15 +234,69 @@ func (c *City) Produce(w *World) {
 	for _, u := range c.Units {
 		if u.Ticks > 0 {
 			ut := w.UnitTypeGet(u.Type)
-			if post.GreaterOrEqualTo(&ut.Cost) {
-				post.Remove(&ut.Cost)
+			if post.GreaterOrEqualTo(ut.Cost) {
+				post.Remove(ut.Cost)
 				u.Ticks--
 			}
 		}
 	}
 
-	post.TrimTo(&view.Stock.Actual)
+	post.TrimTo(view.Stock.Actual)
 	c.Stock = post
+}
+
+func (c *City) SetUniformTaxRate(nb float64) {
+	c.TaxRate = MultiplierUniform(nb)
+}
+
+func (c *City) SetTaxRate(m ResourcesMultiplier) {
+	c.TaxRate = m
+}
+
+func (c *City) GiveFreedom(w *World, other *City) {
+	pre := other.pOverlord
+	if pre == nil {
+		return
+	}
+
+	other.Overlord = 0
+	other.pOverlord = nil
+
+	// FIXME(jfs): Notify 'pre'
+	// FIXME(jfs): Notify 'c'
+	// FIXME(jfs): Notify 'other'
+}
+
+func (c *City) GainFreedom(w *World) {
+	pre := c.pOverlord
+	if pre == nil {
+		return
+	}
+
+	c.Overlord = 0
+	c.pOverlord = nil
+
+	// FIXME(jfs): Notify 'pre'
+	// FIXME(jfs): Notify 'c'
+}
+
+func (c *City) ConquerCity(w *World, other *City) {
+	if other.pOverlord == c {
+		return
+	}
+
+	//pre := other.pOverlord
+	other.pOverlord = c
+	other.Overlord = c.Id
+	other.TaxRate = MultiplierUniform(w.Definitions.RateOverlord)
+
+	// FIXME(jfs): Notify 'pre'
+	// FIXME(jfs): Notify 'c'
+	// FIXME(jfs): Notify 'other'
+}
+
+func (c *City) TransferResourcesTo(w *World, overlord *City, amount Resources) {
+
 }
 
 // Transfer a Unit from the City to the given Army.
@@ -331,47 +312,12 @@ func (c *City) TransferUnit(w *World, a *Army, idUnit uint64) error {
 	return nil
 }
 
-// Transfer a Unit from the City to the given Army.
-// The chain of ownerships (Charcater, City, Army, Unit) is checked.
-func (w *World) CityTransferUnit(idUser, idChar, idCity uint64, idUnit, idArmy uint64) error {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	pCity, _, _, err := w.CityGetAndCheck(idUser, idChar, idCity)
-	if err != nil {
-		return err
-	}
-
-	pArmy := w.ArmyGet(idArmy)
-	if pArmy == nil {
-		return errors.New("Army not found")
-	}
-
-	if pArmy.City != pCity.Id {
-		return errors.New("")
-	}
-
-	return pCity.TransferUnit(w, pArmy, idUnit)
-}
-
-func (w *World) CityCreateArmy(idUser, idChar, idCity uint64, name string) (uint64, error) {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
-	pCity, _, _, err := w.CityGetAndCheck(idUser, idChar, idCity)
-	if err != nil {
-		return 0, err
-	}
-
-	return w.ArmyCreate(pCity, name)
-}
-
 func (c *City) KnowledgeFrontier(w *World) []*KnowledgeType {
 	return w.KnowledgeGetFrontier(c.Knowledges)
 }
 
 func (c *City) BuildingFrontier(w *World) []*BuildingType {
-	return w.BuildingGetFrontier(c.Buildings, c.Knowledges)
+	return w.BuildingGetFrontier(c.Popularity(w), c.Buildings, c.Knowledges)
 }
 
 // Return a collection of UnitType that may be trained by the current City
@@ -478,6 +424,130 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 	id := w.getNextId()
 	c.Buildings.Add(&Building{Id: id, Type: bId, Ticks: pType.Ticks})
 	return id, nil
+}
+
+func (w *World) CityGet(id uint64) *City {
+	return w.Live.Cities.Get(id)
+}
+
+func (w *World) CityCheck(id uint64) bool {
+	return w.CityGet(id) != nil
+}
+
+func (w *World) CityCreate(loc uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	id := w.getNextId()
+	w.Live.Cities.Create(id, loc)
+	return id, nil
+}
+
+func (w *World) CityTrain(userId, characterId, cityId, uId uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
+	if err != nil {
+		return 0, err
+	}
+	return pCity.Train(w, uId)
+}
+
+func (w *World) CityBuild(userId, characterId, cityId, bId uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
+	if err != nil {
+		return 0, err
+	}
+	return pCity.Build(w, bId)
+}
+
+func (w *World) CityStudy(userId, characterId, cityId, kId uint64) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(userId, characterId, cityId)
+	if err != nil {
+		return 0, err
+	}
+	return pCity.Study(w, kId)
+}
+
+func (w *World) CityGetAndCheck(userId, characterId, cityId uint64) (*City, *Character, *Character, error) {
+	// Fetch + sanity checks about the city
+	pCity := w.CityGet(cityId)
+	if pCity == nil {
+		return nil, nil, nil, errors.New("Not Found")
+	}
+	if pCity.Deputy != characterId && pCity.Owner != characterId {
+		return nil, nil, nil, errors.New("Forbidden")
+	}
+
+	// Fetch + senity checks about the City
+	pOwner := w.CharacterGet(pCity.Owner)
+	pDeputy := w.CharacterGet(pCity.Deputy)
+	if pOwner == nil || pDeputy == nil {
+		return nil, nil, nil, errors.New("Not Found")
+	}
+	if pOwner.User != userId && pDeputy.User != userId {
+		return nil, nil, nil, errors.New("Forbidden")
+	}
+
+	return pCity, pOwner, pDeputy, nil
+}
+
+func (w *World) CityShow(userId, characterId, cityId uint64) (view CityView, err error) {
+	w.rw.RLock()
+	defer w.rw.RUnlock()
+
+	pCity, pOwner, pDeputy, e := w.CityGetAndCheck(userId, characterId, cityId)
+	if e != nil {
+		err = e
+		return
+	}
+
+	view = pCity.Show(w)
+	view.Owner.Name = pOwner.Name
+	view.Deputy.Name = pDeputy.Name
+	return
+}
+
+// Transfer a Unit from the City to the given Army.
+// The chain of ownerships (Charcater, City, Army, Unit) is checked.
+func (w *World) CityTransferUnit(idUser, idChar, idCity uint64, idUnit, idArmy uint64) error {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(idUser, idChar, idCity)
+	if err != nil {
+		return err
+	}
+
+	pArmy := w.ArmyGet(idArmy)
+	if pArmy == nil {
+		return errors.New("Army not found")
+	}
+
+	if pArmy.City != pCity.Id {
+		return errors.New("")
+	}
+
+	return pCity.TransferUnit(w, pArmy, idUnit)
+}
+
+func (w *World) CityCreateArmy(idUser, idChar, idCity uint64, name string) (uint64, error) {
+	w.rw.Lock()
+	defer w.rw.Unlock()
+
+	pCity, _, _, err := w.CityGetAndCheck(idUser, idChar, idCity)
+	if err != nil {
+		return 0, err
+	}
+
+	return w.ArmyCreate(pCity, name)
 }
 
 func (w *World) ScoreBoardCompute() CityScoreBoard {

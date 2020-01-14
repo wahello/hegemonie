@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -19,18 +19,18 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jfsmig/hegemonie/common/world"
 	. "github.com/jfsmig/hegemonie/common/client"
+	"github.com/jfsmig/hegemonie/common/world"
 )
 
 type RegionCommand struct {
-	north string
+	north    string
 	pathLoad string
-	srv RegionService
+	srv      RegionService
 }
 
 type RegionService struct {
-	w *world.World
+	w        *world.World
 	pathSave string
 }
 
@@ -173,7 +173,7 @@ func (s *RegionService) GetScoreBoard(args *GetScoreBoardArgs, reply *GetScoreBo
 
 func (self *RegionCommand) Name() string     { return "region" }
 func (self *RegionCommand) Synopsis() string { return "Start a region service." }
-func (self *RegionCommand) Usage() string { return "region ENDPOINT\n" }
+func (self *RegionCommand) Usage() string    { return "region ENDPOINT\n" }
 
 func (self *RegionCommand) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&self.north, "north", ":8080", "File to be loaded")

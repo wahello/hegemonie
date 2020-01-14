@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12,6 +12,8 @@ import (
 	"github.com/go-macaron/pongo2"
 	"github.com/go-macaron/session"
 	"github.com/google/subcommands"
+	"github.com/jfsmig/hegemonie/common/client"
+	"github.com/jfsmig/hegemonie/common/mapper"
 	"gopkg.in/macaron.v1"
 	"io/ioutil"
 	"log"
@@ -20,9 +22,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/jfsmig/hegemonie/common/client"
-	"github.com/jfsmig/hegemonie/common/mapper"
 )
 
 type FormLogin struct {
@@ -197,6 +196,7 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 				ctx.HTML(200, "land")
 			}
 		})
+
 	m.Get("/game/map",
 		func(ctx *macaron.Context, s session.Store) {
 			// gameMap, overlay, err := mapper.Generate()
@@ -232,6 +232,7 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 
 			ctx.HTML(200, "map")
 		})
+
 	// TODO: VDO: disable these routes when DEBUG=false
 	m.Get("/debug/map/map",
 		func(ctx *macaron.Context, s session.Store) {
@@ -445,7 +446,7 @@ func randomSecret() string {
 
 func (self *FrontService) Name() string     { return "front" }
 func (self *FrontService) Synopsis() string { return "Start a front service." }
-func (self *FrontService) Usage() string { return "front\n" }
+func (self *FrontService) Usage() string    { return "front\n" }
 
 func (self *FrontService) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&self.endpointNorth, "north", ":8080", "TCP/IP North endpoint")

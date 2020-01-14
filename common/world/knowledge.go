@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,27 +7,12 @@ package world
 
 import "sort"
 
-func (s *SetOfKnowledgeTypes) Len() int {
-	return len(*s)
-}
+func (s SetOfKnowledgeTypes) Len() int           { return len(s) }
+func (s SetOfKnowledgeTypes) Less(i, j int) bool { return s[i].Id < s[j].Id }
+func (s SetOfKnowledgeTypes) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
-func (s *SetOfKnowledgeTypes) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
-}
-
-func (s *SetOfKnowledgeTypes) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
-}
-
-func (s *SetOfKnowledgeTypes) Add(b *KnowledgeType) {
-	*s = append(*s, b)
-	sort.Sort(s)
-}
-
-func (s *SetOfKnowledgeTypes) Get(id uint64) *KnowledgeType {
-	for _, i := range *s {
+func (s SetOfKnowledgeTypes) Get(id uint64) *KnowledgeType {
+	for _, i := range s {
 		if i.Id == id {
 			return i
 		}
@@ -35,22 +20,30 @@ func (s *SetOfKnowledgeTypes) Get(id uint64) *KnowledgeType {
 	return nil
 }
 
-func (s *SetOfKnowledgeTypes) Has(id uint64) bool {
+func (s SetOfKnowledgeTypes) Has(id uint64) bool {
 	return s.Get(id) != nil
 }
 
-func (s *SetOfKnowledges) Len() int {
-	return len(*s)
+func (s *SetOfKnowledgeTypes) Add(b *KnowledgeType) {
+	*s = append(*s, b)
+	sort.Sort(s)
 }
 
-func (s *SetOfKnowledges) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
+func (s SetOfKnowledges) Len() int           { return len(s) }
+func (s SetOfKnowledges) Less(i, j int) bool { return s[i].Id < s[j].Id }
+func (s SetOfKnowledges) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+func (s SetOfKnowledges) Get(id uint64) *Knowledge {
+	for _, i := range s {
+		if i.Id == id {
+			return i
+		}
+	}
+	return nil
 }
 
-func (s *SetOfKnowledges) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
+func (s SetOfKnowledges) Has(id uint64) bool {
+	return s.Get(id) != nil
 }
 
 func (s *SetOfKnowledges) Add(b *Knowledge) {

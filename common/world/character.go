@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,16 +7,30 @@ package world
 
 import (
 	"errors"
+	"sort"
 )
 
-func (w *World) CharacterGet(cid uint64) *Character {
+func (s SetOfCharacters) Len() int           { return len(s) }
+func (s SetOfCharacters) Less(i, j int) bool { return s[i].Id < s[j].Id }
+func (s SetOfCharacters) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+func (s SetOfCharacters) Get(id uint64) *Character {
 	// TODO(jfs): lookup in the sorted array
-	for _, c := range w.Auth.Characters {
-		if c.Id == cid {
+	for _, c := range s {
+		if c.Id == id {
 			return c
 		}
 	}
 	return nil
+}
+
+func (s *SetOfCharacters) Add(c *Character) {
+	*s = append(*s, c)
+	sort.Sort(*s)
+}
+
+func (w *World) CharacterGet(id uint64) *Character {
+	return w.Auth.Characters.Get(id)
 }
 
 // Notify the caller of the cities managed by the given Character.
@@ -35,20 +49,6 @@ func (w *World) CharacterGetCities(id uint64, owner func(*City), deputy func(*Ci
 			deputy(c)
 		}
 	}
-}
-
-func (s *SetOfCharacters) Len() int {
-	return len(*s)
-}
-
-func (s *SetOfCharacters) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
-}
-
-func (s *SetOfCharacters) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
 }
 
 func (w *World) CharacterShow(uid, cid uint64) (view CharacterView, err error) {

@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -13,6 +13,21 @@ const (
 	ResourceMax = 6
 )
 
+const (
+	// Do nothing. Useful for waypoints
+	CmdPause = 0
+	// Start a fight or join a running fight on the side of the attackers
+	CmdCityAttack = 2
+	// Join a running fight on the side of the defenders, or Watch the City if
+	CmdCityDefend = 3
+	// Attack the City and become its overlord in case of victory
+	CmdCityOverlord = 4
+	// Attack the City and break a building in case of victory
+	CmdCityBreak = 5
+	// Attack the City and reduce its production for the next turn
+	CmdCityMassacre = 6
+)
+
 type Resources [ResourceMax]uint64
 
 type ResourcesIncrement [ResourceMax]int64
@@ -24,32 +39,43 @@ type ResourceModifiers struct {
 	Plus ResourcesIncrement
 }
 
+type Command struct {
+	// The unique ID of the Cell to target
+	Cell uint64
+
+	// What to do once arrived at the given Cell.
+	Action uint
+}
+
 type Army struct {
 	// The unique ID of the current Army
 	Id uint64
 
-	// A display name for the current City
-	Name string
-
 	// The ID of the City that controls the current Army
 	City uint64 `json:",omitempty"`
+
+	// The ID of the Fight this Army is involved in.
+	Fight uint64 `json:",omitempty"`
 
 	// The ID of the Cell the Army is on
 	Cell uint64 `json:",omitempty"`
 
-	// The IS of a Cell of the Map that is a goal of the current movement of the Army
-	Target uint64 `json:",omitempty"`
+	// A display name for the current City
+	Name string
 
 	// How many resources are carried by that Army
 	Stock Resources
 
 	Units SetOfUnits
+
+	// The IS of a Cell of the Map that is a goal of the current movement of the Army
+	Targets []Command
 }
 
 type KnowledgeType struct {
-	Id        uint64
-	Name      string
-	Ticks     uint `json:",omitempty"`
+	Id    uint64
+	Name  string
+	Ticks uint `json:",omitempty"`
 
 	// Transient bonus of Popularity, when the Knowledge is present
 	PopBonus int64
@@ -89,6 +115,9 @@ type BuildingType struct {
 
 	// Has the building to be unique a the City
 	Unique bool `json:",omitempty"`
+
+	// Amount of total popularity required to start the construction of the building
+	PopRequired int64
 
 	// Transient bonus of Popularity, when the Building is alive
 	PopBonus int64
@@ -153,6 +182,13 @@ type City struct {
 	// The unique ID of a second Character in charge of the City.
 	Deputy uint64 `json:",omitempty"`
 
+	// The unique ID of a City who is the boss of the current City.
+	// Used for resources production computations.
+	Overlord uint64
+
+	// Ratio of the produced resources automatically sent to the Overlord City.
+	TaxRate ResourcesMultiplier
+
 	// The unique ID of the Cell the current City is built on.
 	// This is redundant with the City field in the Cell structure.
 	// Both information must match.
@@ -164,6 +200,11 @@ type City struct {
 	// Permanent Popularity of the current City
 	// The total value is the permanent value plus several "transient" bonus
 	Pop int64
+
+	Chaotic    uint
+	Alignement uint
+	Race       uint
+	Religion   uint
 
 	// Resources stock owned by the current City
 	Stock Resources
@@ -195,6 +236,14 @@ type City struct {
 	// PRIVATE
 	// Armies under the responsibility of the current City
 	armies SetOfArmies
+
+	// PRIVATE
+	// Pointer to the current Overlord of the current City
+	pOverlord *City
+
+	// PRIVATE
+	// Pointer to cities we currently are the overlord of
+	lieges SetOfCities
 }
 
 type UnitType struct {
@@ -282,6 +331,13 @@ type User struct {
 	Inactive bool `json:",omitempty"`
 }
 
+type Fight struct {
+	Id      uint64
+	Cell    uint64
+	Attack  SetOfId
+	Defense SetOfId
+}
+
 // A MapVertex is a Directed Vertex in the transport graph
 type MapVertex struct {
 	// Unique identifier of the source Cell
@@ -319,6 +375,8 @@ type Map struct {
 	rw         sync.RWMutex
 }
 
+type SetOfId []uint64
+
 type SetOfArmies []*Army
 
 type SetOfUnits []*Unit
@@ -339,6 +397,8 @@ type SetOfCharacters []*Character
 
 type SetOfCities []*City
 
+type SetOfFights []*Fight
+
 type SetOfNodes []MapNode
 
 type SetOfVertices []MapVertex
@@ -353,6 +413,11 @@ type DefinitionsBase struct {
 	Buildings  SetOfBuildingTypes
 	Knowledges SetOfKnowledgeTypes
 
+	// Should resource transfers happen instantly or should an actual transport
+	// be emitted by the sender? Set to `true` for an instant transfer or to
+	// `false` for a transport.
+	InstantTransfers bool
+
 	// Permanent bonus to the Popularity when a City creates an Army
 	PopBonusArmyCreate int64
 
@@ -361,11 +426,16 @@ type DefinitionsBase struct {
 
 	// Transient bonus to the Popularity of a City for each of its live Army
 	PopBonusArmyAlive int64
+
+	// Default Overlord rate: percentage of the production of a City that is
+	// taxed by its Overlord
+	RateOverlord float64
 }
 
 type LiveBase struct {
 	Armies SetOfArmies
 	Cities SetOfCities
+	Fights SetOfFights
 }
 
 type World struct {

@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2019 Hegemonie's AUTHORS
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,46 +7,17 @@ package world
 
 import "sort"
 
-func (s *SetOfBuildingTypes) Len() int {
-	return len(*s)
-}
+func (s SetOfBuildings) Len() int           { return len(s) }
+func (s SetOfBuildings) Less(i, j int) bool { return s[i].Id < s[j].Id }
+func (s SetOfBuildings) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
-func (s *SetOfBuildingTypes) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
-}
-
-func (s *SetOfBuildingTypes) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
-}
-
-func (s *SetOfBuildingTypes) Add(b *BuildingType) {
-	*s = append(*s, b)
-	sort.Sort(s)
-}
-
-func (w *World) BuildingTypeGet(id uint64) *BuildingType {
-	for _, i := range w.Definitions.Buildings {
-		if i.Id == id {
-			return i
+func (s SetOfBuildings) Get(id uint64) *Building {
+	for _, b := range s {
+		if b.Id == id {
+			return b
 		}
 	}
 	return nil
-}
-
-func (s *SetOfBuildings) Len() int {
-	return len(*s)
-}
-
-func (s *SetOfBuildings) Less(i, j int) bool {
-	return (*s)[i].Id < (*s)[j].Id
-}
-
-func (s *SetOfBuildings) Swap(i, j int) {
-	tmp := (*s)[i]
-	(*s)[i] = (*s)[j]
-	(*s)[j] = tmp
 }
 
 func (s *SetOfBuildings) Add(b *Building) {
@@ -54,8 +25,25 @@ func (s *SetOfBuildings) Add(b *Building) {
 	sort.Sort(s)
 }
 
-// TODO(jfs): Maybe speed the execution with a reverse index of Requires
-func (w *World) BuildingGetFrontier(built []*Building, owned []*Knowledge) []*BuildingType {
+func (s SetOfBuildingTypes) Len() int           { return len(s) }
+func (s SetOfBuildingTypes) Less(i, j int) bool { return s[i].Id < s[j].Id }
+func (s SetOfBuildingTypes) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+func (s SetOfBuildingTypes) Get(id uint64) *BuildingType {
+	for _, bt := range s {
+		if bt.Id == id {
+			return bt
+		}
+	}
+	return nil
+}
+
+func (s *SetOfBuildingTypes) Add(b *BuildingType) {
+	*s = append(*s, b)
+	sort.Sort(s)
+}
+
+func (s SetOfBuildingTypes) Frontier(pop int64, built []*Building, owned []*Knowledge) []*BuildingType {
 	bmap := make(map[uint64]bool)
 	pending := make(map[uint64]bool)
 	finished := make(map[uint64]bool)
@@ -71,8 +59,10 @@ func (w *World) BuildingGetFrontier(built []*Building, owned []*Knowledge) []*Bu
 	}
 
 	valid := func(bt *BuildingType) bool {
-		// TODO(jfs): Manage not only singleton
-		if bmap[bt.Id] {
+		if bt.PopRequired > pop {
+			return false
+		}
+		if bt.Unique && bmap[bt.Id] {
 			return false
 		}
 		for _, c := range bt.Conflicts {
@@ -89,10 +79,19 @@ func (w *World) BuildingGetFrontier(built []*Building, owned []*Knowledge) []*Bu
 	}
 
 	result := make([]*BuildingType, 0)
-	for _, bt := range w.Definitions.Buildings {
+	for _, bt := range s {
 		if valid(bt) {
 			result = append(result, bt)
 		}
 	}
 	return result
+}
+
+func (w *World) BuildingGetFrontier(pop int64, built []*Building, owned []*Knowledge) []*BuildingType {
+	// TODO(jfs): Maybe speed the execution with a reverse index of Requires
+	return w.Definitions.Buildings.Frontier(pop, built, owned)
+}
+
+func (w *World) BuildingTypeGet(id uint64) *BuildingType {
+	return w.Definitions.Buildings.Get(id)
 }
