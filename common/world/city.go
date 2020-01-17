@@ -11,8 +11,8 @@ import (
 )
 
 func (s SetOfCities) Len() int           { return len(s) }
-func (s SetOfCities) Less(i, j int) bool { return s[i].Id < s[j].Id }
 func (s SetOfCities) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s SetOfCities) Less(i, j int) bool { return s[i].Id < s[j].Id }
 
 func (s SetOfCities) Get(id uint64) *City {
 	for _, c := range s {
@@ -191,21 +191,54 @@ func (c *City) Show(w *World) (view CityView) {
 	return
 }
 
-func (c *City) Produce(w *World) {
-	// Pre-compute the modified values of Stock and Production
-	view := c.Show(w)
-	post := view.Stock.Usage
+// Create an Army made of the Units defending the City
+func (c *City) MakeDefence(w *World) *Army {
+	a := &Army{
+		Id:       w.getNextId(),
+		City:     c.Id,
+		Cell:     c.Cell,
+		Fight:    0,
+		Name:     "Wot?",
+		Units:    make(SetOfUnits, 0),
+		Postures: []int64{int64(c.Id)},
+		Targets:  make([]Command, 0),
+	}
+	w.Live.Armies.Add(a)
+	return a
+}
 
-	post.Add(view.Production.Actual)
+// Play one round of local production and return the
+func (c *City) ProduceLocally(w *World, view *CityView) Resources {
+	var prod Resources = view.Production.Actual
+	if c.LastMassacres > 0 {
+		mult := MultiplierUniform(w.Definitions.MassacreImpact)
+		for i := uint(0); i < c.LastMassacres; i++ {
+			prod.Multiply(mult)
+		}
+		c.LastMassacres--
+	}
+	return prod
+}
+
+func (c *City) Produce(w *World) {
+	// Pre-compute the modified values of Stock and Production.
+	// We just reuse a functon that already does it (despite it does more)
+	view := c.Show(w)
+
+	// Make the local City generate resources (and recover the massacres)
+	prod := c.ProduceLocally(w, &view)
+	c.Stock.Add(prod)
 
 	if c.Overlord != 0 {
 		if c.pOverlord != nil {
-			// Copy the expected Tax, ensure it is inferior to the current Stock
-			// level, to avoid a negative stock amount, then preempt it.
-			var tax Resources = view.Production.Actual
+			// Compute the expected Tax based on the local production
+			var tax Resources = prod
 			tax.Multiply(c.TaxRate)
-			tax.TrimTo(post)
-			post.Remove(tax)
+			// Ensure the tax isn't superior to the actual production (to cope with
+			// invalid tax rates)
+			tax.TrimTo(c.Stock)
+			// Then preempt the tax from the stock
+			c.Stock.Remove(tax)
 
 			// TODO(jfs): check for potential shortage
 			//  shortage := c.Tax.GreaterThan(tax)
@@ -221,28 +254,52 @@ func (c *City) Produce(w *World) {
 		}
 	}
 
-	for _, b := range c.Buildings {
-		if b.Ticks > 0 {
-			bt := w.BuildingTypeGet(b.Id)
-			if post.GreaterOrEqualTo(bt.Cost) {
-				post.Remove(bt.Cost)
-				b.Ticks--
-			}
-		}
-	}
+	// ATM the stock maybe still stores resources. We use them to make the assets evolve.
+	// We arbitrarily give the preference to Units, then Buildings and eventually the
+	// Knowledge.
 
 	for _, u := range c.Units {
 		if u.Ticks > 0 {
 			ut := w.UnitTypeGet(u.Type)
-			if post.GreaterOrEqualTo(ut.Cost) {
-				post.Remove(ut.Cost)
+			if c.Stock.GreaterOrEqualTo(ut.Cost) {
+				c.Stock.Remove(ut.Cost)
 				u.Ticks--
+				if u.Ticks <= 0 {
+					// FIXME(jfs): Notify the City
+				}
 			}
 		}
 	}
 
-	post.TrimTo(view.Stock.Actual)
-	c.Stock = post
+	for _, b := range c.Buildings {
+		if b.Ticks > 0 {
+			bt := w.BuildingTypeGet(b.Id)
+			if c.Stock.GreaterOrEqualTo(bt.Cost) {
+				c.Stock.Remove(bt.Cost)
+				b.Ticks--
+				if b.Ticks <= 0 {
+					// FIXME(jfs): Notify the City
+				}
+			}
+		}
+	}
+
+	for _, k := range c.Knowledges {
+		if k.Ticks > 0 {
+			bt := w.KnowledgeTypeGet(k.Id)
+			if c.Stock.GreaterOrEqualTo(bt.Cost) {
+				c.Stock.Remove(bt.Cost)
+				k.Ticks--
+			}
+			if k.Ticks <= 0 {
+				// FIXME(jfs): Notify the City
+			}
+		}
+	}
+
+	// At the end of the turn, ensure we do not hold more resources than the actual
+	// stock capacity (with the effect of all the multipliers)
+	c.Stock.TrimTo(view.Stock.Actual)
 }
 
 func (c *City) SetUniformTaxRate(nb float64) {
@@ -282,6 +339,9 @@ func (c *City) GainFreedom(w *World) {
 
 func (c *City) ConquerCity(w *World, other *City) {
 	if other.pOverlord == c {
+		c.pOverlord = nil
+		c.Overlord = 0
+		c.TaxRate = MultiplierUniform(0)
 		return
 	}
 

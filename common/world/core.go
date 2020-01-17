@@ -26,6 +26,10 @@ const (
 	CmdCityBreak = 5
 	// Attack the City and reduce its production for the next turn
 	CmdCityMassacre = 6
+	// Deposit all the resources of the Army to the local City
+	CmdCityDeposit = 7
+	// Disband the Army and transfer its units and resources to the local City
+	CmdCityDisband = 8
 )
 
 type Resources [ResourceMax]uint64
@@ -60,6 +64,10 @@ type Army struct {
 	// The ID of the Cell the Army is on
 	Cell uint64 `json:",omitempty"`
 
+	// Is the current Army still alive?
+	// This flag is used to save array handlings.
+	Deleted bool `json:",omitempty"`
+
 	// A display name for the current City
 	Name string
 
@@ -69,7 +77,12 @@ type Army struct {
 	Units SetOfUnits
 
 	// The IS of a Cell of the Map that is a goal of the current movement of the Army
-	Targets []Command
+	Targets []Command `json:",omitempty"`
+
+	// An array of Postures against armies of other cities.
+	// A positive value means "defend"
+	// A negative value means "assault"
+	Postures []int64 `json:",omitempty"`
 }
 
 type KnowledgeType struct {
@@ -158,6 +171,9 @@ type Building struct {
 
 	// How many construction rounds remain before the building's achievement
 	Ticks uint `json:",omitempty"`
+
+	// Has the building been ruined?
+	Deleted bool `json:",omitempty"`
 }
 
 type Character struct {
@@ -194,6 +210,8 @@ type City struct {
 	// Both information must match.
 	Cell uint64
 
+	Assault *Fight `json:",omitempty"`
+
 	// The display name of the current City
 	Name string
 
@@ -216,6 +234,10 @@ type City struct {
 	// Resources produced each round by the City, before the enforcing of
 	// Production Boosts ans Production Multipliers
 	Production Resources
+
+	// Number of massacres the current City undergo.
+	// It takes one production turn to recover one Massacre.
+	LastMassacres uint `json:",omitempty"`
 
 	// Is the city still usable
 	Deleted bool `json:",omitempty"`
@@ -332,14 +354,23 @@ type User struct {
 }
 
 type Fight struct {
-	Id      uint64
-	Cell    uint64
-	Attack  SetOfId
-	Defense SetOfId
+	// The unique ID of the
+	Id uint64
+
+	// The unique ID of the MapVertex the current Fight is happening on.
+	Cell uint64
+
+	// The set of Id of armies involved in the current Fight on the "attack" side
+	// (the side that initiated the fight)
+	Attack SetOfArmies
+
+	/// The set of Id of armies involved in the current Fight on the "defence" side
+	// the (side that has been pforce-pulled).
+	Defense SetOfArmies
 }
 
-// A MapVertex is a Directed Vertex in the transport graph
-type MapVertex struct {
+// A MapEdge is an edge if the transportation directed graph
+type MapEdge struct {
 	// Unique identifier of the source Cell
 	S uint64
 
@@ -350,8 +381,8 @@ type MapVertex struct {
 	Deleted bool `json:",omitempty"`
 }
 
-// A MapNode is a Node is the directed graph of the transport network.
-type MapNode struct {
+// A MapVertex is a vertex in the transportation directed graph
+type MapVertex struct {
 	// The unique identifier of the current cell.
 	Id uint64
 
@@ -365,14 +396,11 @@ type MapNode struct {
 // A Map is a directed graph destined to be used as a transport network,
 // organised as an adjacency list.
 type Map struct {
-	Cells  SetOfNodes
-	Roads  SetOfVertices
+	Cells  SetOfVertices
+	Roads  SetOfEdges
 	NextId uint64
 
-	steps      map[vector]uint64
-	dirtyRoads bool
-	dirtyCells bool
-	rw         sync.RWMutex
+	steps map[vector]uint64
 }
 
 type SetOfId []uint64
@@ -399,9 +427,9 @@ type SetOfCities []*City
 
 type SetOfFights []*Fight
 
-type SetOfNodes []MapNode
+type SetOfVertices []*MapVertex
 
-type SetOfVertices []MapVertex
+type SetOfEdges []*MapEdge
 
 type AuthBase struct {
 	Users      SetOfUsers
@@ -412,6 +440,10 @@ type DefinitionsBase struct {
 	Units      SetOfUnitTypes
 	Buildings  SetOfBuildingTypes
 	Knowledges SetOfKnowledgeTypes
+
+	// Ratio applied to the production of resources that is applied for each
+	// Massacre underwent by any city. It only impacts the production of the City itself.
+	MassacreImpact float64
 
 	// Should resource transfers happen instantly or should an actual transport
 	// be emitted by the sender? Set to `true` for an instant transfer or to
@@ -433,8 +465,14 @@ type DefinitionsBase struct {
 }
 
 type LiveBase struct {
+	// Free armies on the map, not involved in any Fight
 	Armies SetOfArmies
+
+	// All the cities present on the Region
 	Cities SetOfCities
+
+	// Fights currently happening. The armies involved in the Fight are owned
+	// By the Fight and do not appear in the "Armies" field.
 	Fights SetOfFights
 }
 
@@ -442,10 +480,9 @@ type World struct {
 	Auth        AuthBase
 	Definitions DefinitionsBase
 	Live        LiveBase
+	Places      Map
 
 	NextId uint64
 	Salt   string
 	rw     sync.RWMutex
-
-	Places Map
 }

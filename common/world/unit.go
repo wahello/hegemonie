@@ -8,8 +8,8 @@ package world
 import "sort"
 
 func (s SetOfUnits) Len() int           { return len(s) }
-func (s SetOfUnits) Less(i, j int) bool { return s[i].Id < s[j].Id }
 func (s SetOfUnits) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s SetOfUnits) Less(i, j int) bool { return s[i].Id < s[j].Id }
 
 func (s *SetOfUnits) Add(u *Unit) {
 	*s = append(*s, u)

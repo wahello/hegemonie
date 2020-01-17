@@ -49,6 +49,12 @@ func (r Resources) GetRatio(nb float64) Resources {
 	return rc
 }
 
+func (r *Resources) Zero() {
+	for i := 0; i < ResourceMax; i++ {
+		r[i] = 0
+	}
+}
+
 func (r *Resources) Add(o Resources) {
 	for i := 0; i < ResourceMax; i++ {
 		r[i] = r[i] + o[i]
