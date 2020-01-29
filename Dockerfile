@@ -28,8 +28,8 @@ RUN set -x \
 RUN set -x \
 && cd /gopath/src/github.com/jfsmig/hegemonie \
 && mkdir -p /data/templates \
-&& cp -r front/templates /data/ \
-&& cp -r front/static /data/static
+&& cp -r pkg/web/templates /data/ \
+&& cp -r pkg/web/static /data/static
 
 # Create the minimal runtime image
 FROM scratch
