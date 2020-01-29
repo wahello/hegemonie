@@ -1,17 +1,42 @@
 # Hegemonie
 
-A Web interface manages the authentication of the players, displays the
-status of the country managed by each player and proposes actions (as HTML forms)
-to mpact the world.
+## Design
 
-Meanwhile, the game engine is managed by a standalone daemon that makes
-the world evolve with external triggers: long term actions progress a bit
-toward their completion, the movements are executed, attacks started, resources
-produced, etc etc.
+
+
+## Architecture
+
+The Hegemonie platform consist in a set of microservices.
+* **web server** is the front service that does the web UI: it authenticates the
+  users and serves simple HTML/CSS pages to depict the status of the countries
+  manager by the players, as well as it propsoes HTTP forms to make it evolve.
+* **auth server** is a ``grpc`` service responsible of the user management
+  (mostly C.R.U.D. operations plus password checks). The service itself is not
+  authenticated. Please refer for the
+  [Auth API](https://github.com/jfsmig/hegemonie/blob/master/pkg/auth/service.proto)
+  API for more information.
+* **region server** is a tuple of 3 ``grpc`` services responsible for the game
+  logic within a single region. The service itself is not authenticated. Please refer to
+  the ``grpc`` description of the
+  [City API](https://github.com/jfsmig/hegemonie/blob/master/pkg/region/city.proto),
+  [Army API](https://github.com/jfsmig/hegemonie/blob/master/pkg/region/army.proto) and
+  [Admin API](https://github.com/jfsmig/hegemonie/blob/master/pkg/region/admin.proto)
+  for more information.
+* **events server** is a ``grpc`` service proposing to subscribe to events related
+  to specific topics (e.g. a country, a region). The service itself is not authenticated.
+* **api server** exposes an authenticated API that agregates and consolidates all the
+  other API. The users are authenticated and the usage authorized with OAuth2. 
+
+
+![Hegemonie Architecture](https://raw.githubusercontent.com/jfsmig/hegemonie/master/docs/system-architecture.png)
+
+Everything is controlled by a single CLI tool, ``hegemonie``. That single CLI carries 
+the 5 servers and their respective 5 clients. 
 
 1. Written in 100% in Golang: for the sake of Simplicity and Portability. The
-   code mostly depends on [Go-Macaron](https://go-macaron.com) and the Golang
-   [standard library](https://golang.org/pkg). At the moment no special
+   code mostly depends on [Go-Macaron](https://go-macaron.com) (for ``web server``),
+   [Golang grpc](https://github.com/grpc/grpc-go) (for all the other internal services)
+   and the Golang [standard library](https://golang.org/pkg). At the moment no special
    attention has been paid to the performance of the whole thing: this will
    happen after the release of a very first MVP.
 2. No database required: the system has all its components in RAM while it is
@@ -26,51 +51,75 @@ produced, etc etc.
    [Discord](https://discord.io/), [Slack](https://slack.com),
    [RocketChat](https://rocket.chat), [Riot](https://riot.im) or whatever.
 
-A game instance for a small community is lightweight enough to run on a small
-ARM-based board.
-
-## Architecture
-
-As of today a single tool called ``hegemonie`` provides all the elements
-* **hegemonie front** serves HTTP pages for the human beings
-* **hegemonie region** serves a portion of the game's world restricted to a single map region,
-  through a simple HTTP/Golang RPC interface.
-* **hegemonie round** triggers the rounds in the game's world, and is destined to be triggered
-  by ``cron``
 
 ## Scalability
 
-This is not the topic yet. However there are already a few opportunities.
+This is not the topic yet. However there are already a few opportunities to let
+the game scale:
+* ``web server`` is not completey stateless yet because it relies on sessions in RAM.
+  If you need to scale it, be sure to use a load balancer performing source-based hashing
+  to map the requests on instances. 
+* ``auth server`` is currently stateful because it relies on a local storage. Further
+  scaling plans exist, either based on a sharding of the users or on a scalable storage
+  backend. This is still to be discussed and is not a topic yet.
+* ``region server`` is stateful and it manages all the entities in-game. Distinct world
+  services (i.e. processes) will host distinct datasets. A region service represents an
+  opportunity to shard the users.
+* ``api server`` is currently a vaporware but will be a stateless service. It will scale
+  seamlessly.
+* ``events server`` is only a vaporware at the moment.
 
-The *front* service is stateless, you might deploy many of them.
+Whatever the solution in place, only the ``web server`` will require an external load
+balancing, at the ingress. It is likely that hegemonie will soon rely on a service mesh
+to route the grpc messages to the appropriate targets.
 
-The *region* service is stateful and it manages all the game entities. Distinct world
-services (i.e. processes) will host distinct datasets. A region service is not replicated
-and the population pf users requires to be shareded among the regions to grow.
+
+## Reliability
+
+This is not a topic yet.
+
+
+## Performance
+
+Further than the design choice, in the region server, to keep each region "live in RAM",
+the performance is not a topic yet.
+
+We roughly target a system that can manage a game instance for a small community of less than
+50 players, that would be lightweight enough to run on a ARM-based single board computer (e.g.
+a RaspberryPi v3).
+
 
 ## Deploy with Docker
 
-This is still a work in progress and here can be only one region in the world, because the
-``front`` doesn't manage discovery or directory.
+This is still a work in progress and here can be only one region in the world, because
+the ``web server`` doesn't manage the discovery or a directory of regions (it only relies
+on CLI options).
+
+With the help of the subsequent alias:
+```
+alias HEGE='docker run --network host jfsmig/hegemonie:latest --'
+```
 
 Deploy a ``front`` service:
 ```
-docker run --network host jfsmig/hegemonie:latest -- front --north 127.0.0.1:8080 --region 127.0.0.1:8081
+HEGE web server --endpoint 127.0.0.1:8080 --region 127.0.0.1:8081
 ```
 
 Deploy a ``region`` service:
 ```
-docker run --network host jfsmig/hegemonie:latest -- region --north 127.0.0.1:8081
+HEGE region server --endpoint 127.0.0.1:8081
 ```
 
 ## Deploy with Snapcraft
 
 TODO
 
+
 ## Try it from scratch
 
-Starting from the sources, if you have the go environment and the ``make`` installed, then simply run:
- 
+Starting from the sources, if you have the go environment and the ``make`` installed,
+then simply run:
+
 ```
 make try
 ```

@@ -2,37 +2,32 @@ BASE=github.com/jfsmig/hegemonie
 GO=go
 
 all:
+	protoc -I pkg/auth   pkg/auth/service.proto --go_out=plugins=grpc:pkg/auth/proto
+	protoc -I pkg/region pkg/region/city.proto  --go_out=plugins=grpc:pkg/region/proto_city
+	protoc -I pkg/region pkg/region/army.proto  --go_out=plugins=grpc:pkg/region/proto_army
+	protoc -I pkg/region pkg/region/admin.proto --go_out=plugins=grpc:pkg/region/proto_admin
 	$(GO) install $(BASE)
 
 clean:
 	$(GO) clean $(BASE)
 
-.PHONY: all clean test fmt try \
-	world client mapper hege-front hege-world
+.PHONY: all clean test bench fmt try
 
-fmt:
-	$(GO) fmt $(BASE)
-	$(GO) fmt $(BASE)/common/client
-	$(GO) fmt $(BASE)/common/mapper
-	$(GO) fmt $(BASE)/common/world
-	$(GO) fmt $(BASE)/front
-	$(GO) fmt $(BASE)/region
+fmt: all
+	find * -type f -name '*.go' \
+		| grep -v '.pb.go$$' | while read F ; do dirname $$F ; done \
+		| sort | uniq | while read D ; do ( set -x ; cd $$D && go fmt ) done
 
-test:
-	$(GO) test -v $(BASE)
-	$(GO) test -v $(BASE)/common/client
-	$(GO) test -v $(BASE)/common/mapper
-	$(GO) test -v $(BASE)/common/world
-	$(GO) test -v $(BASE)/front
-	$(GO) test -v $(BASE)/region
+test: all
+	find * -type f -name '*_test.go' \
+		| while read F ; do dirname $$F ; done \
+		| sort | uniq | while read D ; do ( set -x ; cd $$D && go test ) done
 
-bench:
-	$(GO) test -bench=. -v $(BASE)
-	$(GO) test -bench=. -v $(BASE)/common/client
-	$(GO) test -bench=. -v $(BASE)/common/mapper
-	$(GO) test -bench=. -v $(BASE)/common/world
-	$(GO) test -bench=. -v $(BASE)/front
-	$(GO) test -bench=. -v $(BASE)/region
+bench: all
+	find * -type f -name '*_test.go' \
+		| while read F ; do dirname $$F ; done \
+		| sort | uniq | while read D ; do ( set -x ; cd $$D && go -bench=. test ) done
 
 try: all
 	./ci/run.sh $$PWD/ci/bootstrap
+

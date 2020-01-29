@@ -1,0 +1,189 @@
+syntax = "proto3";
+
+package hegemonie.region.proto.city;
+
+service City {
+    // Returns a list of cities owned by the given character
+    rpc List (ListReq) returns (ListOfNamedItems) {}
+
+    // Returns a view of the City
+    // Be careful, the request might fail because of a too large object.
+    rpc Show (CityId) returns (CityView) {}
+
+    rpc Study (StudyReq) returns (None) {}
+
+    rpc Build (BuildReq) returns (None) {}
+
+    rpc Train (TrainReq) returns (None) {}
+
+    rpc CreateArmy (CreateArmyReq) returns (None) {}
+
+    rpc TransferUnit (TransferUnitReq) returns (None) {}
+
+    // Return the list of armies that can be controlled by the given City
+    rpc ListArmies (CityId) returns (ListOfNamedItems) {}
+}
+
+message NamedItem {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message ListOfNamedItems {
+    repeated NamedItem items = 1;
+}
+
+
+// Identifies a City and Character who is
+message CityId {
+    uint64 character = 1;
+    uint64 city = 2;
+}
+
+message ArmyView {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message ResourcesAbs {
+    uint64 r0 = 1;
+    uint64 r1 = 2;
+    uint64 r2 = 3;
+    uint64 r3 = 4;
+    uint64 r4 = 5;
+    uint64 r5 = 6;
+}
+
+message ResourcesPlus {
+    int64 r0 = 1;
+    int64 r1 = 2;
+    int64 r2 = 3;
+    int64 r3 = 4;
+    int64 r4 = 5;
+    int64 r5 = 6;
+}
+
+message ResourcesMult {
+    double r0 = 1;
+    double r1 = 2;
+    double r2 = 3;
+    double r3 = 4;
+    double r4 = 5;
+    double r5 = 6;
+}
+
+message ResourcesMod {
+    ResourcesPlus plus = 1;
+    ResourcesMult mult = 2;
+}
+
+message UnitTypeView {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message BuildingTypeView {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message KnowledgeTypeView {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message UnitView {
+    uint64 id = 1;
+    uint64 type = 2;
+    uint32 ticks = 3;
+    string name = 4;
+}
+
+message BuildingView {
+    uint64 id = 1;
+    uint64 type = 2;
+    uint32 ticks = 3;
+    string name = 4;
+}
+
+message KnowledgeView {
+    uint64 id = 1;
+    uint64 type = 2;
+    uint32 ticks = 3;
+    string name = 4;
+}
+
+message StockView {
+    ResourcesAbs base = 1;
+    ResourcesMod knowledge = 2;
+    ResourcesMod buildings = 3;
+    ResourcesMod troops = 4;
+    ResourcesAbs actual = 5;
+
+    ResourcesAbs usage = 6;
+}
+
+message ProductionView {
+    ResourcesAbs base = 1;
+    ResourcesMod knowledge = 2;
+    ResourcesMod buildings = 3;
+    ResourcesMod troops = 4;
+    ResourcesAbs actual = 5;
+}
+
+message CityEvolution {
+    repeated KnowledgeTypeView kFrontier = 1;
+    repeated BuildingTypeView bFrontier = 2;
+    repeated UnitTypeView uFrontier = 3;
+}
+
+message CityAssets {
+    repeated UnitView units = 1;
+    repeated BuildingView buildings = 2;
+    repeated KnowledgeView knowledge = 3;
+    repeated ArmyView armies = 4;
+}
+
+message CityView {
+    uint64 id = 1;
+    string name = 2;
+    uint64 owner = 3;
+    uint64 deputy = 4;
+
+    ProductionView production = 5;
+    StockView stock = 6;
+    CityEvolution evol = 7;
+    CityAssets assets = 8;
+}
+
+message StudyReq {
+    CityId city = 1;
+    uint64 knowledgeType = 2;
+}
+
+message TrainReq {
+    CityId city = 1;
+    uint64 unitType = 2;
+}
+
+message BuildReq {
+    CityId city = 1;
+    uint64 buildingType = 2;
+}
+
+message CreateArmyReq {
+    CityId city = 1;
+    string name = 2;
+}
+
+message TransferUnitReq {
+    CityId city = 1;
+    uint64 army = 2;
+    uint64 unit = 3;
+}
+
+message ListReq {
+    uint64 character = 1;
+}
+
+message None {}

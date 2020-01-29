@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package hegemonie.region.proto.army;
+
+service Army {
+    // Return a detailed view of the given Army
+    rpc Show (ArmyId) returns (ArmyView) {}
+
+    // Make the Army flea the fight it is involved in.
+    rpc Flea (ArmyId) returns (None) {}
+
+    // Make the Army flip in the fight it is involved in.
+    rpc Flip (ArmyId) returns (None) {}
+
+    // Append the specified command on the list of the Army.
+    rpc Command (ArmyCommandReq) returns (None) {}
+}
+
+// Identifies an army managed by the city
+message ArmyId {
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 army = 3;
+}
+
+message ArmyView {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message ArmyCommandReq {
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 army = 3;
+    uint64 target = 4;
+    uint64 action = 5;
+}
+
+message None {}

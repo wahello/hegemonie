@@ -16,7 +16,7 @@
         },
         {
             "Id": 2, "Cell": 4, "Owner": 1, "Deputy": 2,
-            "Name": "Calaquyr",
+            "Name": "Capitale",
             "Stock": [ 250, 13, 22, 37 ],
             "StockCapacity": [ 1000, 1000, 1000, 1000 ],
             "Production": [ 10, 10, 10, 10 ],

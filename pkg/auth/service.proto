@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package hegemonie.auth.proto;
+
+message None {}
+
+message UserCreateReq {
+    string mail = 1;
+}
+
+message UserUpdateReq {
+    uint64 id = 1;
+    string pass = 2;
+    string name = 3;
+}
+
+message UserAuthReq {
+    string mail = 1;
+    string pass = 2;
+}
+
+message UserShowReq {
+    uint64 id = 1;
+    string mail = 2;
+    bool active = 3;
+}
+
+message CharacterView {
+    uint64 id = 1;
+    string region = 2;
+    string name = 3;
+    bool off = 4;
+}
+
+message UserView {
+    uint64 id = 1;
+    string mail = 2;
+    string name = 3;
+    bool inactive = 4;
+    bool suspended = 5;
+    bool admin = 6;
+    repeated CharacterView characters = 7;
+}
+
+message UserSuspendReq {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message UserListReq {
+    uint64 marker = 1;
+    uint64 limit = 2;
+}
+
+message UserListRep {
+    repeated UserView items = 1;
+}
+
+message CharacterShowReq {
+    uint64 user = 1;
+    uint64 character = 2;
+}
+
+
+service Auth {
+    rpc UserList (UserListReq) returns (UserListRep) {}
+
+    rpc UserShow (UserShowReq) returns (UserView) {}
+
+    rpc UserCreate (UserCreateReq) returns (UserView) {}
+
+    rpc UserUpdate (UserUpdateReq) returns (None) {}
+
+    rpc UserSuspend (UserSuspendReq) returns (None) {}
+
+    rpc UserAuth (UserAuthReq) returns (UserView) {}
+
+    // Check the given Character can be managed by the given User,
+    // And returns an abstract of the Character information.
+    rpc CharacterShow (CharacterShowReq) returns (CharacterView) {}
+}

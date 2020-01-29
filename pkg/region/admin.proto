@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package hegemonie.region.proto.admin;
+
+service Admin {
+    // Have all the Cities on the Region to produce their resources
+    rpc Produce(None) returns (None) {}
+
+    // Make all the armies on the Region to move on step
+    rpc Move(None) returns (None) {}
+
+    rpc GetScores(None) returns (ScoreBoard) {}
+}
+
+message ScoredCity {
+    uint64 city = 1;
+    int64 score = 2;
+}
+
+message ScoreBoard {
+    repeated ScoredCity items = 1;
+}
+
+message None {}

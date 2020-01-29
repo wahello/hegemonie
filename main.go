@@ -6,23 +6,89 @@
 package main
 
 import (
-	"context"
-	"flag"
-	"github.com/google/subcommands"
-	"os"
-
-	"github.com/jfsmig/hegemonie/front"
-	"github.com/jfsmig/hegemonie/region"
+	"errors"
+	"github.com/jfsmig/hegemonie/pkg/api/agent"
+	"github.com/jfsmig/hegemonie/pkg/api/client"
+	"github.com/jfsmig/hegemonie/pkg/auth/agent"
+	"github.com/jfsmig/hegemonie/pkg/auth/client"
+	"github.com/jfsmig/hegemonie/pkg/events/agent"
+	"github.com/jfsmig/hegemonie/pkg/events/client"
+	"github.com/jfsmig/hegemonie/pkg/region/agent"
+	"github.com/jfsmig/hegemonie/pkg/region/client"
+	"github.com/jfsmig/hegemonie/pkg/web/agent"
+	"github.com/spf13/cobra"
+	"log"
 )
 
 func main() {
-	subcommands.Register(subcommands.HelpCommand(), "Helpers")
-	subcommands.Register(subcommands.FlagsCommand(), "Helpers")
-	subcommands.Register(subcommands.CommandsCommand(), "Helpers")
-	subcommands.Register(&front.FrontService{}, "Actions")
-	subcommands.Register(&region.RegionCommand{}, "Actions")
-	flag.Parse()
+	apiCmd := &cobra.Command{
+		Use:   "api",
+		Short: "API server group of commands",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("Missing subcommand")
+		},
+	}
+	apiCmd.AddCommand(hegemonie_api_agent.Command())
+	apiCmd.AddCommand(hegemonie_api_client.Command())
 
-	ctx := context.Background()
-	os.Exit(int(subcommands.Execute(ctx)))
+	evtCmd := &cobra.Command{
+		Use:     "events",
+		Aliases: []string{"evt"},
+		Short:   "Events server group of commands",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("Missing subcommand")
+		},
+	}
+	evtCmd.AddCommand(hegemonie_events_agent.Command())
+	evtCmd.AddCommand(hegemonie_events_client.Command())
+
+	regCmd := &cobra.Command{
+		Use:     "region",
+		Aliases: []string{"reg"},
+		Short:   "Region group of commands",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("Missing subcommand")
+		},
+	}
+	regCmd.AddCommand(hegemonie_region_agent.Command())
+	regCmd.AddCommand(hegemonie_region_client.Command())
+
+	aaaCmd := &cobra.Command{
+		Use:     "auth",
+		Aliases: []string{"aaa"},
+		Short:   "Auth group of commands",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("Missing subcommand")
+		},
+	}
+	aaaCmd.AddCommand(hegemonie_auth_agent.Command())
+	aaaCmd.AddCommand(hegemonie_auth_client.Command())
+
+	webCmd := &cobra.Command{
+		Use:     "web",
+		Aliases: []string{"html", "http", "front"},
+		Short:   "Web group of commands",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("Missing subcommand")
+		},
+	}
+	webCmd.AddCommand(hegemonie_web_agent.Command())
+
+	rootCmd := &cobra.Command{
+		Use:   "hegemonie",
+		Short: "Hegemonie main CLI",
+		Long:  "Hegemonie: main binary tool to start service agents, query clients and operation jobs.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("Missing subcommand")
+		},
+	}
+	rootCmd.AddCommand(aaaCmd)
+	rootCmd.AddCommand(apiCmd)
+	rootCmd.AddCommand(evtCmd)
+	rootCmd.AddCommand(regCmd)
+	rootCmd.AddCommand(webCmd)
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalln("Command error:", err)
+	}
 }

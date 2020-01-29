@@ -8,8 +8,10 @@ The game engine is a [4X](https://en.wikipedia.org/wiki/4X) technical basis
 for larger RPG games. The description of the game will sound familiar to RPG
 players:
 * Each **user** manages characters, each **character** manages cities
-* Each **city** produces **resources**, grows a **knowledge** tree, evolves with **building** and trains **troops**.
-* **Armies** can be setup to gather some troops and execute orders across the map.
+* Each **city** produces **resources**, grows a **knowledge** tree, evolves
+  with **building** and trains **troops**.
+* **Armies** can be setup to gather some troops and execute orders across
+  the map.
 
 
 ## Getting Started
@@ -18,8 +20,7 @@ Simply build & install like this:
 
 ```
 BASE=github.com/jfsmig/hegemonie
-go install "${BASE}/hege-front"
-go install "${BASE}/hege-world"
+go install "${BASE}/hegemonie"
 ```
 
 For more information, please refer to the [TECH.md](./TECH.md) page.
