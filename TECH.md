@@ -1,9 +1,5 @@
 # Hegemonie
 
-## Design
-
-
-
 ## Architecture
 
 The Hegemonie platform consist in a set of microservices.
