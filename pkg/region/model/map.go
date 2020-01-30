@@ -113,10 +113,10 @@ func (m *Map) RoadCreate(src, dst uint64, check bool) error {
 
 	if r := m.Roads.Get(src, dst); r != nil {
 		if r.Deleted {
-			return errors.New("MapEdge exists")
-		} else {
 			r.Deleted = false
 			return nil
+		} else {
+			return errors.New("MapEdge exists")
 		}
 	} else {
 		m.Roads.Add(&MapEdge{src, dst, false})
@@ -137,11 +137,11 @@ func (m *Map) RoadDelete(src, dst uint64, check bool) error {
 	}
 
 	if r := m.Roads.Get(src, dst); r != nil {
-		if !r.Deleted {
+		if r.Deleted {
+			return errors.New("MapEdge closed")
+		} else {
 			r.Deleted = true
 			return nil
-		} else {
-			return errors.New("MapEdge closed")
 		}
 	} else {
 		return errors.New("MapEdge not found")

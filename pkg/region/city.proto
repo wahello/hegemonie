@@ -1,8 +1,16 @@
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 syntax = "proto3";
 
 package hegemonie.region.proto.city;
 
 service City {
+    // Returns a list of cities owned by the any of the given characters
+    rpc ListSet (ListSetReq) returns (ListOfManagedCities) {}
+
     // Returns a list of cities owned by the given character
     rpc List (ListReq) returns (ListOfNamedItems) {}
 
@@ -24,6 +32,15 @@ service City {
     rpc ListArmies (CityId) returns (ListOfNamedItems) {}
 }
 
+service Definitions {
+    rpc ListUnits (PaginatedQuery) returns (ListOfUnitTypes) {}
+
+    rpc ListBuildings (PaginatedQuery) returns (ListOfBuildingTypes) {}
+
+    rpc ListKnowledges (PaginatedQuery) returns (ListOfKnowledgeTypes) {}
+}
+
+
 message NamedItem {
     uint64 id = 1;
     string name = 2;
@@ -33,6 +50,15 @@ message ListOfNamedItems {
     repeated NamedItem items = 1;
 }
 
+message ListOfManagedCities {
+    repeated ManagedCity items = 1;
+}
+
+message ManagedCity {
+    uint64 idCharacter = 1;
+    uint64 idCity = 2;
+    string name = 3;
+}
 
 // Identifies a City and Character who is
 message CityId {
@@ -93,24 +119,27 @@ message KnowledgeTypeView {
 }
 
 message UnitView {
-    uint64 id = 1;
-    uint64 type = 2;
-    uint32 ticks = 3;
-    string name = 4;
+    UnitTypeView type = 1;
+    uint64 id = 2;
+    uint64 idType = 3;
+    uint32 ticks = 4;
+    string name = 5;
 }
 
 message BuildingView {
-    uint64 id = 1;
-    uint64 type = 2;
-    uint32 ticks = 3;
-    string name = 4;
+    BuildingTypeView type = 1;
+    uint64 id = 2;
+    uint64 idType = 3;
+    uint32 ticks = 4;
+    string name = 5;
 }
 
 message KnowledgeView {
-    uint64 id = 1;
-    uint64 type = 2;
-    uint32 ticks = 3;
-    string name = 4;
+    KnowledgeTypeView type = 1;
+    uint64 id = 2;
+    uint64 idType = 3;
+    uint32 ticks = 4;
+    string name = 5;
 }
 
 message StockView {
@@ -186,4 +215,27 @@ message ListReq {
     uint64 character = 1;
 }
 
+message ListSetReq {
+    repeated uint64 characters = 1;
+}
+
 message None {}
+
+
+message PaginatedQuery {
+    uint64 marker = 1;
+    uint32 max = 2;
+}
+
+message ListOfUnitTypes {
+    repeated UnitTypeView items = 1;
+}
+
+message ListOfBuildingTypes {
+    repeated BuildingTypeView items = 1;
+}
+
+message ListOfKnowledgeTypes {
+    repeated KnowledgeTypeView items = 1;
+}
+

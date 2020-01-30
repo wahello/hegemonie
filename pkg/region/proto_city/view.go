@@ -102,17 +102,17 @@ func ShowAssets(w *region.World, c *region.City) *CityAssets {
 
 	for _, k := range c.Knowledges {
 		v.Knowledge = append(v.Knowledge, &KnowledgeView{
-			Id: k.Id, Type: k.Type, Ticks: uint32(k.Ticks),
+			Id: k.Id, IdType: k.Type, Ticks: uint32(k.Ticks),
 		})
 	}
 	for _, b := range c.Buildings {
 		v.Buildings = append(v.Buildings, &BuildingView{
-			Id: b.Id, Type: b.Type, Ticks: uint32(b.Ticks),
+			Id: b.Id, IdType: b.Type, Ticks: uint32(b.Ticks),
 		})
 	}
 	for _, u := range c.Units {
 		v.Units = append(v.Units, &UnitView{
-			Id: u.Id, Type: u.Type, Ticks: uint32(u.Ticks),
+			Id: u.Id, IdType: u.Type, Ticks: uint32(u.Ticks),
 		})
 	}
 

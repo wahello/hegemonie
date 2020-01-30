@@ -29,6 +29,18 @@ func (s *SetOfKnowledgeTypes) Add(b *KnowledgeType) {
 	sort.Sort(s)
 }
 
+func (s SetOfKnowledgeTypes) Slice(marker uint64, max uint32) []*KnowledgeType {
+	start := sort.Search(len(s), func(i int) bool { return s[i].Id > marker })
+	if start < 0 || start >= s.Len() {
+		return s[:0]
+	}
+	remaining := uint32(s.Len() - start)
+	if remaining > max {
+		remaining = max
+	}
+	return s[start : uint32(start)+remaining]
+}
+
 func (s SetOfKnowledges) Len() int           { return len(s) }
 func (s SetOfKnowledges) Less(i, j int) bool { return s[i].Id < s[j].Id }
 func (s SetOfKnowledges) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }

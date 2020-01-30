@@ -109,6 +109,7 @@ func (self *regionConfig) execute() error {
 	srv := grpc.NewServer()
 
 	city.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})
+	city.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: self, w: &w})
 	admin.RegisterAdminServer(srv, &srvAdmin{cfg: self, w: &w})
 	army.RegisterArmyServer(srv, &srvArmy{cfg: self, w: &w})
 	if err := srv.Serve(lis); err != nil {

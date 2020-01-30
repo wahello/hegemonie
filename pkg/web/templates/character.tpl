@@ -3,7 +3,7 @@
 <div class="large">
     <ul>
         {% for c in Cities %}
-        <li><a href="/game/land?cid={{Character.Id}}&lid={{c.Id}}">{{c.Name}}</a></li>
+        <li><a href="/game/land/overview?cid={{Character.Id}}&lid={{c.Id}}">{{c.Name}}</a></li>
         {% endfor %}
     </ul>
 </div>

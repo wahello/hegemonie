@@ -18,10 +18,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <h1>{{Title}}</h1>
     </header>
     <nav>
-        {% if User.Admin %}<a href="/game/admin">Admin</a>{% endif %}
-        {% if userid %}<a href="/game/user">User</a>{% endif %}
+        {% if lid %}
+        <a href="/game/land/overview?cid={{ cid }}&lid={{ lid }}">Overview</a>
+        <a href="/game/land/budget?cid={{ cid }}&lid={{ lid }}">Budget</a>
+        <a href="/game/land/units?cid={{ cid }}&lid={{ lid }}">Troops</a>
+        <a href="/game/land/armies?cid={{ cid }}&lid={{ lid }}">Armies</a>
+        <a href="/game/land/buildings?cid={{ cid }}&lid={{ lid }}">Building</a>
+        <a href="/game/land/knowledges?cid={{ cid }}&lid={{ lid }}">Science</a>
+        <br/>
+        {% endif %}
+
         {% if cid %}<a href="/game/character?cid={{ cid }}">Character</a>{% endif %}
-        {% if lid %}<a href="/game/land?cid={{ cid }}&lid={{ lid }}">Land</a>{% endif %}
+        {% if userid %}<a href="/game/user">User</a>{% endif %}
+        {% if User.Admin %}<a href="/game/admin">Admin</a>{% endif %}
         {% if userid %}<a href="/action/logout">Log-Out</a>{% endif %}
     </nav>
     <aside>

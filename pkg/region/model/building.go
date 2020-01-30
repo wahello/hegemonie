@@ -43,6 +43,18 @@ func (s *SetOfBuildingTypes) Add(b *BuildingType) {
 	sort.Sort(s)
 }
 
+func (s SetOfBuildingTypes) Slice(marker uint64, max uint32) []*BuildingType {
+	start := sort.Search(len(s), func(i int) bool { return s[i].Id > marker })
+	if start < 0 || start >= s.Len() {
+		return s[:0]
+	}
+	remaining := uint32(s.Len() - start)
+	if remaining > max {
+		remaining = max
+	}
+	return s[start : uint32(start)+remaining]
+}
+
 func (s SetOfBuildingTypes) Frontier(pop int64, built []*Building, owned []*Knowledge) []*BuildingType {
 	bmap := make(map[uint64]bool)
 	pending := make(map[uint64]bool)

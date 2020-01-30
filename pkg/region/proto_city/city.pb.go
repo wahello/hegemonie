@@ -110,6 +110,100 @@ func (m *ListOfNamedItems) GetItems() []*NamedItem {
 	return nil
 }
 
+type ListOfManagedCities struct {
+	Items                []*ManagedCity `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *ListOfManagedCities) Reset()         { *m = ListOfManagedCities{} }
+func (m *ListOfManagedCities) String() string { return proto.CompactTextString(m) }
+func (*ListOfManagedCities) ProtoMessage()    {}
+func (*ListOfManagedCities) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{2}
+}
+
+func (m *ListOfManagedCities) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListOfManagedCities.Unmarshal(m, b)
+}
+func (m *ListOfManagedCities) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListOfManagedCities.Marshal(b, m, deterministic)
+}
+func (m *ListOfManagedCities) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListOfManagedCities.Merge(m, src)
+}
+func (m *ListOfManagedCities) XXX_Size() int {
+	return xxx_messageInfo_ListOfManagedCities.Size(m)
+}
+func (m *ListOfManagedCities) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListOfManagedCities.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListOfManagedCities proto.InternalMessageInfo
+
+func (m *ListOfManagedCities) GetItems() []*ManagedCity {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type ManagedCity struct {
+	IdCharacter          uint64   `protobuf:"varint,1,opt,name=idCharacter,proto3" json:"idCharacter,omitempty"`
+	IdCity               uint64   `protobuf:"varint,2,opt,name=idCity,proto3" json:"idCity,omitempty"`
+	Name                 string   `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ManagedCity) Reset()         { *m = ManagedCity{} }
+func (m *ManagedCity) String() string { return proto.CompactTextString(m) }
+func (*ManagedCity) ProtoMessage()    {}
+func (*ManagedCity) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{3}
+}
+
+func (m *ManagedCity) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ManagedCity.Unmarshal(m, b)
+}
+func (m *ManagedCity) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ManagedCity.Marshal(b, m, deterministic)
+}
+func (m *ManagedCity) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ManagedCity.Merge(m, src)
+}
+func (m *ManagedCity) XXX_Size() int {
+	return xxx_messageInfo_ManagedCity.Size(m)
+}
+func (m *ManagedCity) XXX_DiscardUnknown() {
+	xxx_messageInfo_ManagedCity.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ManagedCity proto.InternalMessageInfo
+
+func (m *ManagedCity) GetIdCharacter() uint64 {
+	if m != nil {
+		return m.IdCharacter
+	}
+	return 0
+}
+
+func (m *ManagedCity) GetIdCity() uint64 {
+	if m != nil {
+		return m.IdCity
+	}
+	return 0
+}
+
+func (m *ManagedCity) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
 // Identifies a City and Character who is
 type CityId struct {
 	Character            uint64   `protobuf:"varint,1,opt,name=character,proto3" json:"character,omitempty"`
@@ -123,7 +217,7 @@ func (m *CityId) Reset()         { *m = CityId{} }
 func (m *CityId) String() string { return proto.CompactTextString(m) }
 func (*CityId) ProtoMessage()    {}
 func (*CityId) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{2}
+	return fileDescriptor_f63625ed15d5bd67, []int{4}
 }
 
 func (m *CityId) XXX_Unmarshal(b []byte) error {
@@ -170,7 +264,7 @@ func (m *ArmyView) Reset()         { *m = ArmyView{} }
 func (m *ArmyView) String() string { return proto.CompactTextString(m) }
 func (*ArmyView) ProtoMessage()    {}
 func (*ArmyView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{3}
+	return fileDescriptor_f63625ed15d5bd67, []int{5}
 }
 
 func (m *ArmyView) XXX_Unmarshal(b []byte) error {
@@ -221,7 +315,7 @@ func (m *ResourcesAbs) Reset()         { *m = ResourcesAbs{} }
 func (m *ResourcesAbs) String() string { return proto.CompactTextString(m) }
 func (*ResourcesAbs) ProtoMessage()    {}
 func (*ResourcesAbs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{4}
+	return fileDescriptor_f63625ed15d5bd67, []int{6}
 }
 
 func (m *ResourcesAbs) XXX_Unmarshal(b []byte) error {
@@ -300,7 +394,7 @@ func (m *ResourcesPlus) Reset()         { *m = ResourcesPlus{} }
 func (m *ResourcesPlus) String() string { return proto.CompactTextString(m) }
 func (*ResourcesPlus) ProtoMessage()    {}
 func (*ResourcesPlus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{5}
+	return fileDescriptor_f63625ed15d5bd67, []int{7}
 }
 
 func (m *ResourcesPlus) XXX_Unmarshal(b []byte) error {
@@ -379,7 +473,7 @@ func (m *ResourcesMult) Reset()         { *m = ResourcesMult{} }
 func (m *ResourcesMult) String() string { return proto.CompactTextString(m) }
 func (*ResourcesMult) ProtoMessage()    {}
 func (*ResourcesMult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{6}
+	return fileDescriptor_f63625ed15d5bd67, []int{8}
 }
 
 func (m *ResourcesMult) XXX_Unmarshal(b []byte) error {
@@ -454,7 +548,7 @@ func (m *ResourcesMod) Reset()         { *m = ResourcesMod{} }
 func (m *ResourcesMod) String() string { return proto.CompactTextString(m) }
 func (*ResourcesMod) ProtoMessage()    {}
 func (*ResourcesMod) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{7}
+	return fileDescriptor_f63625ed15d5bd67, []int{9}
 }
 
 func (m *ResourcesMod) XXX_Unmarshal(b []byte) error {
@@ -501,7 +595,7 @@ func (m *UnitTypeView) Reset()         { *m = UnitTypeView{} }
 func (m *UnitTypeView) String() string { return proto.CompactTextString(m) }
 func (*UnitTypeView) ProtoMessage()    {}
 func (*UnitTypeView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{8}
+	return fileDescriptor_f63625ed15d5bd67, []int{10}
 }
 
 func (m *UnitTypeView) XXX_Unmarshal(b []byte) error {
@@ -548,7 +642,7 @@ func (m *BuildingTypeView) Reset()         { *m = BuildingTypeView{} }
 func (m *BuildingTypeView) String() string { return proto.CompactTextString(m) }
 func (*BuildingTypeView) ProtoMessage()    {}
 func (*BuildingTypeView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{9}
+	return fileDescriptor_f63625ed15d5bd67, []int{11}
 }
 
 func (m *BuildingTypeView) XXX_Unmarshal(b []byte) error {
@@ -595,7 +689,7 @@ func (m *KnowledgeTypeView) Reset()         { *m = KnowledgeTypeView{} }
 func (m *KnowledgeTypeView) String() string { return proto.CompactTextString(m) }
 func (*KnowledgeTypeView) ProtoMessage()    {}
 func (*KnowledgeTypeView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{10}
+	return fileDescriptor_f63625ed15d5bd67, []int{12}
 }
 
 func (m *KnowledgeTypeView) XXX_Unmarshal(b []byte) error {
@@ -631,20 +725,21 @@ func (m *KnowledgeTypeView) GetName() string {
 }
 
 type UnitView struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type                 uint64   `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
-	Ticks                uint32   `protobuf:"varint,3,opt,name=ticks,proto3" json:"ticks,omitempty"`
-	Name                 string   `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Type                 *UnitTypeView `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Id                   uint64        `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	IdType               uint64        `protobuf:"varint,3,opt,name=idType,proto3" json:"idType,omitempty"`
+	Ticks                uint32        `protobuf:"varint,4,opt,name=ticks,proto3" json:"ticks,omitempty"`
+	Name                 string        `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
 }
 
 func (m *UnitView) Reset()         { *m = UnitView{} }
 func (m *UnitView) String() string { return proto.CompactTextString(m) }
 func (*UnitView) ProtoMessage()    {}
 func (*UnitView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{11}
+	return fileDescriptor_f63625ed15d5bd67, []int{13}
 }
 
 func (m *UnitView) XXX_Unmarshal(b []byte) error {
@@ -665,6 +760,13 @@ func (m *UnitView) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnitView proto.InternalMessageInfo
 
+func (m *UnitView) GetType() *UnitTypeView {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
 func (m *UnitView) GetId() uint64 {
 	if m != nil {
 		return m.Id
@@ -672,9 +774,9 @@ func (m *UnitView) GetId() uint64 {
 	return 0
 }
 
-func (m *UnitView) GetType() uint64 {
+func (m *UnitView) GetIdType() uint64 {
 	if m != nil {
-		return m.Type
+		return m.IdType
 	}
 	return 0
 }
@@ -694,20 +796,21 @@ func (m *UnitView) GetName() string {
 }
 
 type BuildingView struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type                 uint64   `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
-	Ticks                uint32   `protobuf:"varint,3,opt,name=ticks,proto3" json:"ticks,omitempty"`
-	Name                 string   `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Type                 *BuildingTypeView `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Id                   uint64            `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	IdType               uint64            `protobuf:"varint,3,opt,name=idType,proto3" json:"idType,omitempty"`
+	Ticks                uint32            `protobuf:"varint,4,opt,name=ticks,proto3" json:"ticks,omitempty"`
+	Name                 string            `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
 func (m *BuildingView) Reset()         { *m = BuildingView{} }
 func (m *BuildingView) String() string { return proto.CompactTextString(m) }
 func (*BuildingView) ProtoMessage()    {}
 func (*BuildingView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{12}
+	return fileDescriptor_f63625ed15d5bd67, []int{14}
 }
 
 func (m *BuildingView) XXX_Unmarshal(b []byte) error {
@@ -728,6 +831,13 @@ func (m *BuildingView) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BuildingView proto.InternalMessageInfo
 
+func (m *BuildingView) GetType() *BuildingTypeView {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
 func (m *BuildingView) GetId() uint64 {
 	if m != nil {
 		return m.Id
@@ -735,9 +845,9 @@ func (m *BuildingView) GetId() uint64 {
 	return 0
 }
 
-func (m *BuildingView) GetType() uint64 {
+func (m *BuildingView) GetIdType() uint64 {
 	if m != nil {
-		return m.Type
+		return m.IdType
 	}
 	return 0
 }
@@ -757,20 +867,21 @@ func (m *BuildingView) GetName() string {
 }
 
 type KnowledgeView struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type                 uint64   `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
-	Ticks                uint32   `protobuf:"varint,3,opt,name=ticks,proto3" json:"ticks,omitempty"`
-	Name                 string   `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Type                 *KnowledgeTypeView `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Id                   uint64             `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	IdType               uint64             `protobuf:"varint,3,opt,name=idType,proto3" json:"idType,omitempty"`
+	Ticks                uint32             `protobuf:"varint,4,opt,name=ticks,proto3" json:"ticks,omitempty"`
+	Name                 string             `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
+	XXX_unrecognized     []byte             `json:"-"`
+	XXX_sizecache        int32              `json:"-"`
 }
 
 func (m *KnowledgeView) Reset()         { *m = KnowledgeView{} }
 func (m *KnowledgeView) String() string { return proto.CompactTextString(m) }
 func (*KnowledgeView) ProtoMessage()    {}
 func (*KnowledgeView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{13}
+	return fileDescriptor_f63625ed15d5bd67, []int{15}
 }
 
 func (m *KnowledgeView) XXX_Unmarshal(b []byte) error {
@@ -791,6 +902,13 @@ func (m *KnowledgeView) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_KnowledgeView proto.InternalMessageInfo
 
+func (m *KnowledgeView) GetType() *KnowledgeTypeView {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
 func (m *KnowledgeView) GetId() uint64 {
 	if m != nil {
 		return m.Id
@@ -798,9 +916,9 @@ func (m *KnowledgeView) GetId() uint64 {
 	return 0
 }
 
-func (m *KnowledgeView) GetType() uint64 {
+func (m *KnowledgeView) GetIdType() uint64 {
 	if m != nil {
-		return m.Type
+		return m.IdType
 	}
 	return 0
 }
@@ -835,7 +953,7 @@ func (m *StockView) Reset()         { *m = StockView{} }
 func (m *StockView) String() string { return proto.CompactTextString(m) }
 func (*StockView) ProtoMessage()    {}
 func (*StockView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{14}
+	return fileDescriptor_f63625ed15d5bd67, []int{16}
 }
 
 func (m *StockView) XXX_Unmarshal(b []byte) error {
@@ -913,7 +1031,7 @@ func (m *ProductionView) Reset()         { *m = ProductionView{} }
 func (m *ProductionView) String() string { return proto.CompactTextString(m) }
 func (*ProductionView) ProtoMessage()    {}
 func (*ProductionView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{15}
+	return fileDescriptor_f63625ed15d5bd67, []int{17}
 }
 
 func (m *ProductionView) XXX_Unmarshal(b []byte) error {
@@ -982,7 +1100,7 @@ func (m *CityEvolution) Reset()         { *m = CityEvolution{} }
 func (m *CityEvolution) String() string { return proto.CompactTextString(m) }
 func (*CityEvolution) ProtoMessage()    {}
 func (*CityEvolution) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{16}
+	return fileDescriptor_f63625ed15d5bd67, []int{18}
 }
 
 func (m *CityEvolution) XXX_Unmarshal(b []byte) error {
@@ -1038,7 +1156,7 @@ func (m *CityAssets) Reset()         { *m = CityAssets{} }
 func (m *CityAssets) String() string { return proto.CompactTextString(m) }
 func (*CityAssets) ProtoMessage()    {}
 func (*CityAssets) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{17}
+	return fileDescriptor_f63625ed15d5bd67, []int{19}
 }
 
 func (m *CityAssets) XXX_Unmarshal(b []byte) error {
@@ -1105,7 +1223,7 @@ func (m *CityView) Reset()         { *m = CityView{} }
 func (m *CityView) String() string { return proto.CompactTextString(m) }
 func (*CityView) ProtoMessage()    {}
 func (*CityView) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{18}
+	return fileDescriptor_f63625ed15d5bd67, []int{20}
 }
 
 func (m *CityView) XXX_Unmarshal(b []byte) error {
@@ -1194,7 +1312,7 @@ func (m *StudyReq) Reset()         { *m = StudyReq{} }
 func (m *StudyReq) String() string { return proto.CompactTextString(m) }
 func (*StudyReq) ProtoMessage()    {}
 func (*StudyReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{19}
+	return fileDescriptor_f63625ed15d5bd67, []int{21}
 }
 
 func (m *StudyReq) XXX_Unmarshal(b []byte) error {
@@ -1241,7 +1359,7 @@ func (m *TrainReq) Reset()         { *m = TrainReq{} }
 func (m *TrainReq) String() string { return proto.CompactTextString(m) }
 func (*TrainReq) ProtoMessage()    {}
 func (*TrainReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{20}
+	return fileDescriptor_f63625ed15d5bd67, []int{22}
 }
 
 func (m *TrainReq) XXX_Unmarshal(b []byte) error {
@@ -1288,7 +1406,7 @@ func (m *BuildReq) Reset()         { *m = BuildReq{} }
 func (m *BuildReq) String() string { return proto.CompactTextString(m) }
 func (*BuildReq) ProtoMessage()    {}
 func (*BuildReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{21}
+	return fileDescriptor_f63625ed15d5bd67, []int{23}
 }
 
 func (m *BuildReq) XXX_Unmarshal(b []byte) error {
@@ -1335,7 +1453,7 @@ func (m *CreateArmyReq) Reset()         { *m = CreateArmyReq{} }
 func (m *CreateArmyReq) String() string { return proto.CompactTextString(m) }
 func (*CreateArmyReq) ProtoMessage()    {}
 func (*CreateArmyReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{22}
+	return fileDescriptor_f63625ed15d5bd67, []int{24}
 }
 
 func (m *CreateArmyReq) XXX_Unmarshal(b []byte) error {
@@ -1383,7 +1501,7 @@ func (m *TransferUnitReq) Reset()         { *m = TransferUnitReq{} }
 func (m *TransferUnitReq) String() string { return proto.CompactTextString(m) }
 func (*TransferUnitReq) ProtoMessage()    {}
 func (*TransferUnitReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{23}
+	return fileDescriptor_f63625ed15d5bd67, []int{25}
 }
 
 func (m *TransferUnitReq) XXX_Unmarshal(b []byte) error {
@@ -1436,7 +1554,7 @@ func (m *ListReq) Reset()         { *m = ListReq{} }
 func (m *ListReq) String() string { return proto.CompactTextString(m) }
 func (*ListReq) ProtoMessage()    {}
 func (*ListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{24}
+	return fileDescriptor_f63625ed15d5bd67, []int{26}
 }
 
 func (m *ListReq) XXX_Unmarshal(b []byte) error {
@@ -1464,6 +1582,45 @@ func (m *ListReq) GetCharacter() uint64 {
 	return 0
 }
 
+type ListSetReq struct {
+	Characters           []uint64 `protobuf:"varint,1,rep,packed,name=characters,proto3" json:"characters,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListSetReq) Reset()         { *m = ListSetReq{} }
+func (m *ListSetReq) String() string { return proto.CompactTextString(m) }
+func (*ListSetReq) ProtoMessage()    {}
+func (*ListSetReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{27}
+}
+
+func (m *ListSetReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListSetReq.Unmarshal(m, b)
+}
+func (m *ListSetReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListSetReq.Marshal(b, m, deterministic)
+}
+func (m *ListSetReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListSetReq.Merge(m, src)
+}
+func (m *ListSetReq) XXX_Size() int {
+	return xxx_messageInfo_ListSetReq.Size(m)
+}
+func (m *ListSetReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListSetReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListSetReq proto.InternalMessageInfo
+
+func (m *ListSetReq) GetCharacters() []uint64 {
+	if m != nil {
+		return m.Characters
+	}
+	return nil
+}
+
 type None struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1474,7 +1631,7 @@ func (m *None) Reset()         { *m = None{} }
 func (m *None) String() string { return proto.CompactTextString(m) }
 func (*None) ProtoMessage()    {}
 func (*None) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f63625ed15d5bd67, []int{25}
+	return fileDescriptor_f63625ed15d5bd67, []int{28}
 }
 
 func (m *None) XXX_Unmarshal(b []byte) error {
@@ -1495,9 +1652,175 @@ func (m *None) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_None proto.InternalMessageInfo
 
+type PaginatedQuery struct {
+	Marker               uint64   `protobuf:"varint,1,opt,name=marker,proto3" json:"marker,omitempty"`
+	Max                  uint32   `protobuf:"varint,2,opt,name=max,proto3" json:"max,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PaginatedQuery) Reset()         { *m = PaginatedQuery{} }
+func (m *PaginatedQuery) String() string { return proto.CompactTextString(m) }
+func (*PaginatedQuery) ProtoMessage()    {}
+func (*PaginatedQuery) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{29}
+}
+
+func (m *PaginatedQuery) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PaginatedQuery.Unmarshal(m, b)
+}
+func (m *PaginatedQuery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PaginatedQuery.Marshal(b, m, deterministic)
+}
+func (m *PaginatedQuery) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PaginatedQuery.Merge(m, src)
+}
+func (m *PaginatedQuery) XXX_Size() int {
+	return xxx_messageInfo_PaginatedQuery.Size(m)
+}
+func (m *PaginatedQuery) XXX_DiscardUnknown() {
+	xxx_messageInfo_PaginatedQuery.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PaginatedQuery proto.InternalMessageInfo
+
+func (m *PaginatedQuery) GetMarker() uint64 {
+	if m != nil {
+		return m.Marker
+	}
+	return 0
+}
+
+func (m *PaginatedQuery) GetMax() uint32 {
+	if m != nil {
+		return m.Max
+	}
+	return 0
+}
+
+type ListOfUnitTypes struct {
+	Items                []*UnitTypeView `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *ListOfUnitTypes) Reset()         { *m = ListOfUnitTypes{} }
+func (m *ListOfUnitTypes) String() string { return proto.CompactTextString(m) }
+func (*ListOfUnitTypes) ProtoMessage()    {}
+func (*ListOfUnitTypes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{30}
+}
+
+func (m *ListOfUnitTypes) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListOfUnitTypes.Unmarshal(m, b)
+}
+func (m *ListOfUnitTypes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListOfUnitTypes.Marshal(b, m, deterministic)
+}
+func (m *ListOfUnitTypes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListOfUnitTypes.Merge(m, src)
+}
+func (m *ListOfUnitTypes) XXX_Size() int {
+	return xxx_messageInfo_ListOfUnitTypes.Size(m)
+}
+func (m *ListOfUnitTypes) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListOfUnitTypes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListOfUnitTypes proto.InternalMessageInfo
+
+func (m *ListOfUnitTypes) GetItems() []*UnitTypeView {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type ListOfBuildingTypes struct {
+	Items                []*BuildingTypeView `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *ListOfBuildingTypes) Reset()         { *m = ListOfBuildingTypes{} }
+func (m *ListOfBuildingTypes) String() string { return proto.CompactTextString(m) }
+func (*ListOfBuildingTypes) ProtoMessage()    {}
+func (*ListOfBuildingTypes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{31}
+}
+
+func (m *ListOfBuildingTypes) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListOfBuildingTypes.Unmarshal(m, b)
+}
+func (m *ListOfBuildingTypes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListOfBuildingTypes.Marshal(b, m, deterministic)
+}
+func (m *ListOfBuildingTypes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListOfBuildingTypes.Merge(m, src)
+}
+func (m *ListOfBuildingTypes) XXX_Size() int {
+	return xxx_messageInfo_ListOfBuildingTypes.Size(m)
+}
+func (m *ListOfBuildingTypes) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListOfBuildingTypes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListOfBuildingTypes proto.InternalMessageInfo
+
+func (m *ListOfBuildingTypes) GetItems() []*BuildingTypeView {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type ListOfKnowledgeTypes struct {
+	Items                []*KnowledgeTypeView `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
+}
+
+func (m *ListOfKnowledgeTypes) Reset()         { *m = ListOfKnowledgeTypes{} }
+func (m *ListOfKnowledgeTypes) String() string { return proto.CompactTextString(m) }
+func (*ListOfKnowledgeTypes) ProtoMessage()    {}
+func (*ListOfKnowledgeTypes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f63625ed15d5bd67, []int{32}
+}
+
+func (m *ListOfKnowledgeTypes) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListOfKnowledgeTypes.Unmarshal(m, b)
+}
+func (m *ListOfKnowledgeTypes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListOfKnowledgeTypes.Marshal(b, m, deterministic)
+}
+func (m *ListOfKnowledgeTypes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListOfKnowledgeTypes.Merge(m, src)
+}
+func (m *ListOfKnowledgeTypes) XXX_Size() int {
+	return xxx_messageInfo_ListOfKnowledgeTypes.Size(m)
+}
+func (m *ListOfKnowledgeTypes) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListOfKnowledgeTypes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListOfKnowledgeTypes proto.InternalMessageInfo
+
+func (m *ListOfKnowledgeTypes) GetItems() []*KnowledgeTypeView {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*NamedItem)(nil), "hegemonie.region.proto.city.NamedItem")
 	proto.RegisterType((*ListOfNamedItems)(nil), "hegemonie.region.proto.city.ListOfNamedItems")
+	proto.RegisterType((*ListOfManagedCities)(nil), "hegemonie.region.proto.city.ListOfManagedCities")
+	proto.RegisterType((*ManagedCity)(nil), "hegemonie.region.proto.city.ManagedCity")
 	proto.RegisterType((*CityId)(nil), "hegemonie.region.proto.city.CityId")
 	proto.RegisterType((*ArmyView)(nil), "hegemonie.region.proto.city.ArmyView")
 	proto.RegisterType((*ResourcesAbs)(nil), "hegemonie.region.proto.city.ResourcesAbs")
@@ -1521,78 +1844,100 @@ func init() {
 	proto.RegisterType((*CreateArmyReq)(nil), "hegemonie.region.proto.city.CreateArmyReq")
 	proto.RegisterType((*TransferUnitReq)(nil), "hegemonie.region.proto.city.TransferUnitReq")
 	proto.RegisterType((*ListReq)(nil), "hegemonie.region.proto.city.ListReq")
+	proto.RegisterType((*ListSetReq)(nil), "hegemonie.region.proto.city.ListSetReq")
 	proto.RegisterType((*None)(nil), "hegemonie.region.proto.city.None")
+	proto.RegisterType((*PaginatedQuery)(nil), "hegemonie.region.proto.city.PaginatedQuery")
+	proto.RegisterType((*ListOfUnitTypes)(nil), "hegemonie.region.proto.city.ListOfUnitTypes")
+	proto.RegisterType((*ListOfBuildingTypes)(nil), "hegemonie.region.proto.city.ListOfBuildingTypes")
+	proto.RegisterType((*ListOfKnowledgeTypes)(nil), "hegemonie.region.proto.city.ListOfKnowledgeTypes")
 }
 
 func init() { proto.RegisterFile("city.proto", fileDescriptor_f63625ed15d5bd67) }
 
 var fileDescriptor_f63625ed15d5bd67 = []byte{
-	// 1033 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x57, 0xdd, 0x8e, 0xdb, 0x44,
-	0x14, 0xae, 0x7f, 0x92, 0x26, 0xa7, 0x49, 0x29, 0x23, 0x84, 0xac, 0x85, 0x8b, 0x65, 0xe8, 0xd2,
-	0xa5, 0xd0, 0xd0, 0x66, 0x5b, 0x2a, 0x01, 0xa5, 0x0a, 0x15, 0x3f, 0xab, 0xed, 0x96, 0xd5, 0xec,
-	0x82, 0xb8, 0xe8, 0x0a, 0x39, 0xf1, 0x34, 0x3b, 0x8a, 0xe3, 0x09, 0xe3, 0x71, 0x57, 0x79, 0x09,
-	0x5e, 0x80, 0x4b, 0x5e, 0x8c, 0x3b, 0xb8, 0xe7, 0x05, 0xd0, 0x8c, 0xc7, 0x8e, 0xe3, 0x05, 0xdb,
-	0xd1, 0x6a, 0xef, 0xb8, 0x9b, 0xe3, 0xf8, 0xfb, 0xbe, 0x33, 0x93, 0xef, 0x9c, 0x39, 0x06, 0x98,
-	0x30, 0xb9, 0x1c, 0x2c, 0x04, 0x97, 0x1c, 0xbd, 0x73, 0x46, 0xa7, 0x74, 0xce, 0x23, 0x46, 0x07,
-	0x82, 0x4e, 0x19, 0x8f, 0xd2, 0xe7, 0x03, 0xf5, 0x0a, 0xfe, 0x04, 0xba, 0x2f, 0xfc, 0x39, 0x0d,
-	0xf6, 0x25, 0x9d, 0xa3, 0x9b, 0x60, 0xb3, 0xc0, 0xb3, 0xb6, 0xad, 0x5d, 0x97, 0xd8, 0x2c, 0x40,
-	0x08, 0xdc, 0xc8, 0x9f, 0x53, 0xcf, 0xde, 0xb6, 0x76, 0xbb, 0x44, 0xaf, 0xf1, 0x11, 0xdc, 0x7a,
-	0xce, 0x62, 0xf9, 0xfd, 0xab, 0x1c, 0x16, 0xa3, 0x2f, 0xa0, 0xc5, 0xd4, 0xc2, 0xb3, 0xb6, 0x9d,
-	0xdd, 0x1b, 0xc3, 0x0f, 0x06, 0x15, 0x8a, 0x83, 0x1c, 0x47, 0x52, 0x10, 0xfe, 0x0c, 0xda, 0xcf,
-	0x98, 0x5c, 0xee, 0x07, 0xe8, 0x5d, 0xe8, 0x4e, 0xce, 0x7c, 0xe1, 0x4f, 0x24, 0x15, 0x26, 0x8d,
-	0xd5, 0x03, 0x95, 0x8d, 0x22, 0xd0, 0xd9, 0xb8, 0x44, 0xaf, 0xf1, 0x00, 0x3a, 0x23, 0x31, 0x5f,
-	0xfe, 0xc8, 0xe8, 0x79, 0xa3, 0xec, 0x23, 0xe8, 0x11, 0x1a, 0xf3, 0x44, 0x4c, 0x68, 0x3c, 0x1a,
-	0xc7, 0x0a, 0x23, 0xee, 0x67, 0x18, 0x71, 0x5f, 0xc7, 0x0f, 0x8c, 0x82, 0x2d, 0x1e, 0xe8, 0x78,
-	0xe8, 0x39, 0x26, 0x1e, 0xea, 0x78, 0xcf, 0x73, 0x4d, 0xbc, 0xa7, 0xe3, 0x87, 0x5e, 0xcb, 0xc4,
-	0x0f, 0x75, 0xfc, 0xc8, 0x6b, 0x9b, 0xf8, 0x11, 0xe6, 0xd0, 0xcf, 0xf5, 0x8e, 0xc2, 0xa4, 0x28,
-	0xe8, 0x94, 0x04, 0x9d, 0x92, 0xa0, 0x53, 0x12, 0x74, 0x4a, 0x82, 0x4e, 0x49, 0xd0, 0xb9, 0x20,
-	0x78, 0x98, 0x84, 0xb2, 0x20, 0x68, 0x95, 0x04, 0xad, 0x92, 0xa0, 0x55, 0x12, 0xb4, 0x4a, 0x82,
-	0x56, 0x49, 0xd0, 0xd2, 0x82, 0xbf, 0x5a, 0x85, 0x23, 0x3d, 0xe4, 0x01, 0xfa, 0x12, 0xdc, 0x45,
-	0x98, 0xc4, 0x5a, 0xf2, 0xc6, 0xf0, 0x6e, 0xa5, 0x17, 0xd6, 0xce, 0x86, 0x68, 0x9c, 0xc2, 0xcf,
-	0x93, 0x50, 0xea, 0x14, 0x1b, 0xe3, 0xd5, 0x56, 0x89, 0xc6, 0xe1, 0x21, 0xf4, 0x7e, 0x88, 0x98,
-	0x3c, 0x59, 0x2e, 0x68, 0x63, 0x5b, 0x7c, 0x0a, 0xb7, 0xbe, 0x4a, 0x58, 0x18, 0xb0, 0x68, 0xba,
-	0x11, 0xee, 0x31, 0xbc, 0x79, 0x10, 0xf1, 0xf3, 0x90, 0x06, 0x53, 0xba, 0x11, 0xf0, 0x27, 0xe8,
-	0xa8, 0x24, 0xff, 0xeb, 0x7d, 0xb9, 0x5c, 0xd0, 0xcc, 0xe7, 0x6a, 0x8d, 0xde, 0x82, 0x96, 0x64,
-	0x93, 0x59, 0xac, 0xff, 0xa8, 0x3e, 0x49, 0x83, 0x9c, 0xd9, 0x2d, 0x30, 0xbf, 0x84, 0x5e, 0xb6,
-	0x95, 0x2b, 0x60, 0x3f, 0x85, 0x7e, 0xbe, 0xe1, 0x2b, 0xa0, 0xff, 0xdd, 0x81, 0xee, 0xb1, 0xe4,
-	0x93, 0x99, 0xe6, 0x7e, 0x02, 0xee, 0xd8, 0x8f, 0xa9, 0x71, 0xd2, 0x87, 0xcd, 0x9c, 0x30, 0x1a,
-	0xc7, 0x44, 0xc3, 0xd0, 0xb7, 0xd0, 0x9d, 0x65, 0xb9, 0x1a, 0x37, 0x35, 0xe4, 0x38, 0xe4, 0x01,
-	0x59, 0x61, 0x15, 0xd1, 0xd8, 0x1c, 0x69, 0xba, 0x87, 0xcd, 0x88, 0x72, 0x2c, 0x1a, 0x41, 0x5b,
-	0x0a, 0xce, 0x17, 0xb1, 0xde, 0xf4, 0x46, 0x2c, 0x06, 0xa8, 0x28, 0xfc, 0x89, 0x4c, 0xfc, 0x50,
-	0x97, 0xe4, 0x46, 0xa7, 0x62, 0x80, 0xe8, 0x29, 0xb4, 0x92, 0xd8, 0x9f, 0x52, 0x5d, 0xc4, 0x1b,
-	0x31, 0xa4, 0x38, 0xfc, 0xa7, 0x0d, 0x37, 0x8f, 0x04, 0x0f, 0x92, 0x89, 0x64, 0x3c, 0xfa, 0xff,
-	0xaf, 0xba, 0xb2, 0xbf, 0x0a, 0xff, 0x6d, 0x41, 0x5f, 0xdd, 0x8d, 0x5f, 0xbf, 0xe6, 0x61, 0xa2,
-	0x0e, 0x1b, 0x3d, 0x87, 0xee, 0xec, 0x1b, 0xc1, 0x23, 0xc9, 0xf4, 0x15, 0xa9, 0xae, 0xdb, 0x41,
-	0x25, 0xef, 0x85, 0xfe, 0x44, 0x56, 0x04, 0xe8, 0x00, 0xba, 0xe3, 0x9c, 0xcd, 0xd6, 0x6c, 0xf7,
-	0x2a, 0xd9, 0xca, 0x5d, 0x92, 0xac, 0xf0, 0xea, 0xec, 0x93, 0x9c, 0xcc, 0xd1, 0x64, 0xd5, 0x5b,
-	0x2e, 0xb6, 0x69, 0xb2, 0xc2, 0xe2, 0xdf, 0x6c, 0x00, 0xb5, 0xeb, 0x51, 0x1c, 0x53, 0x19, 0xa3,
-	0xcf, 0xa1, 0x95, 0x44, 0x4c, 0x66, 0xd3, 0xc5, 0x4e, 0x2d, 0xa7, 0xe6, 0x4b, 0x31, 0xeb, 0x86,
-	0xb0, 0x1b, 0x24, 0x55, 0x6c, 0x9e, 0x45, 0x43, 0x7c, 0x57, 0xb4, 0x68, 0xba, 0xbb, 0xbb, 0xcd,
-	0x0e, 0xde, 0x1c, 0x7a, 0xee, 0xd1, 0x27, 0xd0, 0xf6, 0xc5, 0x9c, 0x51, 0x65, 0xad, 0xfa, 0x0d,
-	0x65, 0xe3, 0x0d, 0x31, 0x20, 0xfc, 0x97, 0x0d, 0x1d, 0x75, 0x3a, 0x4d, 0xef, 0x1a, 0xd5, 0x7e,
-	0xf9, 0x79, 0xa4, 0xff, 0x13, 0xf5, 0x5a, 0x1a, 0xa0, 0xb7, 0xa1, 0x1d, 0xd0, 0x45, 0x22, 0x97,
-	0x66, 0x9a, 0x31, 0x11, 0x3a, 0x00, 0x58, 0xe4, 0xb5, 0x6d, 0x9c, 0xfb, 0x51, 0x65, 0x86, 0xeb,
-	0xad, 0x80, 0x14, 0xe0, 0x6a, 0x30, 0x8c, 0x55, 0x3b, 0x37, 0xad, 0xa6, 0x7a, 0x30, 0xcc, 0x1b,
-	0x3f, 0x49, 0x41, 0x6a, 0x12, 0xa0, 0xaf, 0x79, 0xe8, 0x5d, 0x6f, 0x30, 0x09, 0xac, 0x55, 0x09,
-	0xd1, 0x38, 0xf4, 0x14, 0xda, 0xbe, 0xb6, 0x90, 0xd7, 0xd1, 0x0c, 0x77, 0x6a, 0x19, 0x52, 0xc7,
-	0x11, 0x03, 0xc3, 0x0c, 0x3a, 0xc7, 0x32, 0x09, 0x96, 0x84, 0xfe, 0x82, 0x1e, 0x9b, 0xe9, 0x33,
-	0xed, 0x70, 0xef, 0xd7, 0x52, 0xed, 0x07, 0xe9, 0x88, 0x8a, 0x6e, 0x43, 0x7f, 0x56, 0xac, 0x41,
-	0x73, 0x35, 0xae, 0x3f, 0xc4, 0x3f, 0x43, 0xe7, 0x44, 0xf8, 0x2c, 0xba, 0x94, 0xd4, 0x16, 0x74,
-	0x12, 0x53, 0x53, 0x46, 0x25, 0x8f, 0xf1, 0x14, 0x3a, 0xda, 0xda, 0x97, 0x12, 0xc0, 0xd0, 0x1b,
-	0x17, 0x3a, 0x80, 0x11, 0x59, 0x7b, 0x86, 0x5f, 0x42, 0xff, 0x99, 0xa0, 0xbe, 0xa4, 0xca, 0xb9,
-	0x97, 0x52, 0xfb, 0xb7, 0xc1, 0x49, 0xc0, 0x1b, 0x27, 0xc2, 0x8f, 0xe2, 0x57, 0x54, 0xa8, 0x52,
-	0xbf, 0x2c, 0xbf, 0x2f, 0xe6, 0xf9, 0x07, 0x85, 0x5a, 0xab, 0x67, 0xea, 0xc8, 0x4c, 0xad, 0xe8,
-	0x35, 0xbe, 0x03, 0xd7, 0xd5, 0x27, 0x8f, 0xd2, 0xaa, 0xfc, 0x42, 0xc1, 0x6d, 0x70, 0x5f, 0xf0,
-	0x88, 0x0e, 0xff, 0x68, 0x81, 0xab, 0x94, 0xd0, 0x29, 0xb8, 0x0a, 0x89, 0x6e, 0x57, 0x26, 0x65,
-	0xc8, 0xb7, 0xee, 0xd5, 0xbe, 0x55, 0xfc, 0xea, 0xc2, 0xd7, 0xd0, 0x09, 0xb8, 0xc7, 0x67, 0xfc,
-	0x1c, 0x35, 0xd9, 0xf3, 0xd6, 0x4e, 0xed, 0x4b, 0xaa, 0xf6, 0xf0, 0x35, 0x74, 0x0c, 0x2d, 0xed,
-	0x7a, 0xb4, 0x53, 0x53, 0xae, 0x69, 0x65, 0x6c, 0xbd, 0x57, 0xfd, 0xb9, 0xc7, 0x23, 0x9a, 0x92,
-	0x6a, 0xfb, 0xd5, 0x90, 0x66, 0x16, 0x6d, 0x4c, 0xaa, 0x8b, 0xa6, 0x86, 0x34, 0x2b, 0xac, 0x66,
-	0xa4, 0xa7, 0x00, 0x2b, 0xff, 0xa2, 0x9a, 0xae, 0x53, 0x34, 0x7a, 0x33, 0x7a, 0x1f, 0x7a, 0x45,
-	0x03, 0xa3, 0x8f, 0xeb, 0x52, 0x2f, 0x7a, 0xbd, 0x99, 0xc4, 0x18, 0x40, 0x99, 0x65, 0xa4, 0xef,
-	0x8b, 0x66, 0xe6, 0xd8, 0xd4, 0x7a, 0xe3, 0xb6, 0xfe, 0x79, 0xef, 0x9f, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x04, 0xf9, 0x2b, 0xca, 0x69, 0x10, 0x00, 0x00,
+	// 1305 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0xdd, 0x72, 0xdb, 0x44,
+	0x14, 0xb6, 0x2c, 0xdb, 0xb5, 0x4f, 0xe2, 0xb4, 0x2c, 0x1d, 0xc6, 0x13, 0x18, 0x26, 0x2c, 0x2d,
+	0x0d, 0xa5, 0x35, 0x89, 0xd3, 0xd2, 0x19, 0xa0, 0xed, 0x38, 0x29, 0x3f, 0x99, 0x34, 0x25, 0xc8,
+	0x09, 0x17, 0xd0, 0x0e, 0x23, 0x5b, 0x1b, 0x67, 0xc7, 0xb6, 0x64, 0x56, 0xab, 0x06, 0xbf, 0x04,
+	0x2f, 0xd0, 0x4b, 0x86, 0x77, 0xe1, 0x25, 0xb8, 0x86, 0x7b, 0x5e, 0x80, 0xd9, 0xa3, 0xb5, 0x2c,
+	0xa9, 0x8c, 0x25, 0x91, 0xc9, 0x1d, 0x77, 0xda, 0xf5, 0x7e, 0xdf, 0x77, 0xf6, 0xec, 0xd9, 0x6f,
+	0x77, 0x0d, 0x30, 0xe0, 0x72, 0xd6, 0x9e, 0x0a, 0x4f, 0x7a, 0xe4, 0xed, 0x33, 0x36, 0x64, 0x13,
+	0xcf, 0xe5, 0xac, 0x2d, 0xd8, 0x90, 0x7b, 0x6e, 0xd8, 0xdf, 0x56, 0x43, 0xe8, 0xc7, 0xd0, 0x78,
+	0x66, 0x4f, 0x98, 0xb3, 0x2f, 0xd9, 0x84, 0xac, 0x41, 0x99, 0x3b, 0x2d, 0x63, 0xc3, 0xd8, 0xac,
+	0x58, 0x65, 0xee, 0x10, 0x02, 0x15, 0xd7, 0x9e, 0xb0, 0x56, 0x79, 0xc3, 0xd8, 0x6c, 0x58, 0xf8,
+	0x4d, 0x8f, 0xe0, 0xda, 0x53, 0xee, 0xcb, 0x6f, 0x4e, 0x23, 0x98, 0x4f, 0x3e, 0x87, 0x2a, 0x57,
+	0x1f, 0x2d, 0x63, 0xc3, 0xdc, 0x5c, 0xe9, 0x7c, 0xd0, 0x5e, 0xa2, 0xd8, 0x8e, 0x70, 0x56, 0x08,
+	0xa2, 0x27, 0xf0, 0x66, 0xc8, 0x78, 0x68, 0xbb, 0xf6, 0x90, 0x39, 0x7b, 0x5c, 0x72, 0xe6, 0x93,
+	0x47, 0x49, 0xd2, 0xcd, 0xa5, 0xa4, 0x0b, 0xe8, 0x6c, 0x4e, 0xfb, 0x03, 0xac, 0xc4, 0x7a, 0xc9,
+	0x06, 0xac, 0x70, 0x67, 0xef, 0xcc, 0x16, 0xf6, 0x40, 0x32, 0xa1, 0x27, 0x19, 0xef, 0x22, 0x6f,
+	0x41, 0x8d, 0xe3, 0x58, 0x9c, 0x6f, 0xc5, 0xd2, 0xad, 0x28, 0x0b, 0x66, 0x2c, 0x0b, 0x9f, 0x42,
+	0x4d, 0xfd, 0xb6, 0xef, 0x90, 0x77, 0xa0, 0x31, 0x48, 0xb1, 0x2e, 0x3a, 0x14, 0x76, 0xb0, 0x60,
+	0xc4, 0x6f, 0xda, 0x86, 0x7a, 0x57, 0x4c, 0x66, 0xdf, 0x71, 0x76, 0x9e, 0x2b, 0xe3, 0x2e, 0xac,
+	0x5a, 0xcc, 0xf7, 0x02, 0x31, 0x60, 0x7e, 0xb7, 0xef, 0x2b, 0x8c, 0xd8, 0x9a, 0x63, 0xc4, 0x16,
+	0xb6, 0xb7, 0xb5, 0x42, 0x59, 0x6c, 0x63, 0xbb, 0x83, 0xd1, 0xaa, 0x76, 0x07, 0xdb, 0x3b, 0xad,
+	0x8a, 0x6e, 0xef, 0x60, 0xfb, 0x5e, 0xab, 0xaa, 0xdb, 0xf7, 0xb0, 0x7d, 0xbf, 0x55, 0xd3, 0xed,
+	0xfb, 0xd4, 0x83, 0x66, 0xa4, 0x77, 0x34, 0x0e, 0xe2, 0x82, 0x66, 0x4a, 0xd0, 0x4c, 0x09, 0x9a,
+	0x29, 0x41, 0x33, 0x25, 0x68, 0xa6, 0x04, 0xcd, 0xd7, 0x04, 0x0f, 0x83, 0xb1, 0x8c, 0x09, 0x1a,
+	0x29, 0x41, 0x23, 0x25, 0x68, 0xa4, 0x04, 0x8d, 0x94, 0xa0, 0x91, 0x12, 0x34, 0x50, 0xf0, 0x17,
+	0x23, 0x96, 0xd2, 0x43, 0xcf, 0x21, 0x8f, 0xa0, 0x32, 0x1d, 0x07, 0x3e, 0x4a, 0xae, 0x74, 0x6e,
+	0x2f, 0x2d, 0xb5, 0x44, 0x6e, 0x2c, 0xc4, 0x29, 0xfc, 0x24, 0x18, 0x4b, 0x0c, 0x31, 0x37, 0x5e,
+	0x4d, 0xd5, 0x42, 0x1c, 0xed, 0xc0, 0xea, 0x89, 0xcb, 0xe5, 0xf1, 0x6c, 0xca, 0x72, 0x97, 0xc5,
+	0x27, 0x70, 0x6d, 0x37, 0xe0, 0x63, 0x87, 0xbb, 0xc3, 0x42, 0xb8, 0x07, 0xf0, 0xc6, 0x81, 0xeb,
+	0x9d, 0x8f, 0x99, 0x33, 0x64, 0x85, 0x80, 0xaf, 0x0c, 0xa8, 0xab, 0x28, 0x11, 0xf0, 0x10, 0x2a,
+	0x72, 0x36, 0x65, 0x3a, 0x63, 0x1f, 0x2e, 0x9d, 0x71, 0x7c, 0x6a, 0x16, 0xc2, 0xb4, 0x5e, 0x39,
+	0xd2, 0xc3, 0xbd, 0xa7, 0xc6, 0xe8, 0xba, 0xd5, 0x2d, 0x72, 0x1d, 0xaa, 0x92, 0x0f, 0x46, 0x3e,
+	0x2e, 0x6e, 0xd3, 0x0a, 0x1b, 0x51, 0x74, 0xd5, 0x58, 0x74, 0xbf, 0x1a, 0xb0, 0x3a, 0xcf, 0x07,
+	0x46, 0xd8, 0x4d, 0x44, 0x78, 0x77, 0x69, 0x84, 0xe9, 0x44, 0x5e, 0x5a, 0x94, 0xbf, 0x19, 0xd0,
+	0x8c, 0xb2, 0x8f, 0x61, 0xee, 0x26, 0xc2, 0x6c, 0x2f, 0x0d, 0xf3, 0xb5, 0x75, 0xbb, 0xbc, 0x6c,
+	0x9a, 0xd0, 0xe8, 0x49, 0x6f, 0x30, 0x9a, 0x2f, 0x76, 0xdf, 0xf6, 0xf3, 0x2d, 0x76, 0xdc, 0xaa,
+	0x2c, 0x84, 0x91, 0xaf, 0xa0, 0x31, 0x9a, 0x47, 0xae, 0xb7, 0x48, 0x4e, 0x8e, 0x43, 0xcf, 0xb1,
+	0x16, 0x58, 0x45, 0xd4, 0xd7, 0x2b, 0xe5, 0xe3, 0xd4, 0x8a, 0x11, 0x45, 0x58, 0xd2, 0x85, 0x9a,
+	0x14, 0x9e, 0x37, 0x0d, 0x33, 0x51, 0x88, 0x45, 0x03, 0x15, 0x85, 0x3d, 0x90, 0x81, 0x3d, 0xc6,
+	0xbc, 0x15, 0xca, 0x8a, 0x06, 0x92, 0xc7, 0x50, 0x0d, 0x7c, 0x7b, 0xc8, 0xd0, 0x99, 0x0a, 0x31,
+	0x84, 0x38, 0xfa, 0x67, 0x19, 0xd6, 0x8e, 0x84, 0xe7, 0x04, 0x03, 0xc9, 0x3d, 0xf7, 0xff, 0xa5,
+	0xba, 0xb4, 0xa5, 0xa2, 0x7f, 0x1b, 0xd0, 0x54, 0x07, 0xfe, 0x17, 0x2f, 0xbd, 0x71, 0xa0, 0x92,
+	0x4d, 0x9e, 0x42, 0x63, 0xf4, 0xa5, 0xf0, 0x5c, 0xc9, 0xf1, 0xdc, 0x37, 0xff, 0xc3, 0xe6, 0x5d,
+	0x10, 0x90, 0x03, 0x68, 0xf4, 0x23, 0xb6, 0x32, 0xb2, 0x15, 0x74, 0xac, 0x05, 0x5e, 0xe5, 0x3e,
+	0x88, 0xc8, 0x4c, 0x24, 0x2b, 0x60, 0xd0, 0x0b, 0x2c, 0x7d, 0x55, 0x06, 0x50, 0xb3, 0xee, 0xfa,
+	0x3e, 0x93, 0x3e, 0xf9, 0x0c, 0xaa, 0x81, 0xcb, 0xe5, 0xfc, 0x46, 0x76, 0x33, 0x93, 0x13, 0xf9,
+	0x42, 0x4c, 0xb2, 0x20, 0xca, 0x39, 0x82, 0x8a, 0x9b, 0x79, 0xbc, 0x20, 0xbe, 0x8e, 0x97, 0x68,
+	0x38, 0xbb, 0xdb, 0xf9, 0x12, 0xaf, 0x93, 0x1e, 0xd5, 0xe8, 0x43, 0xa8, 0xd9, 0x62, 0xc2, 0x99,
+	0x2a, 0xad, 0xec, 0x09, 0xcd, 0xef, 0x6c, 0x96, 0x06, 0xd1, 0xbf, 0xca, 0x50, 0x57, 0xd9, 0xc9,
+	0x7b, 0x80, 0x2a, 0xfb, 0xf5, 0xce, 0x5d, 0x5c, 0x13, 0x35, 0x2c, 0x6c, 0x28, 0xb3, 0x76, 0xd8,
+	0x34, 0x90, 0x33, 0x7d, 0x45, 0xd3, 0x2d, 0x72, 0x00, 0x30, 0x8d, 0xf6, 0xb6, 0xae, 0xdc, 0x8f,
+	0x96, 0x46, 0x98, 0xb4, 0x02, 0x2b, 0x06, 0x57, 0x37, 0x74, 0x5f, 0xd9, 0xb9, 0xb6, 0x9a, 0xe5,
+	0x37, 0xf4, 0xc8, 0xf8, 0xad, 0x10, 0xa4, 0xae, 0x37, 0xec, 0xa5, 0x37, 0x6e, 0x5d, 0xc9, 0x71,
+	0xbd, 0x49, 0xec, 0x12, 0x0b, 0x71, 0xe4, 0x31, 0xd4, 0x6c, 0x2c, 0xa1, 0x56, 0x1d, 0x19, 0x6e,
+	0x65, 0x32, 0x84, 0x15, 0x67, 0x69, 0x18, 0xe5, 0x50, 0xef, 0xc9, 0xc0, 0x99, 0x59, 0xec, 0x27,
+	0xf2, 0x40, 0x5f, 0xa9, 0x43, 0x87, 0x7b, 0x3f, 0x93, 0x6a, 0xdf, 0x09, 0xef, 0xdd, 0xe4, 0x06,
+	0x34, 0x47, 0xf1, 0x3d, 0xa8, 0x0f, 0xcc, 0x64, 0x27, 0xfd, 0x11, 0xea, 0xc7, 0xc2, 0xe6, 0xee,
+	0x85, 0xa4, 0xd6, 0xa1, 0x1e, 0xe8, 0x3d, 0xa5, 0x55, 0xa2, 0x36, 0x1d, 0x42, 0x1d, 0x4b, 0xfb,
+	0x42, 0x02, 0x14, 0x56, 0xfb, 0x31, 0x07, 0xd0, 0x22, 0x89, 0x3e, 0xfa, 0x1c, 0x9a, 0x7b, 0x82,
+	0xd9, 0x92, 0xa9, 0xca, 0xbd, 0x90, 0xda, 0xbf, 0xdd, 0x06, 0x05, 0x5c, 0x3d, 0x16, 0xb6, 0xeb,
+	0x9f, 0x32, 0xa1, 0xb6, 0xfa, 0x45, 0xf9, 0x6d, 0x31, 0x89, 0x5e, 0x49, 0xea, 0x5b, 0xf5, 0xa9,
+	0x94, 0xe9, 0xbd, 0x82, 0xdf, 0xf4, 0x16, 0x5c, 0x51, 0x2f, 0x45, 0xa5, 0xb5, 0xf4, 0xd9, 0x45,
+	0xef, 0x00, 0xa8, 0x81, 0x3d, 0x86, 0x63, 0xdf, 0x05, 0x88, 0x7e, 0x0a, 0xcd, 0xab, 0x62, 0xc5,
+	0x7a, 0x68, 0x0d, 0x2a, 0xcf, 0x3c, 0x57, 0x3d, 0xea, 0xd6, 0x8e, 0xec, 0x21, 0x77, 0x6d, 0xc9,
+	0x9c, 0x6f, 0x03, 0x26, 0x66, 0x6a, 0x6f, 0x4e, 0x6c, 0x31, 0x8a, 0x24, 0x74, 0x8b, 0x5c, 0x03,
+	0x73, 0x62, 0xff, 0x8c, 0xf1, 0x36, 0x2d, 0xf5, 0x49, 0x2d, 0xb8, 0x1a, 0x3e, 0x62, 0xe7, 0x5e,
+	0xea, 0xab, 0xe3, 0x3d, 0xfe, 0x80, 0x2d, 0x60, 0xc1, 0xfa, 0x05, 0xfb, 0xfd, 0xfc, 0x61, 0x1c,
+	0x37, 0x7b, 0x9f, 0xec, 0x25, 0x79, 0x0b, 0x9e, 0x13, 0x9a, 0xfb, 0x39, 0x5c, 0x0f, 0xb9, 0x13,
+	0xc7, 0x92, 0x4f, 0x9e, 0x24, 0xc9, 0x8b, 0x1e, 0x69, 0x21, 0xb8, 0xf3, 0x7b, 0x0d, 0x2a, 0xf8,
+	0x76, 0x3e, 0x0d, 0x57, 0xac, 0xc7, 0x24, 0x59, 0xbe, 0xe9, 0x17, 0xcb, 0xb5, 0xbe, 0x95, 0x39,
+	0x30, 0xf5, 0x57, 0x01, 0x2d, 0x91, 0x17, 0x50, 0x51, 0x3f, 0x90, 0x1b, 0x99, 0x58, 0xa5, 0x70,
+	0x37, 0x87, 0xc2, 0xe2, 0xef, 0x0d, 0x5a, 0x22, 0xc7, 0x50, 0xe9, 0x9d, 0x79, 0xe7, 0x24, 0x4f,
+	0x4d, 0xaf, 0xdf, 0xcc, 0x1c, 0xa4, 0x52, 0x45, 0x4b, 0xa4, 0x07, 0x55, 0x74, 0x35, 0x72, 0x33,
+	0xc3, 0x8e, 0x43, 0xe7, 0x5b, 0x7f, 0x6f, 0xf9, 0xff, 0x2a, 0xaa, 0x84, 0x91, 0x14, 0xd7, 0x3c,
+	0x83, 0x74, 0x6e, 0x41, 0xb9, 0x49, 0xd1, 0x14, 0x33, 0x48, 0xe7, 0xc6, 0x99, 0x8f, 0xf4, 0x05,
+	0xc0, 0xc2, 0x9f, 0x48, 0xc6, 0xa9, 0x12, 0x37, 0xb2, 0x7c, 0xf4, 0x36, 0xac, 0xc6, 0x0d, 0x8a,
+	0xdc, 0xc9, 0x0a, 0x3d, 0xee, 0x65, 0xf9, 0x24, 0xfa, 0xa1, 0xcd, 0x74, 0xf1, 0x3e, 0x90, 0xaf,
+	0x38, 0x8a, 0x96, 0x5e, 0xe7, 0x8f, 0x32, 0xac, 0x3c, 0x61, 0xa7, 0xdc, 0xe5, 0xea, 0x40, 0xf5,
+	0xc9, 0x19, 0x34, 0xd4, 0xa8, 0x13, 0xbc, 0x54, 0x65, 0xdc, 0x07, 0x12, 0x66, 0xb6, 0x7e, 0x27,
+	0x87, 0x74, 0xe4, 0x5e, 0xb4, 0x44, 0xa6, 0xd0, 0x54, 0x9d, 0xbb, 0xd1, 0xcd, 0xab, 0x90, 0x5a,
+	0x9e, 0x5d, 0x9c, 0xf0, 0x35, 0x5a, 0x22, 0x02, 0xd6, 0xd4, 0x0f, 0x91, 0xad, 0x14, 0x94, 0xdc,
+	0xce, 0x21, 0x99, 0xb4, 0x3b, 0x5a, 0xea, 0xd7, 0x70, 0xc8, 0xce, 0x3f, 0x01, 0x00, 0x00, 0xff,
+	0xff, 0x0f, 0x84, 0xc2, 0x97, 0x32, 0x15, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1607,6 +1952,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CityClient interface {
+	// Returns a list of cities owned by the any of the given characters
+	ListSet(ctx context.Context, in *ListSetReq, opts ...grpc.CallOption) (*ListOfManagedCities, error)
 	// Returns a list of cities owned by the given character
 	List(ctx context.Context, in *ListReq, opts ...grpc.CallOption) (*ListOfNamedItems, error)
 	// Returns a view of the City
@@ -1627,6 +1974,15 @@ type cityClient struct {
 
 func NewCityClient(cc *grpc.ClientConn) CityClient {
 	return &cityClient{cc}
+}
+
+func (c *cityClient) ListSet(ctx context.Context, in *ListSetReq, opts ...grpc.CallOption) (*ListOfManagedCities, error) {
+	out := new(ListOfManagedCities)
+	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.city.City/ListSet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *cityClient) List(ctx context.Context, in *ListReq, opts ...grpc.CallOption) (*ListOfNamedItems, error) {
@@ -1703,6 +2059,8 @@ func (c *cityClient) ListArmies(ctx context.Context, in *CityId, opts ...grpc.Ca
 
 // CityServer is the server API for City service.
 type CityServer interface {
+	// Returns a list of cities owned by the any of the given characters
+	ListSet(context.Context, *ListSetReq) (*ListOfManagedCities, error)
 	// Returns a list of cities owned by the given character
 	List(context.Context, *ListReq) (*ListOfNamedItems, error)
 	// Returns a view of the City
@@ -1721,6 +2079,9 @@ type CityServer interface {
 type UnimplementedCityServer struct {
 }
 
+func (*UnimplementedCityServer) ListSet(ctx context.Context, req *ListSetReq) (*ListOfManagedCities, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSet not implemented")
+}
 func (*UnimplementedCityServer) List(ctx context.Context, req *ListReq) (*ListOfNamedItems, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
@@ -1748,6 +2109,24 @@ func (*UnimplementedCityServer) ListArmies(ctx context.Context, req *CityId) (*L
 
 func RegisterCityServer(s *grpc.Server, srv CityServer) {
 	s.RegisterService(&_City_serviceDesc, srv)
+}
+
+func _City_ListSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CityServer).ListSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hegemonie.region.proto.city.City/ListSet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CityServer).ListSet(ctx, req.(*ListSetReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _City_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1899,6 +2278,10 @@ var _City_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*CityServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ListSet",
+			Handler:    _City_ListSet_Handler,
+		},
+		{
 			MethodName: "List",
 			Handler:    _City_List_Handler,
 		},
@@ -1929,6 +2312,150 @@ var _City_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListArmies",
 			Handler:    _City_ListArmies_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "city.proto",
+}
+
+// DefinitionsClient is the client API for Definitions service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type DefinitionsClient interface {
+	ListUnits(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfUnitTypes, error)
+	ListBuildings(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfBuildingTypes, error)
+	ListKnowledges(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfKnowledgeTypes, error)
+}
+
+type definitionsClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewDefinitionsClient(cc *grpc.ClientConn) DefinitionsClient {
+	return &definitionsClient{cc}
+}
+
+func (c *definitionsClient) ListUnits(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfUnitTypes, error) {
+	out := new(ListOfUnitTypes)
+	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.city.Definitions/ListUnits", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *definitionsClient) ListBuildings(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfBuildingTypes, error) {
+	out := new(ListOfBuildingTypes)
+	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.city.Definitions/ListBuildings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *definitionsClient) ListKnowledges(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfKnowledgeTypes, error) {
+	out := new(ListOfKnowledgeTypes)
+	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.city.Definitions/ListKnowledges", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DefinitionsServer is the server API for Definitions service.
+type DefinitionsServer interface {
+	ListUnits(context.Context, *PaginatedQuery) (*ListOfUnitTypes, error)
+	ListBuildings(context.Context, *PaginatedQuery) (*ListOfBuildingTypes, error)
+	ListKnowledges(context.Context, *PaginatedQuery) (*ListOfKnowledgeTypes, error)
+}
+
+// UnimplementedDefinitionsServer can be embedded to have forward compatible implementations.
+type UnimplementedDefinitionsServer struct {
+}
+
+func (*UnimplementedDefinitionsServer) ListUnits(ctx context.Context, req *PaginatedQuery) (*ListOfUnitTypes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUnits not implemented")
+}
+func (*UnimplementedDefinitionsServer) ListBuildings(ctx context.Context, req *PaginatedQuery) (*ListOfBuildingTypes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBuildings not implemented")
+}
+func (*UnimplementedDefinitionsServer) ListKnowledges(ctx context.Context, req *PaginatedQuery) (*ListOfKnowledgeTypes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListKnowledges not implemented")
+}
+
+func RegisterDefinitionsServer(s *grpc.Server, srv DefinitionsServer) {
+	s.RegisterService(&_Definitions_serviceDesc, srv)
+}
+
+func _Definitions_ListUnits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PaginatedQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DefinitionsServer).ListUnits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hegemonie.region.proto.city.Definitions/ListUnits",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DefinitionsServer).ListUnits(ctx, req.(*PaginatedQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Definitions_ListBuildings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PaginatedQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DefinitionsServer).ListBuildings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hegemonie.region.proto.city.Definitions/ListBuildings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DefinitionsServer).ListBuildings(ctx, req.(*PaginatedQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Definitions_ListKnowledges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PaginatedQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DefinitionsServer).ListKnowledges(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hegemonie.region.proto.city.Definitions/ListKnowledges",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DefinitionsServer).ListKnowledges(ctx, req.(*PaginatedQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Definitions_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "hegemonie.region.proto.city.Definitions",
+	HandlerType: (*DefinitionsServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListUnits",
+			Handler:    _Definitions_ListUnits_Handler,
+		},
+		{
+			MethodName: "ListBuildings",
+			Handler:    _Definitions_ListBuildings_Handler,
+		},
+		{
+			MethodName: "ListKnowledges",
+			Handler:    _Definitions_ListKnowledges_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

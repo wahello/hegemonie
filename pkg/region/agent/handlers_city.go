@@ -49,6 +49,10 @@ func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfNa
 	return rep, nil
 }
 
+func (s *srvCity) ListSet(ctx context.Context, req *proto.ListSetReq) (*proto.ListOfManagedCities, error) {
+	return nil, status.Errorf(codes.Unimplemented, "NYI")
+}
+
 func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView, error) {
 	latch := s.w.ReadLocker()
 	latch.Lock()
