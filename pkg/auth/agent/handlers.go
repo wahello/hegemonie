@@ -111,7 +111,7 @@ func (srv *authService) UserAuth(ctx context.Context, req *proto.UserAuthReq) (*
 	return userView(u), nil
 }
 
-func (srv *authService) CharacterShow(ctx context.Context, req *proto.CharacterShowReq) (*proto.CharacterView, error) {
+func (srv *authService) CharacterShow(ctx context.Context, req *proto.CharacterShowReq) (*proto.UserView, error) {
 	if req.User <= 0 || req.Character <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "Invalid user/role ID")
 	}
@@ -124,9 +124,11 @@ func (srv *authService) CharacterShow(ctx context.Context, req *proto.CharacterS
 		}
 		for _, c := range u.Characters {
 			if c.Id == req.Character {
-				return &proto.CharacterView{
+				uView := userView(u)
+				uView.Characters = append(uView.Characters, &proto.CharacterView{
 					Id: c.Id, Region: c.Region, Name: c.Name, Off: c.Off,
-				}, nil
+				})
+				return uView, nil
 			}
 		}
 		return nil, status.Error(codes.PermissionDenied, "Character mismatch")

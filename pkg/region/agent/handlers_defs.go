@@ -8,7 +8,7 @@ package hegemonie_region_agent
 import (
 	"context"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
-	proto "github.com/jfsmig/hegemonie/pkg/region/proto_city"
+	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
 type srvDefinitions struct {

@@ -9,11 +9,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-macaron/session"
-	"github.com/jfsmig/hegemonie/pkg/auth/proto"
-	"github.com/jfsmig/hegemonie/pkg/region/proto_city"
 	"gopkg.in/macaron.v1"
 	"io/ioutil"
 	"net/http"
+
+	auth "github.com/jfsmig/hegemonie/pkg/auth/proto"
+	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
 type ActionPage func(*macaron.Context, session.Store, *session.Flash)
@@ -31,6 +32,7 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 	m.Get("/game/land/armies", serveGameCityArmies(f))
 	m.Get("/game/land/units", serveGameCityUnits(f))
 	m.Get("/game/land/knowledges", serveGameCityKnowledges(f))
+	m.Get("/game/army", serveGameArmyDetail(f))
 
 	m.Get("/game/map/region", serveRegionMap(f))
 	m.Get("/game/map/city", serveCityMap(f))
@@ -44,82 +46,50 @@ func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 
 func serveGameAdmin(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		// Validate the input
-		userid := ptou(sess.Get("userid"))
-		if userid == 0 {
-			flash.Error("Invalid session")
+		uView, err := f.authenticateAdminFromSession(sess)
+		if err != nil {
+			flash.Error(err.Error())
 			ctx.Redirect("/")
 			return
 		}
-
-		// Authorize the character with the user
-		cliAuth := hegemonie_auth_proto.NewAuthClient(f.cnxAuth)
-		view, err := cliAuth.UserShow(context.Background(),
-			&hegemonie_auth_proto.UserShowReq{Id: userid})
-		if err != nil {
-			flash.Warning(err.Error())
-			ctx.Redirect("/game/user")
-			return
-		}
-
-		if !view.Admin {
-			flash.Warning("Insufficient permission")
-			ctx.Redirect("/game/user")
-			return
-		}
-
-		ctx.Data["Title"] = view.Name
-		ctx.Data["userid"] = utoa(userid)
-		ctx.Data["User"] = view
-		//ctx.Data["Score"] = &sReply.Board
+		ctx.Data["Title"] = uView.Name
+		ctx.Data["userid"] = utoa(uView.Id)
+		ctx.Data["User"] = uView
 		ctx.HTML(200, "admin")
 	}
 }
 
 func serveGameUser(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		// Validate the input
-		userid := ptou(sess.Get("userid"))
-		if userid == 0 {
-			flash.Error("Invalid session")
-			ctx.Redirect("/")
-			return
-		}
-
-		// Authorize the character with the user
-		cliAuth := hegemonie_auth_proto.NewAuthClient(f.cnxAuth)
-		view, err := cliAuth.UserShow(context.Background(),
-			&hegemonie_auth_proto.UserShowReq{Id: userid})
-
+		uView, err := f.authenticateUserFromSession(sess)
 		if err != nil {
-			flash.Warning(err.Error())
+			flash.Error(err.Error())
 			ctx.Redirect("/")
 			return
 		}
-		ctx.Data["Title"] = view.Name
-		ctx.Data["userid"] = utoa(userid)
-		ctx.Data["User"] = view
+
+		cliReg := region.NewCityClient(f.cnxRegion)
+		for _, c := range uView.Characters {
+			l, err := cliReg.List(context.Background(), &region.ListReq{Character: c.Id})
+			if err != nil {
+				flash.Warning("Error with " + c.Name)
+			} else {
+				for _, ni := range l.Items {
+					c.Cities = append(c.Cities,
+						&auth.NamedItem{Id: ni.Id, Name: ni.Name})
+				}
+			}
+		}
+		ctx.Data["Title"] = uView.Name
+		ctx.Data["userid"] = utoa(uView.Id)
+		ctx.Data["User"] = uView
 		ctx.HTML(200, "user")
 	}
 }
 
 func serveGameCharacter(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		var err error
-
-		// Validate the input
-		userid := ptou(sess.Get("userid"))
-		charid := atou(ctx.Query("cid"))
-		if userid == 0 || charid == 0 {
-			flash.Error("Invalid session")
-			ctx.Redirect("/")
-			return
-		}
-
-		// Authorize the character with the user
-		cliAuth := hegemonie_auth_proto.NewAuthClient(f.cnxAuth)
-		view, err := cliAuth.CharacterShow(context.Background(),
-			&hegemonie_auth_proto.CharacterShowReq{User: userid, Character: charid})
+		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -127,9 +97,8 @@ func serveGameCharacter(f *FrontService) ActionPage {
 		}
 
 		// Load the Cities managed by the current Character
-		cliReg := hegemonie_region_proto_city.NewCityClient(f.cnxRegion)
-		list, err := cliReg.List(context.Background(),
-			&hegemonie_region_proto_city.ListReq{Character: view.Id})
+		cliReg := region.NewCityClient(f.cnxRegion)
+		list, err := cliReg.List(context.Background(), &region.ListReq{Character: cView.Id})
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -137,10 +106,11 @@ func serveGameCharacter(f *FrontService) ActionPage {
 		}
 
 		// Query the World server for the Character
-		ctx.Data["Title"] = view.Name
-		ctx.Data["userid"] = utoa(userid)
-		ctx.Data["cid"] = utoa(charid)
-		ctx.Data["Character"] = view
+		ctx.Data["Title"] = uView.Name + "|" + cView.Name
+		ctx.Data["userid"] = utoa(uView.Id)
+		ctx.Data["User"] = uView
+		ctx.Data["cid"] = utoa(cView.Id)
+		ctx.Data["Character"] = cView
 		ctx.Data["Cities"] = list.Items
 		ctx.HTML(200, "character")
 	}
@@ -148,33 +118,20 @@ func serveGameCharacter(f *FrontService) ActionPage {
 
 func serveGameCityPage(f *FrontService, template string) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		// Validate the input
-		userid := ptou(sess.Get("userid"))
-		charid := atou(ctx.Query("cid"))
-		landid := atou(ctx.Query("lid"))
-		if userid == 0 || charid == 0 || landid == 0 {
-			flash.Error("Invalid session")
-			ctx.Redirect("/")
-			return
-		}
-
-		// Authorize the character with the user
-		cliAuth := hegemonie_auth_proto.NewAuthClient(f.cnxAuth)
-		cView, err := cliAuth.CharacterShow(context.Background(),
-			&hegemonie_auth_proto.CharacterShowReq{User: userid, Character: charid})
+		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
 		if err != nil {
-			flash.Warning("Auth error: " + err.Error())
-			ctx.Redirect("/game/character?cid=" + fmt.Sprint(charid))
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
 			return
 		}
 
 		// Load the chosen City
-		cliReg := hegemonie_region_proto_city.NewCityClient(f.cnxRegion)
+		cliReg := region.NewCityClient(f.cnxRegion)
 		lView, err := cliReg.Show(context.Background(),
-			&hegemonie_region_proto_city.CityId{Character: charid, City: landid})
+			&region.CityId{Character: cView.Id, City: atou(ctx.Query("lid"))})
 		if err != nil {
 			flash.Warning("Region error: " + err.Error())
-			ctx.Redirect("/game/character?cid=" + fmt.Sprint(charid))
+			ctx.Redirect("/game/character?cid=" + fmt.Sprint(cView.Id))
 			return
 		}
 
@@ -186,17 +143,19 @@ func serveGameCityPage(f *FrontService, template string) ActionPage {
 		for _, item := range lView.Assets.Buildings {
 			item.Type = f.buildings[item.IdType]
 		}
-		for _, item := range lView.Assets.Knowledge {
+		for _, item := range lView.Assets.Knowledges {
 			item.Type = f.knowledge[item.IdType]
 		}
 		f.rw.RUnlock()
 
-		ctx.Data["userid"] = utoa(userid)
-		ctx.Data["cid"] = utoa(charid)
-		ctx.Data["lid"] = utoa(landid)
-		ctx.Data["Title"] = lView.Name
+		ctx.Data["Title"] = cView.Name + "|" + lView.Name
+		ctx.Data["userid"] = utoa(uView.Id)
+		ctx.Data["User"] = uView
+		ctx.Data["cid"] = utoa(cView.Id)
 		ctx.Data["Character"] = cView
+		ctx.Data["lid"] = utoa(lView.Id)
 		ctx.Data["Land"] = lView
+
 		ctx.HTML(200, template)
 	}
 }
@@ -221,22 +180,69 @@ func serveGameCityArmies(f *FrontService) ActionPage {
 	return serveGameCityPage(f, "land_armies")
 }
 
+func serveGameArmyDetail(f *FrontService) ActionPage {
+	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
+		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
+			return
+		}
+
+		// Load the chosen City
+		cliReg := region.NewCityClient(f.cnxRegion)
+		lView, err := cliReg.Show(context.Background(),
+			&region.CityId{Character: cView.Id, City: atou(ctx.Query("lid"))})
+		if err != nil {
+			flash.Warning("Region error: " + err.Error())
+			ctx.Redirect(fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cView.Id, lView.Id))
+			return
+		}
+
+		// Load the chosen Army
+		cliArmy := region.NewArmyClient(f.cnxRegion)
+		aView, err := cliArmy.Show(context.Background(),
+			&region.ArmyId{Character: cView.Id, City: lView.Id, Army: atou(ctx.Query("aid"))})
+		if err != nil {
+			flash.Warning("Region error: " + err.Error())
+			ctx.Redirect(fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cView.Id, lView.Id))
+			return
+		}
+
+		// Expand the view
+		f.rw.RLock()
+		for _, item := range lView.Assets.Units {
+			item.Type = f.units[item.IdType]
+		}
+		for _, item := range lView.Assets.Buildings {
+			item.Type = f.buildings[item.IdType]
+		}
+		for _, item := range lView.Assets.Knowledges {
+			item.Type = f.knowledge[item.IdType]
+		}
+		f.rw.RUnlock()
+
+		ctx.Data["Title"] = cView.Name + "|" + lView.Name
+		ctx.Data["userid"] = utoa(uView.Id)
+		ctx.Data["User"] = uView
+		ctx.Data["cid"] = utoa(cView.Id)
+		ctx.Data["Character"] = cView
+		ctx.Data["lid"] = utoa(lView.Id)
+		ctx.Data["Land"] = lView
+		ctx.Data["aid"] = utoa(aView.Id)
+		ctx.Data["Army"] = aView
+
+		ctx.HTML(200, "army")
+	}
+}
+
 func serveGameCityBudget(f *FrontService) ActionPage {
 	return serveGameCityPage(f, "land_budget")
 }
 
 func serveRegionMap(f *FrontService) NoFlashPage {
 	return func(ctx *macaron.Context, s session.Store) {
-		// gameMap, overlay, err := mapper.Generate()
-		// if err != nil {
-		// 	ctx.Resp.WriteHeader(500)
-		// 	return
-		// }
-		// ctx.Data["map"] = gameMap
-		// ctx.Data["overlay"] = overlay
-		// ctx.HTML(200, "map")
-
-		// TODO: VDO: handle error
+		// TODO(VDO): handle error
 		resp, _ := http.Get("http://" + f.endpointRegion + "/cmd_back_region/places")
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
@@ -264,16 +270,7 @@ func serveRegionMap(f *FrontService) NoFlashPage {
 
 func serveCityMap(f *FrontService) NoFlashPage {
 	return func(ctx *macaron.Context, s session.Store) {
-		// gameMap, overlay, err := mapper.Generate()
-		// if err != nil {
-		// 	ctx.Resp.WriteHeader(500)
-		// 	return
-		// }
-		// ctx.Data["map"] = gameMap
-		// ctx.Data["overlay"] = overlay
-		// ctx.HTML(200, "map")
-
-		// TODO: VDO: handle error
+		// TODO(VDO): handle error
 		resp, _ := http.Get("http://" + f.endpointRegion + "/cmd_back_region/places")
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {

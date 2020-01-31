@@ -10,7 +10,7 @@ import (
 	"errors"
 	"github.com/go-macaron/pongo2"
 	"github.com/go-macaron/session"
-	"github.com/jfsmig/hegemonie/pkg/region/proto_city"
+	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"gopkg.in/macaron.v1"
@@ -83,9 +83,9 @@ type FrontService struct {
 	cnxAuth   *grpc.ClientConn
 
 	rw        sync.RWMutex
-	units     map[uint64]*hegemonie_region_proto_city.UnitTypeView
-	buildings map[uint64]*hegemonie_region_proto_city.BuildingTypeView
-	knowledge map[uint64]*hegemonie_region_proto_city.KnowledgeTypeView
+	units     map[uint64]*region.UnitTypeView
+	buildings map[uint64]*region.BuildingTypeView
+	knowledge map[uint64]*region.KnowledgeTypeView
 }
 
 func (f *FrontService) routeMiddlewares(m *macaron.Macaron) {
@@ -121,14 +121,14 @@ func (f *FrontService) routeMiddlewares(m *macaron.Macaron) {
 
 func (f *FrontService) reload() {
 	ctx := context.Background()
-	cli := hegemonie_region_proto_city.NewDefinitionsClient(f.cnxRegion)
+	cli := region.NewDefinitionsClient(f.cnxRegion)
 
 	func() {
 		last := uint64(0)
-		tab := make(map[uint64]*hegemonie_region_proto_city.UnitTypeView)
+		tab := make(map[uint64]*region.UnitTypeView)
 
 		for {
-			args := &hegemonie_region_proto_city.PaginatedQuery{Marker: last, Max: 100}
+			args := &region.PaginatedQuery{Marker: last, Max: 100}
 			l, err := cli.ListUnits(ctx, args)
 			if err != nil {
 				log.Println("Reload error (units):", err.Error())
@@ -153,9 +153,9 @@ func (f *FrontService) reload() {
 
 	func() {
 		last := uint64(0)
-		tab := make(map[uint64]*hegemonie_region_proto_city.BuildingTypeView)
+		tab := make(map[uint64]*region.BuildingTypeView)
 		for {
-			args := &hegemonie_region_proto_city.PaginatedQuery{Marker: last, Max: 100}
+			args := &region.PaginatedQuery{Marker: last, Max: 100}
 			l, err := cli.ListBuildings(ctx, args)
 			if err != nil {
 				log.Println("Reload error (buildings):", err.Error())
@@ -180,9 +180,9 @@ func (f *FrontService) reload() {
 
 	func() {
 		last := uint64(0)
-		tab := make(map[uint64]*hegemonie_region_proto_city.KnowledgeTypeView)
+		tab := make(map[uint64]*region.KnowledgeTypeView)
 		for {
-			args := &hegemonie_region_proto_city.PaginatedQuery{Marker: last, Max: 100}
+			args := &region.PaginatedQuery{Marker: last, Max: 100}
 			l, err := cli.ListKnowledges(ctx, args)
 			if err != nil {
 				log.Println("Reload error (knowledge):", err.Error())

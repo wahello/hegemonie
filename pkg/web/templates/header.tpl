@@ -6,7 +6,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Hegemonie</title>
+<head><meta charset="UTF-8"><title>{{Title}}</title>
 <meta name="author" content="Jean-Francois Smigielski"/>
 <meta name="theme-color" content="#FFF"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -15,7 +15,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 </head>
 <body>
     <header>
+        {% if lid %}
+        <h1>{{Land.Name}}</h1>
+        <h2>{{Character.Name}}</h2>
+        {% elif cid %}
+        <h1>{{Character.Name}}</h1>
+        <h2>{{User.Name}}</h2>
+        {% elif userid %}
+        <h1>{{User.Name}}</h1>
+        {% else %}
         <h1>{{Title}}</h1>
+        {% endif %}
     </header>
     <nav>
         {% if lid %}
@@ -28,10 +38,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <br/>
         {% endif %}
 
-        {% if cid %}<a href="/game/character?cid={{ cid }}">Character</a>{% endif %}
-        {% if userid %}<a href="/game/user">User</a>{% endif %}
-        {% if User.Admin %}<a href="/game/admin">Admin</a>{% endif %}
-        {% if userid %}<a href="/action/logout">Log-Out</a>{% endif %}
+        {% if userid %}
+        <a href="/game/user">User</a>
+            {% if User.Admin %}
+            <a href="/game/admin">Admin</a>
+            {% endif %}
+        <a href="/action/logout">Log-Out</a>
+        {% endif %}
+
+        {% if cid %}
+        <a href="/game/character?cid={{ cid }}">Character</a>
+        {% endif %}
+
     </nav>
     <aside>
         <p>{{Flash.InfoMsg}}{{Flash.WarningMsg}}{{Flash.ErrorMsg}}</p>

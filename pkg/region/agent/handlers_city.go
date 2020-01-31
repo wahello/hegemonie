@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	proto "github.com/jfsmig/hegemonie/pkg/region/proto_city"
+	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
 type srvCity struct {
@@ -49,10 +49,6 @@ func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfNa
 	return rep, nil
 }
 
-func (s *srvCity) ListSet(ctx context.Context, req *proto.ListSetReq) (*proto.ListOfManagedCities, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
-}
-
 func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView, error) {
 	latch := s.w.ReadLocker()
 	latch.Lock()
@@ -68,18 +64,52 @@ func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView,
 }
 
 func (s *srvCity) Study(ctx context.Context, req *proto.StudyReq) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	latch := s.w.ReadLocker()
+	latch.Lock()
+	defer latch.Unlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = city.Study(s.w, req.KnowledgeType)
+	return &proto.None{}, err
 }
 
 func (s *srvCity) Build(ctx context.Context, req *proto.BuildReq) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	latch := s.w.ReadLocker()
+	latch.Lock()
+	defer latch.Unlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = city.Build(s.w, req.BuildingType)
+	return &proto.None{}, err
 }
 
 func (s *srvCity) Train(ctx context.Context, req *proto.TrainReq) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	latch := s.w.ReadLocker()
+	latch.Lock()
+	defer latch.Unlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = city.Train(s.w, req.UnitType)
+	return &proto.None{}, err
 }
 
 func (s *srvCity) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*proto.None, error) {
+	return nil, status.Errorf(codes.Unimplemented, "NYI")
+}
+
+func (s *srvCity) CreateTransport(ctx context.Context, req *proto.CreateTransportReq) (*proto.None, error) {
 	return nil, status.Errorf(codes.Unimplemented, "NYI")
 }
 

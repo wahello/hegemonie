@@ -5,12 +5,9 @@
 
 syntax = "proto3";
 
-package hegemonie.region.proto.city;
+package hegemonie.region.proto;
 
 service City {
-    // Returns a list of cities owned by the any of the given characters
-    rpc ListSet (ListSetReq) returns (ListOfManagedCities) {}
-
     // Returns a list of cities owned by the given character
     rpc List (ListReq) returns (ListOfNamedItems) {}
 
@@ -24,7 +21,11 @@ service City {
 
     rpc Train (TrainReq) returns (None) {}
 
+    // Create an army around a set of units.
+    // The set of units must not be empty and all the units must stay in the given City.
     rpc CreateArmy (CreateArmyReq) returns (None) {}
+
+    rpc CreateTransport (CreateTransportReq) returns (None) {}
 
     rpc TransferUnit (TransferUnitReq) returns (None) {}
 
@@ -40,6 +41,38 @@ service Definitions {
     rpc ListKnowledges (PaginatedQuery) returns (ListOfKnowledgeTypes) {}
 }
 
+service Admin {
+    // Have all the Cities on the Region to produce their resources
+    rpc Produce(None) returns (None) {}
+
+    // Make all the armies on the Region to move on step
+    rpc Move(None) returns (None) {}
+
+    rpc GetScores(None) returns (ScoreBoard) {}
+}
+
+service Army {
+    // Return a detailed view of the given Army
+    rpc Show (ArmyId) returns (ArmyView) {}
+
+    // Make the Army flea the fight it is involved in.
+    rpc Flea (ArmyId) returns (None) {}
+
+    // Make the Army flip in the fight it is involved in.
+    rpc Flip (ArmyId) returns (None) {}
+
+    // Append the specified command on the list of the Army.
+    rpc Command (ArmyCommandReq) returns (None) {}
+}
+
+message ScoredCity {
+    uint64 city = 1;
+    int64 score = 2;
+}
+
+message ScoreBoard {
+    repeated ScoredCity items = 1;
+}
 
 message NamedItem {
     uint64 id = 1;
@@ -50,25 +83,30 @@ message ListOfNamedItems {
     repeated NamedItem items = 1;
 }
 
-message ListOfManagedCities {
-    repeated ManagedCity items = 1;
+// Identifies an army managed by the city
+message ArmyId {
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 army = 3;
 }
 
-message ManagedCity {
-    uint64 idCharacter = 1;
-    uint64 idCity = 2;
-    string name = 3;
+message ArmyView {
+    uint64 id = 1;
+    string name = 2;
+}
+
+message ArmyCommandReq {
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 army = 3;
+    uint64 target = 4;
+    uint64 action = 5;
 }
 
 // Identifies a City and Character who is
 message CityId {
     uint64 character = 1;
     uint64 city = 2;
-}
-
-message ArmyView {
-    uint64 id = 1;
-    string name = 2;
 }
 
 message ResourcesAbs {
@@ -169,7 +207,7 @@ message CityEvolution {
 message CityAssets {
     repeated UnitView units = 1;
     repeated BuildingView buildings = 2;
-    repeated KnowledgeView knowledge = 3;
+    repeated KnowledgeView knowledges = 3;
     repeated ArmyView armies = 4;
 }
 
@@ -186,29 +224,42 @@ message CityView {
 }
 
 message StudyReq {
-    CityId city = 1;
-    uint64 knowledgeType = 2;
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 knowledgeType = 3;
 }
 
 message TrainReq {
-    CityId city = 1;
-    uint64 unitType = 2;
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 unitType = 3;
 }
 
 message BuildReq {
-    CityId city = 1;
-    uint64 buildingType = 2;
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 buildingType = 3;
+}
+
+message CreateTransportReq {
+    uint64 character = 1;
+    uint64 city = 2;
+    string name = 3;
+    ResourcesAbs stock = 4;
 }
 
 message CreateArmyReq {
-    CityId city = 1;
-    string name = 2;
+    uint64 character = 1;
+    uint64 city = 2;
+    string name = 3;
+    repeated uint64 unit = 4;
 }
 
 message TransferUnitReq {
-    CityId city = 1;
-    uint64 army = 2;
-    uint64 unit = 3;
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 army = 3;
+    uint64 unit = 4;
 }
 
 message ListReq {

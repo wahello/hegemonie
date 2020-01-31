@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	proto "github.com/jfsmig/hegemonie/pkg/region/proto_army"
+	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
 type srvArmy struct {

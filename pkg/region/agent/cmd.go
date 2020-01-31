@@ -18,9 +18,7 @@ import (
 	"time"
 
 	"github.com/jfsmig/hegemonie/pkg/region/model"
-	admin "github.com/jfsmig/hegemonie/pkg/region/proto_admin"
-	army "github.com/jfsmig/hegemonie/pkg/region/proto_army"
-	city "github.com/jfsmig/hegemonie/pkg/region/proto_city"
+	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
 type regionConfig struct {
@@ -108,10 +106,10 @@ func (self *regionConfig) execute() error {
 
 	srv := grpc.NewServer()
 
-	city.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})
-	city.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: self, w: &w})
-	admin.RegisterAdminServer(srv, &srvAdmin{cfg: self, w: &w})
-	army.RegisterArmyServer(srv, &srvArmy{cfg: self, w: &w})
+	proto.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})
+	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: self, w: &w})
+	proto.RegisterAdminServer(srv, &srvAdmin{cfg: self, w: &w})
+	proto.RegisterArmyServer(srv, &srvArmy{cfg: self, w: &w})
 	if err := srv.Serve(lis); err != nil {
 		return e("failed to serve: %v", err)
 	}

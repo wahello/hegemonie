@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_proto_city
+package hegemonie_region_proto
 
 import (
 	"github.com/jfsmig/hegemonie/pkg/region/model"
@@ -101,7 +101,7 @@ func ShowAssets(w *region.World, c *region.City) *CityAssets {
 	v := &CityAssets{}
 
 	for _, k := range c.Knowledges {
-		v.Knowledge = append(v.Knowledge, &KnowledgeView{
+		v.Knowledges = append(v.Knowledges, &KnowledgeView{
 			Id: k.Id, IdType: k.Type, Ticks: uint32(k.Ticks),
 		})
 	}

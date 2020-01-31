@@ -7,11 +7,55 @@ package hegemonie_web_agent
 
 import (
 	"context"
+	"errors"
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/session"
-	"github.com/jfsmig/hegemonie/pkg/auth/proto"
+	auth "github.com/jfsmig/hegemonie/pkg/auth/proto"
+	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"gopkg.in/macaron.v1"
 )
+
+func (f *FrontService) authenticateUserFromSession(sess session.Store) (*auth.UserView, error) {
+	// Validate the session data
+	userid := ptou(sess.Get("userid"))
+	if userid == 0 {
+		return nil, errors.New("Not authenticated")
+	}
+
+	// Authorize the character with the user
+	cliAuth := auth.NewAuthClient(f.cnxAuth)
+	return cliAuth.UserShow(context.Background(),
+		&auth.UserShowReq{Id: userid})
+}
+
+func (f *FrontService) authenticateAdminFromSession(sess session.Store) (*auth.UserView, error) {
+	uView, err := f.authenticateUserFromSession(sess)
+	if err != nil {
+		return nil, err
+	}
+	if !uView.Admin {
+		return nil, errors.New("No administration permissions")
+	}
+	return uView, nil
+}
+
+func (f *FrontService) authenticateCharacterFromSession(sess session.Store, idChar uint64) (*auth.UserView, *auth.CharacterView, error) {
+	// Validate the session data
+	userid := ptou(sess.Get("userid"))
+	if userid == 0 || idChar == 0 {
+		return nil, nil, errors.New("Not authenticated")
+	}
+
+	// Authorize the character with the user
+	cliAuth := auth.NewAuthClient(f.cnxAuth)
+	uView, err := cliAuth.CharacterShow(context.Background(),
+		&auth.CharacterShowReq{User: userid, Character: idChar})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return uView, uView.Characters[0], nil
+}
 
 func (f *FrontService) routeForms(m *macaron.Macaron) {
 	doLogIn := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormLogin) {
@@ -19,17 +63,17 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		sess.Flush()
 
 		// Authorize the character with the user
-		cliAuth := hegemonie_auth_proto.NewAuthClient(f.cnxAuth)
-		view, err := cliAuth.UserAuth(context.Background(),
-			&hegemonie_auth_proto.UserAuthReq{Mail: info.UserMail, Pass: info.UserPass})
+		cliAuth := auth.NewAuthClient(f.cnxAuth)
+		uView, err := cliAuth.UserAuth(context.Background(),
+			&auth.UserAuthReq{Mail: info.UserMail, Pass: info.UserPass})
 
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/")
 		} else {
-			strid := utoa(view.Id)
-			ctx.SetSecureCookie("session", strid)
-			sess.Set("userid", strid)
+			strId := utoa(uView.Id)
+			ctx.SetSecureCookie("session", strId)
+			sess.Set("userid", strId)
 			ctx.Redirect("/game/user")
 		}
 	}
@@ -41,76 +85,89 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doMove := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		/*
-			err := f.region.RoundMove(&hclient.RoundMoveArgs{}, &hclient.RoundMoveReply{})
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
-		ctx.Redirect("/game/user")
+		_, err := f.authenticateAdminFromSession(sess)
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/")
+			return
+		}
+
+		cliReg := region.NewAdminClient(f.cnxRegion)
+		_, err = cliReg.Move(context.Background(), &region.None{})
+		if err != nil {
+			flash.Warning(err.Error())
+		}
+		ctx.Redirect("/admin")
 	}
 
 	doProduce := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		/*
-			err := f.region.RoundProduce(&hclient.RoundProduceArgs{}, &hclient.RoundProduceReply{})
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
-		ctx.Redirect("/game/user")
+		_, err := f.authenticateAdminFromSession(sess)
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
+			return
+		}
+
+		cliReg := region.NewAdminClient(f.cnxRegion)
+		_, err = cliReg.Produce(context.Background(), &region.None{})
+		if err != nil {
+			flash.Warning(err.Error())
+		}
+		ctx.Redirect("/admin")
 	}
 
 	doCityStudy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityStudy) {
-		/*
-			reply := hclient.CityStudyReply{}
-			args := hclient.CityStudyArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				KnowledgeId: info.KnowledgeId,
-			}
-			err := f.region.CityStudy(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
-		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+		_, _, err := f.authenticateCharacterFromSession(sess, info.CharacterId)
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
+			return
+		}
+
+		cliReg := region.NewCityClient(f.cnxRegion)
+		_, err = cliReg.Study(context.Background(),
+			&region.StudyReq{City: info.CityId, Character: info.CharacterId, KnowledgeType: info.KnowledgeId})
+		if err != nil {
+			flash.Warning(err.Error())
+		}
+
+		ctx.Redirect("/game/land/knowledges?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
 	doCityBuild := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityBuild) {
-		/*
-			reply := hclient.CityBuildReply{}
-			args := hclient.CityBuildArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				BuildingId:  info.BuildingId,
-			}
-			err := f.region.CityBuild(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
-		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+		_, _, err := f.authenticateCharacterFromSession(sess, info.CharacterId)
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
+			return
+		}
+
+		cliReg := region.NewCityClient(f.cnxRegion)
+		_, err = cliReg.Build(context.Background(),
+			&region.BuildReq{City: info.CityId, Character: info.CharacterId, BuildingType: info.BuildingId})
+		if err != nil {
+			flash.Warning(err.Error())
+		}
+
+		ctx.Redirect("/game/land/buildings?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
 	doCityTrain := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityTrain) {
-		/*
-			reply := hclient.CityTrainReply{}
-			args := hclient.CityTrainArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				UnitId:      info.UnitId,
-			}
-			err := f.region.CityTrain(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			} else {
-				flash.Info("Started!")
-			}
-		*/
-		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+		_, _, err := f.authenticateCharacterFromSession(sess, info.CharacterId)
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
+			return
+		}
+
+		cliReg := region.NewCityClient(f.cnxRegion)
+		_, err = cliReg.Train(context.Background(),
+			&region.TrainReq{City: info.CityId, Character: info.CharacterId, UnitType: info.UnitId})
+		if err != nil {
+			flash.Warning(err.Error())
+		}
+
+		ctx.Redirect("/game/land/units?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
 	doCityCreateArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCreate) {
@@ -167,6 +224,44 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
+	doCityDisbandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyDisband) {
+		/*
+			reply := hclient.CityCommandArmyReply{}
+			args := hclient.CityCommandArmyArgs{
+				UserId:      ptou(sess.Get("userid")),
+				CharacterId: info.CharacterId,
+				CityId:      info.CityId,
+				ArmyId:      info.ArmyId,
+				Cell:        info.Cell,
+				Action:      info.Action,
+			}
+			err := f.region.CityCommandArmy(&args, &reply)
+			if err != nil {
+				flash.Error("Action error: " + err.Error())
+			}
+		*/
+		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
+	doCityCancelArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCancel) {
+		/*
+			reply := hclient.CityCommandArmyReply{}
+			args := hclient.CityCommandArmyArgs{
+				UserId:      ptou(sess.Get("userid")),
+				CharacterId: info.CharacterId,
+				CityId:      info.CityId,
+				ArmyId:      info.ArmyId,
+				Cell:        info.Cell,
+				Action:      info.Action,
+			}
+			err := f.region.CityCommandArmy(&args, &reply)
+			if err != nil {
+				flash.Error("Action error: " + err.Error())
+			}
+		*/
+		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+	}
+
 	m.Post("/action/login", binding.Bind(FormLogin{}), doLogIn)
 	m.Post("/action/logout", doLogOut)
 	m.Get("/action/logout", doLogOut)
@@ -175,8 +270,10 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	m.Post("/action/city/study", binding.Bind(FormCityStudy{}), doCityStudy)
 	m.Post("/action/city/build", binding.Bind(FormCityBuild{}), doCityBuild)
 	m.Post("/action/city/train", binding.Bind(FormCityTrain{}), doCityTrain)
-	m.Post("/action/city/army/command", binding.Bind(FormCityArmyCommand{}), doCityCommandArmy)
-	m.Post("/action/city/army/create", binding.Bind(FormCityArmyCreate{}), doCityCreateArmy)
+	m.Post("/action/army/cancel", binding.Bind(FormCityArmyDisband{}), doCityCancelArmy)
+	m.Post("/action/army/disband", binding.Bind(FormCityArmyDisband{}), doCityDisbandArmy)
+	m.Post("/action/army/command", binding.Bind(FormCityArmyCommand{}), doCityCommandArmy)
+	m.Post("/action/army/create", binding.Bind(FormCityArmyCreate{}), doCityCreateArmy)
 	m.Post("/action/city/unit/transfer", binding.Bind(FormCityUnitTransfer{}), doCityTransferUnit)
 }
 
@@ -223,4 +320,16 @@ type FormCityArmyCommand struct {
 
 	Cell   uint64 `form:"cell" binding:"Required"`
 	Action uint64 `form:"what" binding:"Required"`
+}
+
+type FormCityArmyDisband struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	ArmyId      uint64 `form:"aid" binding:"Required"`
+}
+
+type FormCityArmyCancel struct {
+	CharacterId uint64 `form:"cid" binding:"Required"`
+	CityId      uint64 `form:"lid" binding:"Required"`
+	ArmyId      uint64 `form:"aid" binding:"Required"`
 }
