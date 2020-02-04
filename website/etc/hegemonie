@@ -1,0 +1,102 @@
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name ~^(www\.)?hegemonie\.be$;
+	access_log /var/log/nginx/hegemonie-www.access;
+	error_log /var/log/nginx/hegemonie-www.error error;
+
+	root /var/www/hegemonie;
+
+	return 301 https://www.hegemonie.be$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	server_name hegemonie.be;
+	access_log /var/log/nginx/hegemonie-app.access;
+	error_log /var/log/nginx/hegemonie-www.error error;
+
+	ssl on;
+    ssl_certificate /etc/letsencrypt/live/hegemonie.be/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/hegemonie.be/privkey.pem; # managed by Certbot
+
+	return 301 https://www.hegemonie.be$request_uri;
+
+}
+
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	server_name www.hegemonie.be;
+	access_log /var/log/nginx/hegemonie-app.access;
+	error_log /var/log/nginx/hegemonie-www.error error;
+
+	ssl on;
+    ssl_certificate /etc/letsencrypt/live/hegemonie.be/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/hegemonie.be/privkey.pem; # managed by Certbot
+
+	root /var/www/hegemonie;
+	index index.html;
+
+	location = /favicon.ico { try_files /static/$uri $uri =404; }
+
+	location ~* ^/static/img {
+		autoindex on;
+		expires 30d;
+		add_header Pragma public;
+		add_header Cache-Control "public, max-age=18144000";
+	}
+
+	location ~* ^/static/ {
+		expires 7d;
+		add_header Pragma public;
+		add_header Cache-Control "public, max-age=604800";
+	}
+
+	location ~ ^/.+$ {
+		expires 1h;
+		add_header Pragma public;
+		add_header Cache-Control "public, max-age=3600";
+	}
+
+	location / {
+		try_files $uri $uri/ =404;
+	}
+
+}
+
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name app.hegemonie.be;
+	access_log /var/log/nginx/hegemonie-app.access;
+	error_log /var/log/nginx/hegemonie-app.error error;
+
+	root /var/www/hegemonie;
+
+	return 301 https://app.hegemonie.be$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	server_name app.hegemonie.be;
+	access_log /var/log/nginx/hegemonie-app.access;
+	error_log /var/log/nginx/hegemonie-app.error error;
+
+	ssl on;
+    ssl_certificate /etc/letsencrypt/live/hegemonie.be/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/hegemonie.be/privkey.pem; # managed by Certbot
+
+	root /var/www/hegemonie;
+
+	location / {
+		proxy_pass http://127.0.0.1:8080;
+	}
+}
