@@ -117,6 +117,12 @@ Starting from the sources, if you have the go environment and the ``make`` insta
 then simply run:
 
 ```
+set -e
+set -x
+BASE=github.com/jfsmig/hegemonie
+go get "${BASE}"
+go mod download "${BASE}"
+cd "${BASE}"
 make try
 ```
 

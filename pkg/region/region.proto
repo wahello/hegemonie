@@ -211,16 +211,37 @@ message CityAssets {
     repeated ArmyView armies = 4;
 }
 
+message CityPolitics {
+    uint64 overlord = 1;
+    repeated uint64 lieges = 2;
+}
+
 message CityView {
     uint64 id = 1;
     string name = 2;
     uint64 owner = 3;
     uint64 deputy = 4;
 
-    ProductionView production = 5;
-    StockView stock = 6;
-    CityEvolution evol = 7;
-    CityAssets assets = 8;
+    uint32 cult = 5;
+    uint32 chaotic = 6;
+    uint32 alignment = 7;
+    uint32 ethnicGroup = 8;
+
+    uint32 tickMassacres = 9;
+    bool auto = 10;
+    bool deleted = 11;
+
+    CityPolitics politics = 12;
+
+    // The resources owned by the City
+    StockView stock = 13;
+    ProductionView production = 14;
+
+    // All the things owned by the current city
+    CityAssets assets = 16;
+
+    // All the things that the current may start to own
+    CityEvolution evol = 15;
 }
 
 message StudyReq {

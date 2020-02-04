@@ -226,10 +226,17 @@ type City struct {
 	// The total value is the permanent value plus several "transient" bonus
 	Pop int64
 
-	Chaotic    uint
-	Alignement uint
-	Race       uint
-	Religion   uint
+	// From Lawful to Neutral
+	Chaotic uint32
+
+	// From Good to Bad
+	Alignment uint32
+
+	// Race, Tribe, whatever
+	EthnicGroup uint32
+
+	// God, Pantheon, Philosophy
+	Cult uint32
 
 	// Resources stock owned by the current City
 	Stock Resources
@@ -244,7 +251,7 @@ type City struct {
 
 	// Number of massacres the current City undergo.
 	// It takes one production turn to recover one Massacre.
-	LastMassacres uint `json:",omitempty"`
+	TicksMassacres uint32 `json:",omitempty"`
 
 	// Is the city still usable
 	Deleted bool `json:",omitempty"`

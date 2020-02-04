@@ -186,12 +186,12 @@ func (c *City) MakeDefence(w *World) *Army {
 // Play one round of local production and return the
 func (c *City) ProduceLocally(w *World, p *CityProduction) Resources {
 	var prod Resources = p.Actual
-	if c.LastMassacres > 0 {
+	if c.TicksMassacres > 0 {
 		mult := MultiplierUniform(w.Definitions.MassacreImpact)
-		for i := uint(0); i < c.LastMassacres; i++ {
+		for i := uint32(0); i < c.TicksMassacres; i++ {
 			prod.Multiply(mult)
 		}
-		c.LastMassacres--
+		c.TicksMassacres--
 	}
 	return prod
 }
@@ -461,6 +461,10 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 	id := w.getNextId()
 	c.Buildings.Add(&Building{Id: id, Type: bId, Ticks: pType.Ticks})
 	return id, nil
+}
+
+func (c *City) Lieges() []*City {
+	return c.lieges[:]
 }
 
 func (w *World) CityGet(id uint64) *City {

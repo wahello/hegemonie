@@ -59,7 +59,7 @@ func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView,
 		return nil, err
 	}
 
-	view := proto.Show(s.w, city)
+	view := ShowCity(s.w, city)
 	return view, nil
 }
 

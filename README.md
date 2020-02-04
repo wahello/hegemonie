@@ -19,11 +19,15 @@ players:
 Simply build & install like this: 
 
 ```
+set -e
+set -x
 BASE=github.com/jfsmig/hegemonie
-go install "${BASE}/hegemonie"
+go get "${BASE}"
+go mod download "${BASE}"
+go install "${BASE}"
 ```
 
-For more information, please refer to the [TECH.md](./TECH.md) page.
+For more information, please refer to the page with the [technical elements](./TECH.md).
 
 
 ## How To Contribute
@@ -42,8 +46,15 @@ Any contributions you make are greatly appreciated.
 
 Distributed under the MPLv2 License. See [LICENSE](./LICENSE) for more information.
 
-We strongly believe in Open Source for many reasons.
- 
+We strongly believe in Open Source for many reasons:
+* For the purpose of a better user experience, because the value of a game
+  instance is in its players and in the description of the world. Therefore
+  the game engine should focus on allowing a rich world and letting a game
+  master to populate instances with an awesome cet of players.
+* For software quality purposes because a software with open sources is the best
+  way to have its bugs identified and fixed as soon as possible.
+* For a greater adoption, we chosed a deliberatly liberal license so that
+  there cannot be any legal concern.
 
 ## Contact
 
@@ -51,7 +62,7 @@ Follow the development on GitHub with the [jfsmig/hegemonie](https://github.com/
 
 Follow the community on our Facebook page [Hegemonie.be](https://www.facebook.com/hegemonie.be).
 
-
 ## Acknowledgements
 
 We welcome any volunteer and we already have a list of [amazing authors of Hegemonie](./AUTHORS.md).
+

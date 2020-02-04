@@ -3,27 +3,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_proto
+package hegemonie_region_agent
 
 import (
 	"github.com/jfsmig/hegemonie/pkg/region/model"
+	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
-func ShowEvolution(w *region.World, c *region.City) *CityEvolution {
-	cv := &CityEvolution{}
+func ShowEvolution(w *region.World, c *region.City) *proto.CityEvolution {
+	cv := &proto.CityEvolution{}
 
 	for _, kt := range c.KnowledgeFrontier(w) {
-		cv.KFrontier = append(cv.KFrontier, &KnowledgeTypeView{
+		cv.KFrontier = append(cv.KFrontier, &proto.KnowledgeTypeView{
 			Id: kt.Id, Name: kt.Name,
 		})
 	}
 	for _, bt := range c.BuildingFrontier(w) {
-		cv.BFrontier = append(cv.BFrontier, &BuildingTypeView{
+		cv.BFrontier = append(cv.BFrontier, &proto.BuildingTypeView{
 			Id: bt.Id, Name: bt.Name,
 		})
 	}
 	for _, ut := range c.UnitFrontier(w) {
-		cv.UFrontier = append(cv.UFrontier, &UnitTypeView{
+		cv.UFrontier = append(cv.UFrontier, &proto.UnitTypeView{
 			Id: ut.Id, Name: ut.Name,
 		})
 	}
@@ -31,8 +32,8 @@ func ShowEvolution(w *region.World, c *region.City) *CityEvolution {
 	return cv
 }
 
-func resMult(r region.ResourcesMultiplier) *ResourcesMult {
-	rm := ResourcesMult{}
+func resMult(r region.ResourcesMultiplier) *proto.ResourcesMult {
+	rm := proto.ResourcesMult{}
 	// Fuck, protobuf has no array of fixed size
 	rm.R0 = r[0]
 	rm.R1 = r[1]
@@ -43,8 +44,8 @@ func resMult(r region.ResourcesMultiplier) *ResourcesMult {
 	return &rm
 }
 
-func resPlus(r region.ResourcesIncrement) *ResourcesPlus {
-	rm := ResourcesPlus{}
+func resPlus(r region.ResourcesIncrement) *proto.ResourcesPlus {
+	rm := proto.ResourcesPlus{}
 	// Fuck, protobuf has no array of fixed size
 	rm.R0 = r[0]
 	rm.R1 = r[1]
@@ -55,8 +56,8 @@ func resPlus(r region.ResourcesIncrement) *ResourcesPlus {
 	return &rm
 }
 
-func resAbs(r region.Resources) *ResourcesAbs {
-	rm := ResourcesAbs{}
+func resAbs(r region.Resources) *proto.ResourcesAbs {
+	rm := proto.ResourcesAbs{}
 	// Fuck, protobuf has no array of fixed size
 	rm.R0 = r[0]
 	rm.R1 = r[1]
@@ -67,15 +68,15 @@ func resAbs(r region.Resources) *ResourcesAbs {
 	return &rm
 }
 
-func resMod(r region.ResourceModifiers) *ResourcesMod {
-	rm := ResourcesMod{}
+func resMod(r region.ResourceModifiers) *proto.ResourcesMod {
+	rm := proto.ResourcesMod{}
 	rm.Mult = resMult(r.Mult)
 	rm.Plus = resPlus(r.Plus)
 	return &rm
 }
 
-func ShowProduction(w *region.World, c *region.City) *ProductionView {
-	v := &ProductionView{}
+func ShowProduction(w *region.World, c *region.City) *proto.ProductionView {
+	v := &proto.ProductionView{}
 	prod := c.GetProduction(w)
 	v.Base = resAbs(prod.Base)
 	v.Buildings = resMod(prod.Buildings)
@@ -85,8 +86,8 @@ func ShowProduction(w *region.World, c *region.City) *ProductionView {
 	return v
 }
 
-func ShowStock(w *region.World, c *region.City) *StockView {
-	v := &StockView{}
+func ShowStock(w *region.World, c *region.City) *proto.StockView {
+	v := &proto.StockView{}
 	stock := c.GetStock(w)
 	v.Base = resAbs(stock.Base)
 	v.Buildings = resMod(stock.Buildings)
@@ -97,37 +98,59 @@ func ShowStock(w *region.World, c *region.City) *StockView {
 	return v
 }
 
-func ShowAssets(w *region.World, c *region.City) *CityAssets {
-	v := &CityAssets{}
+func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
+	v := &proto.CityAssets{}
 
 	for _, k := range c.Knowledges {
-		v.Knowledges = append(v.Knowledges, &KnowledgeView{
+		v.Knowledges = append(v.Knowledges, &proto.KnowledgeView{
 			Id: k.Id, IdType: k.Type, Ticks: uint32(k.Ticks),
 		})
 	}
 	for _, b := range c.Buildings {
-		v.Buildings = append(v.Buildings, &BuildingView{
+		v.Buildings = append(v.Buildings, &proto.BuildingView{
 			Id: b.Id, IdType: b.Type, Ticks: uint32(b.Ticks),
 		})
 	}
 	for _, u := range c.Units {
-		v.Units = append(v.Units, &UnitView{
+		v.Units = append(v.Units, &proto.UnitView{
 			Id: u.Id, IdType: u.Type, Ticks: uint32(u.Ticks),
 		})
 	}
 
 	for _, a := range c.Armies() {
-		v.Armies = append(v.Armies, &ArmyView{
+		v.Armies = append(v.Armies, &proto.ArmyView{
 			Id: a.Id, Name: a.Name})
 	}
 
 	return v
 }
 
-func Show(w *region.World, c *region.City) *CityView {
-	cv := &CityView{
-		Id: c.Id, Name: c.Name, Owner: c.Owner, Deputy: c.Deputy,
+func ShowCity(w *region.World, c *region.City) *proto.CityView {
+	cv := &proto.CityView{
+		Id: c.Id,
+		Name: c.Name,
+		Owner: c.Owner,
+		Deputy: c.Deputy,
+
+		Cult: c.Cult,
+		Chaotic: c.Chaotic,
+		Alignment: c.Alignment,
+		EthnicGroup: c.EthnicGroup,
+
+		TickMassacres: c.TicksMassacres,
+		Auto: c.Auto,
+		Deleted: c.Deleted,
+
+		Politics: &proto.CityPolitics{
+			Overlord: c.Overlord,
+			Lieges: []uint64{},
+		},
 	}
+
+	for _, c := range c.Lieges() {
+		cv.Politics.Lieges = append(cv.Politics.Lieges, c.Id)
+	}
+
 	cv.Evol = ShowEvolution(w, c)
 	cv.Production = ShowProduction(w, c)
 	cv.Stock = ShowStock(w, c)

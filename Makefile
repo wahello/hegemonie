@@ -29,3 +29,9 @@ bench: all
 try: all
 	./ci/run.sh $$PWD/ci/bootstrap
 
+img_tag:
+	 ( export L='(C) Quentin Minten / CC BY-NC-SA 3.0' ; \
+		for F in website/www/static/img0/quentin-minten*/*.jpg ; do \
+			BN=$(basename $$F) ; \
+			convert img0/$$BN -gravity south -stroke '#000C' -strokewidth 2 -annotate 0 "$L" -stroke  none -fill yellow -annotate 0 "$L" website/www/static/img/$$BN ; \
+		done )

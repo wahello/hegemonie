@@ -153,7 +153,7 @@ func (a *Army) Massacre(w *World, pCity *City) {
 		panic("Impossible action: nil city")
 	}
 
-	pCity.LastMassacres++
+	pCity.TicksMassacres++
 
 	// FIXME(jfs): Popularities
 	// FIXME(jfs): Notify pLocalCity
