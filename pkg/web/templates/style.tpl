@@ -1,6 +1,6 @@
 body {
     background-color: #FFFFFF;
-    background-image: url("https://www.hegemonie.be/static/img/back-chateau.jpg");
+    background-image: url("{{url}}/static/img/back-chateau.jpg");
     background-repeat: no-repeat;
     background-position: right;
     background-attachment: fixed;
@@ -8,15 +8,15 @@ body {
 }
 
 body.troops {
-    background-image: url("https://www.hegemonie.be/static/img/back-general.jpg");
+    background-image: url("{{url}}/static/img/back-general.jpg");
 }
 
 body.buildings {
-    background-image: url("https://www.hegemonie.be/static/img/back-magie.jpg");
+    background-image: url("{{url}}/static/img/back-magie.jpg");
 }
 
 body.science {
-    background-image: url("https://www.hegemonie.be/static/img/back-science.jpg");
+    background-image: url("{{url}}/static/img/back-science.jpg");
 }
 
 * {

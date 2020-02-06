@@ -43,9 +43,35 @@ func Command() *cobra.Command {
 			}
 
 			m := macaron.Classic()
-			front.routeMiddlewares(m)
-			front.routeForms(m)
+			m.SetDefaultCookieSecret("hege_session")
+			m.Use(pongo2.Pongoer(pongo2.Options{
+				Directory:       front.dirTemplates,
+				Extensions:      []string{".tpl", ".html", ".tmpl"},
+				HTMLContentType: "text/html",
+				Charset:         "UTF-8",
+				IndentJSON:      true,
+				IndentXML:       true,
+			}))
+			m.Use(session.Sessioner())
+			m.Use(func(ctx *macaron.Context, s session.Store) {
+				auth := func() {
+					uid := s.Get("userid")
+					if uid == "" {
+						ctx.Redirect("/index.html")
+					}
+				}
+				// Pages under the /game/* prefix require an established authentication
+				switch {
+				case strings.HasPrefix(ctx.Req.URL.Path, "/game/"),
+					strings.HasPrefix(ctx.Req.URL.Path, "/action/"):
+					auth()
+				}
+			})
 			front.routePages(m)
+			m.Use(macaron.Static(front.dirStatic, macaron.StaticOptions{
+				Prefix: "static",
+			}))
+			front.routeForms(m)
 
 			var err error
 
@@ -86,37 +112,6 @@ type FrontService struct {
 	units     map[uint64]*region.UnitTypeView
 	buildings map[uint64]*region.BuildingTypeView
 	knowledge map[uint64]*region.KnowledgeTypeView
-}
-
-func (f *FrontService) routeMiddlewares(m *macaron.Macaron) {
-	// TODO(jfs): The secret has to be shared among all the running instances
-	m.SetDefaultCookieSecret(randomSecret())
-	m.Use(macaron.Static(f.dirStatic, macaron.StaticOptions{
-		Prefix: "static",
-	}))
-	m.Use(pongo2.Pongoer(pongo2.Options{
-		Directory:       f.dirTemplates,
-		Extensions:      []string{".tpl", ".html", ".tmpl"},
-		HTMLContentType: "text/html",
-		Charset:         "UTF-8",
-		IndentJSON:      true,
-		IndentXML:       true,
-	}))
-	m.Use(session.Sessioner())
-	m.Use(func(ctx *macaron.Context, s session.Store) {
-		auth := func() {
-			uid := s.Get("userid")
-			if uid == "" {
-				ctx.Redirect("/index.html")
-			}
-		}
-		// Pages under the /game/* prefix require an established authentication
-		switch {
-		case strings.HasPrefix(ctx.Req.URL.Path, "/game/"),
-			strings.HasPrefix(ctx.Req.URL.Path, "/action/"):
-			auth()
-		}
-	})
 }
 
 func (f *FrontService) reload() {

@@ -23,6 +23,7 @@ type NoFlashPage func(*macaron.Context, session.Store)
 
 func (f *FrontService) routePages(m *macaron.Macaron) {
 	m.Get("/", serveRoot)
+	m.Get("/style.css", serveStyle)
 	m.Get("/game/admin", serveGameAdmin(f))
 	m.Get("/game/user", serveGameUser(f))
 	m.Get("/game/character", serveGameCharacter(f))
@@ -36,6 +37,12 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 
 	m.Get("/game/map/region", serveRegionMap(f))
 	m.Get("/game/map/city", serveCityMap(f))
+}
+
+func serveStyle(ctx *macaron.Context, sess session.Store) {
+	ctx.Data["url"] = "http://127.0.0.1:8080"
+	ctx.Header().Set("mime-type", "text/css")
+	ctx.HTML(200, "style")
 }
 
 func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
