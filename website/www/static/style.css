@@ -1,41 +1,10 @@
-body {
-    background-color: #FFFFFF;
-    background-image: url("https://www.hegemonie.be/static/img/back-general.jpg");
-    background-repeat: no-repeat;
-    background-position: right;
-    background-attachment: fixed;
-    background-size: contain;
-	margin: 10px;
-	padding: 0px;
-	display: grid;
-	grid-template-columns: auto 500px 400px auto;
-}
+body { background-color: #FFFFFF; margin: 10px; padding: 0px; }
 
-* {
-    font-family: Helvetica, Tahoma, sans-serif;
-    color: black;
-}
+* { font-family: Helvetica, Tahoma, sans-serif; color: black; }
 
-header { grid-row: 1; grid-column: 2; }
-nav    { grid-row: 1; grid-column: 3; }
-main   { grid-row: 2; grid-column: 2 / 4; }
-body footer { grid-row: 3; grid-column: 2 / 4; }
-
-header {
-	margin-top: 10px;
-	margin-bottom: 30px;
-}
-
-header h1 {
-    font-size: 48px;
-    color: deeppink;
-}
-
-header h2 {
-    font-size: 24px;
-    color: darkorange;
-}
-
+header { margin-top: 10px 0px 10px 0px; }
+header h1 { font-size: 48px; color: deeppink; }
+header h2 { font-size: 24px; color: darkorange; }
 header h1, header h2 {
 	padding-top: 0px;
 	padding-bottom: 0px;
@@ -43,26 +12,57 @@ header h1, header h2 {
 	margin-bottom: 0px;
 }
 
-main {
-	background-color: rgba(255, 255, 255, 0.9);
-}
-
-article time { font-size: 12px; font-style: italic; }
-article h1 { font-size: 22px; color: black; }
-article h2 { font-size: 20px; color: black; margin: 30px 0px 5px 0px; }
-article h3 { font-size: 18px; color: darkslategray; margin: 25px 0px 5px 0px; }
-article h4 { font-size: 16px; color: darkslategray; margin: 20px 0px 5px 0px; }
-article p  { font-size: 14px; color: darkslategray; }
-article p.signature { font-style: italic; }
-
-nav {
-	padding: 5px;
-}
+main article { background-color: rgba(255, 255, 255, 0.7); }
+main article h1 { display: none; }
+main article h2 { font-size: 24px; color: black; margin: 30px 0px 5px 0px; }
+main article h3 { font-size: 20px; color: darkslategray; margin: 25px 0px 5px 0px; }
+main article h4 { font-size: 16px; color: darkslategray; margin: 20px 0px 5px 0px; }
+main article p  { font-size: 14px; color: darkslategray; }
+main article time { font-size: 12px; font-style: italic; }
+main article p.signature { font-style: italic; }
 
 nav a {
-	font-size: 24px;
-	border: 1px solid black;
+	font-size: 18px;
 	text-decoration: none;
-	padding: 5px;
-	background-color: white;
+	padding: 0px;
+}
+
+@media all {
+	@media (min-width: 1300px) {
+		body {
+			background-image: url("https://www.hegemonie.be/static/img/back-general.jpg");
+			background-repeat: no-repeat;
+			background-position: right;
+			background-attachment: fixed;
+			background-size: contain;
+		}
+		body {
+			display: grid;
+			grid-template-columns: auto 600px 300px auto;
+		}
+		header { grid-row: 1; grid-column: 2; }
+		nav    { grid-row: 1; grid-column: 3; vertical-align: middle; }
+		nav a  { display: block; }
+		main   { grid-row: 2; grid-column: 2 / 4; }
+		footer { grid-row: 3; grid-column: 2 / 4; }
+	}
+	@media (min-width: 900px) and (max-width: 1300px) {
+		body {
+			display: grid;
+			grid-template-columns: auto 600px 300px auto;
+		}
+		header { grid-row: 1; grid-column: 2; }
+		nav    { grid-row: 1; grid-column: 3; justify-content: center; }
+		nav a  { display: block; }
+		main   { grid-row: 2; grid-column: 2 / 4; }
+		footer { grid-row: 3; grid-column: 2 / 4; }
+	}
+	@media (max-width: 900px) {
+		body   { display: block; }
+		header { display: block; }
+		nav    { display: block; }
+		nav a  { display: inline; }
+		main   { display: block; }
+		footer { display: block; }
+	}
 }
