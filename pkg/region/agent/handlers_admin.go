@@ -32,6 +32,9 @@ func (s *srvAdmin) GetScores(ctx context.Context, req *proto.None) (*proto.Score
 }
 
 func (s *srvAdmin) Save(ctx context.Context, req *proto.None) (*proto.None, error) {
+	s.w.RLock()
+	defer s.w.RUnlock()
+
 	err := s.cfg.save(s.w)
 	if err != nil {
 		return nil, err

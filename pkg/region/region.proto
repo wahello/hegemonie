@@ -27,7 +27,13 @@ service City {
 
     rpc CreateTransport (CreateTransportReq) returns (None) {}
 
+    // Transfer a Unit from the given City to the given Army.
+    // The City must control the Army and the Unit must be in the City.
     rpc TransferUnit (TransferUnitReq) returns (None) {}
+
+    // Transfer a pile of Resources from the given City to the given Army.
+    // The City must control the Army and the Stock must hold the amount of Resources.
+    rpc TransferResources (TransferResourcesReq) returns (None) {}
 
     // Return the list of armies that can be controlled by the given City
     rpc ListArmies (CityId) returns (ListOfNamedItems) {}
@@ -280,7 +286,14 @@ message TransferUnitReq {
     uint64 character = 1;
     uint64 city = 2;
     uint64 army = 3;
-    uint64 unit = 4;
+    repeated uint64 unit = 4;
+}
+
+message TransferResourcesReq {
+    uint64 character = 1;
+    uint64 city = 2;
+    uint64 army = 3;
+    ResourcesAbs stock = 4;
 }
 
 message ListReq {
@@ -292,7 +305,6 @@ message ListSetReq {
 }
 
 message None {}
-
 
 message PaginatedQuery {
     uint64 marker = 1;
@@ -310,4 +322,3 @@ message ListOfBuildingTypes {
 message ListOfKnowledgeTypes {
     repeated KnowledgeTypeView items = 1;
 }
-

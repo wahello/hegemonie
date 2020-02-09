@@ -223,7 +223,7 @@ func (c *City) Produce(w *World) {
 			if w.Definitions.InstantTransfers {
 				c.pOverlord.Stock.Add(tax)
 			} else {
-				c.TransferResourcesTo(w, c.pOverlord, tax)
+				c.SendResourcesTo(w, c.pOverlord, tax)
 			}
 
 			// FIXME(jfs): notify overlord
@@ -332,20 +332,48 @@ func (c *City) ConquerCity(w *World, other *City) {
 	// FIXME(jfs): Notify 'other'
 }
 
-func (c *City) TransferResourcesTo(w *World, overlord *City, amount Resources) {
-
+func (c *City) SendResourcesTo(w *World, overlord *City, amount Resources) {
+	// FIXME(jfs): NYI
 }
 
-// Transfer a Unit from the City to the given Army.
-// No check is performed if the City controls the Army.
-func (c *City) TransferUnit(w *World, a *Army, idUnit uint64) error {
-	pUnit := c.Unit(idUnit)
-	if pUnit == nil {
-		return errors.New("Unit not found")
+func (c *City) TransferOwnResources(a *Army, r Resources) error {
+	if a.City != c.Id {
+		return errors.New("Army not controlled by the City")
+	}
+	if !c.Stock.GreaterOrEqualTo(r) {
+		return errors.New("Insufficient resources")
 	}
 
-	c.Units.Remove(pUnit)
-	a.Units.Add(pUnit)
+	c.Stock.Remove(r)
+	a.Stock.Add(r)
+	return nil
+}
+
+func (c *City) TransferOwnUnit(a *Army, units ...uint64) error {
+	if len(units) <= 0 || a == nil {
+		panic("EINVAL")
+	}
+
+	if a.City != c.Id {
+		return errors.New("Army not controlled by the City")
+	}
+
+	allUnits := make(map[uint64]*Unit)
+	for _, uid := range units {
+		if _, ok := allUnits[uid]; ok {
+			continue
+		}
+		if u := c.Units.Get(uid); u == nil {
+			return errors.New("Unit not found")
+		} else {
+			allUnits[uid] = u
+		}
+	}
+
+	for _, u := range allUnits {
+		c.Units.Remove(u)
+		a.Units.Add(u)
+	}
 	return nil
 }
 
@@ -465,102 +493,4 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 
 func (c *City) Lieges() []*City {
 	return c.lieges[:]
-}
-
-func (w *World) CityGet(id uint64) *City {
-	return w.Live.Cities.Get(id)
-}
-
-func (w *World) CityCheck(id uint64) bool {
-	return w.CityGet(id) != nil
-}
-
-func (w *World) CityCreate(loc uint64) (uint64, error) {
-	id := w.getNextId()
-	w.Live.Cities.Create(id, loc)
-	return id, nil
-}
-
-func (w *World) CityTrain(characterId, cityId, uId uint64) (uint64, error) {
-	pCity, err := w.CityGetAndCheck(characterId, cityId)
-	if err != nil {
-		return 0, err
-	}
-	return pCity.Train(w, uId)
-}
-
-func (w *World) CityBuild(characterId, cityId, bId uint64) (uint64, error) {
-	pCity, err := w.CityGetAndCheck(characterId, cityId)
-	if err != nil {
-		return 0, err
-	}
-	return pCity.Build(w, bId)
-}
-
-func (w *World) CityStudy(characterId, cityId, kId uint64) (uint64, error) {
-	pCity, err := w.CityGetAndCheck(characterId, cityId)
-	if err != nil {
-		return 0, err
-	}
-	return pCity.Study(w, kId)
-}
-
-func (w *World) CityGetAndCheck(characterId, cityId uint64) (*City, error) {
-	// Fetch + sanity checks about the city
-	pCity := w.CityGet(cityId)
-	if pCity == nil {
-		return nil, errors.New("Not Found")
-	}
-	if pCity.Deputy != characterId && pCity.Owner != characterId {
-		return nil, errors.New("Forbidden")
-	}
-
-	return pCity, nil
-}
-
-// Transfer a Unit from the City to the given Army.
-// The chain of ownerships (Charcater, City, Army, Unit) is checked.
-func (w *World) CityTransferUnit(idChar, idCity uint64, idUnit, idArmy uint64) error {
-	pCity, err := w.CityGetAndCheck(idChar, idCity)
-	if err != nil {
-		return err
-	}
-
-	pArmy := w.ArmyGet(idArmy)
-	if pArmy == nil {
-		return errors.New("Army not found")
-	}
-
-	if pArmy.City != pCity.Id {
-		return errors.New("")
-	}
-
-	return pCity.TransferUnit(w, pArmy, idUnit)
-}
-
-func (w *World) CityCreateArmy(idUser, idChar, idCity uint64, name string) (uint64, error) {
-	pCity, err := w.CityGetAndCheck(idChar, idCity)
-	if err != nil {
-		return 0, err
-	}
-
-	return w.ArmyCreate(pCity, name)
-}
-
-func (w *World) CityArmies(idChar, idCity uint64) ([]*Army, error) {
-	city, err := w.CityGetAndCheck(idChar, idCity)
-	if err != nil {
-		return nil, err
-	}
-	return city.armies[:], nil
-}
-
-func (w *World) Cities(idChar uint64) []*City {
-	rep := make([]*City, 0)
-	for _, c := range w.Live.Cities {
-		if c.Owner == idChar || c.Deputy == idChar {
-			rep = append(rep, c)
-		}
-	}
-	return rep[:]
 }

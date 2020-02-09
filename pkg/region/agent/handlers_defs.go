@@ -17,9 +17,8 @@ type srvDefinitions struct {
 }
 
 func (s *srvDefinitions) ListUnits(ctx context.Context, req *proto.PaginatedQuery) (*proto.ListOfUnitTypes, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	v := s.w.Definitions.Units.Slice(req.Marker, ClampU32(req.Max, 1, 1000))
 	rep := &proto.ListOfUnitTypes{}
@@ -30,9 +29,8 @@ func (s *srvDefinitions) ListUnits(ctx context.Context, req *proto.PaginatedQuer
 }
 
 func (s *srvDefinitions) ListBuildings(ctx context.Context, req *proto.PaginatedQuery) (*proto.ListOfBuildingTypes, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	v := s.w.Definitions.Buildings.Slice(req.Marker, ClampU32(req.Max, 1, 1000))
 	rep := &proto.ListOfBuildingTypes{}
@@ -43,9 +41,8 @@ func (s *srvDefinitions) ListBuildings(ctx context.Context, req *proto.Paginated
 }
 
 func (s *srvDefinitions) ListKnowledges(ctx context.Context, req *proto.PaginatedQuery) (*proto.ListOfKnowledgeTypes, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	v := s.w.Definitions.Knowledges.Slice(req.Marker, ClampU32(req.Max, 1, 1000))
 	rep := &proto.ListOfKnowledgeTypes{}

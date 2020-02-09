@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"sync"
 	"sync/atomic"
 )
 
@@ -78,9 +77,13 @@ func (w *World) Check() error {
 	return nil
 }
 
-func (w *World) ReadLocker() sync.Locker {
-	return w.rw.RLocker()
-}
+func (w *World) WLock() { w.rw.Lock() }
+
+func (w *World) WUnlock() { w.rw.Unlock() }
+
+func (w *World) RLock() { w.rw.RLock() }
+
+func (w *World) RUnlock() { w.rw.RLock() }
 
 func (w *World) getNextId() uint64 {
 	return atomic.AddUint64(&w.NextId, 1)

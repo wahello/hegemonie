@@ -32,7 +32,8 @@ func ShowEvolution(w *region.World, c *region.City) *proto.CityEvolution {
 	return cv
 }
 
-func resMult(r region.ResourcesMultiplier) *proto.ResourcesMult {
+// M2P -> Model to Proto
+func resMultM2P(r region.ResourcesMultiplier) *proto.ResourcesMult {
 	rm := proto.ResourcesMult{}
 	// Fuck, protobuf has no array of fixed size
 	rm.R0 = r[0]
@@ -44,7 +45,8 @@ func resMult(r region.ResourcesMultiplier) *proto.ResourcesMult {
 	return &rm
 }
 
-func resPlus(r region.ResourcesIncrement) *proto.ResourcesPlus {
+// M2P -> Model to Proto
+func resPlusM2P(r region.ResourcesIncrement) *proto.ResourcesPlus {
 	rm := proto.ResourcesPlus{}
 	// Fuck, protobuf has no array of fixed size
 	rm.R0 = r[0]
@@ -56,7 +58,8 @@ func resPlus(r region.ResourcesIncrement) *proto.ResourcesPlus {
 	return &rm
 }
 
-func resAbs(r region.Resources) *proto.ResourcesAbs {
+// M2P -> Model to Proto
+func resAbsM2P(r region.Resources) *proto.ResourcesAbs {
 	rm := proto.ResourcesAbs{}
 	// Fuck, protobuf has no array of fixed size
 	rm.R0 = r[0]
@@ -68,33 +71,45 @@ func resAbs(r region.Resources) *proto.ResourcesAbs {
 	return &rm
 }
 
-func resMod(r region.ResourceModifiers) *proto.ResourcesMod {
+func resAbsP2M(rm *proto.ResourcesAbs) region.Resources {
+	r := region.Resources{}
+	r[0] = rm.R0
+	r[1] = rm.R1
+	r[2] = rm.R2
+	r[3] = rm.R3
+	r[4] = rm.R4
+	r[5] = rm.R5
+	return r
+}
+
+// M2P -> Model to Proto
+func resModM2P(r region.ResourceModifiers) *proto.ResourcesMod {
 	rm := proto.ResourcesMod{}
-	rm.Mult = resMult(r.Mult)
-	rm.Plus = resPlus(r.Plus)
+	rm.Mult = resMultM2P(r.Mult)
+	rm.Plus = resPlusM2P(r.Plus)
 	return &rm
 }
 
 func ShowProduction(w *region.World, c *region.City) *proto.ProductionView {
 	v := &proto.ProductionView{}
 	prod := c.GetProduction(w)
-	v.Base = resAbs(prod.Base)
-	v.Buildings = resMod(prod.Buildings)
-	v.Knowledge = resMod(prod.Knowledge)
-	v.Troops = resMod(prod.Troops)
-	v.Actual = resAbs(prod.Actual)
+	v.Base = resAbsM2P(prod.Base)
+	v.Buildings = resModM2P(prod.Buildings)
+	v.Knowledge = resModM2P(prod.Knowledge)
+	v.Troops = resModM2P(prod.Troops)
+	v.Actual = resAbsM2P(prod.Actual)
 	return v
 }
 
 func ShowStock(w *region.World, c *region.City) *proto.StockView {
 	v := &proto.StockView{}
 	stock := c.GetStock(w)
-	v.Base = resAbs(stock.Base)
-	v.Buildings = resMod(stock.Buildings)
-	v.Knowledge = resMod(stock.Knowledge)
-	v.Troops = resMod(stock.Troops)
-	v.Actual = resAbs(stock.Actual)
-	v.Usage = resAbs(stock.Usage)
+	v.Base = resAbsM2P(stock.Base)
+	v.Buildings = resModM2P(stock.Buildings)
+	v.Knowledge = resModM2P(stock.Knowledge)
+	v.Troops = resModM2P(stock.Troops)
+	v.Actual = resAbsM2P(stock.Actual)
+	v.Usage = resAbsM2P(stock.Usage)
 	return v
 }
 
@@ -127,23 +142,23 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 
 func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	cv := &proto.CityView{
-		Id: c.Id,
-		Name: c.Name,
-		Owner: c.Owner,
+		Id:     c.Id,
+		Name:   c.Name,
+		Owner:  c.Owner,
 		Deputy: c.Deputy,
 
-		Cult: c.Cult,
-		Chaotic: c.Chaotic,
-		Alignment: c.Alignment,
+		Cult:        c.Cult,
+		Chaotic:     c.Chaotic,
+		Alignment:   c.Alignment,
 		EthnicGroup: c.EthnicGroup,
 
 		TickMassacres: c.TicksMassacres,
-		Auto: c.Auto,
-		Deleted: c.Deleted,
+		Auto:          c.Auto,
+		Deleted:       c.Deleted,
 
 		Politics: &proto.CityPolitics{
 			Overlord: c.Overlord,
-			Lieges: []uint64{},
+			Lieges:   []uint64{},
 		},
 	}
 

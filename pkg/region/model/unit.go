@@ -25,6 +25,8 @@ func (s SetOfUnits) Get(id uint64) *Unit {
 	return nil
 }
 
+func (s SetOfUnits) Has(id uint64) bool { return nil != s.Get(id) }
+
 func (s SetOfUnits) getFollowerIndex(o *Unit) int {
 	for i, f := range s {
 		if f.Id == o.Id {

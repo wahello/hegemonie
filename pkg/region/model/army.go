@@ -51,7 +51,7 @@ func (s *SetOfArmies) Remove(a *Army) {
 	}
 }
 
-func (w *World) ArmyCreate(c *City, name string) (uint64, error) {
+func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
 	a := &Army{
 		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
 		Name: name, Units: make(SetOfUnits, 0),
@@ -59,7 +59,7 @@ func (w *World) ArmyCreate(c *City, name string) (uint64, error) {
 	}
 	w.Live.Armies.Add(a)
 	c.armies.Add(a)
-	return a.Id, nil
+	return a, nil
 }
 
 func (w *World) ArmyGet(id uint64) *Army {

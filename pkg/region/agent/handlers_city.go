@@ -20,25 +20,24 @@ type srvCity struct {
 }
 
 func (s *srvCity) ListArmies(ctx context.Context, req *proto.CityId) (*proto.ListOfNamedItems, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
-	armies, err := s.w.CityArmies(req.Character, req.City)
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
 		return nil, err
 	}
+
 	rep := &proto.ListOfNamedItems{}
-	for _, a := range armies {
+	for _, a := range city.Armies() {
 		rep.Items = append(rep.Items, &proto.NamedItem{Id: a.Id, Name: a.Name})
 	}
 	return rep, nil
 }
 
 func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfNamedItems, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	rep := &proto.ListOfNamedItems{}
 	cities := s.w.Cities(req.Character)
@@ -50,9 +49,8 @@ func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfNa
 }
 
 func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
@@ -64,9 +62,8 @@ func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView,
 }
 
 func (s *srvCity) Study(ctx context.Context, req *proto.StudyReq) (*proto.None, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
@@ -78,9 +75,8 @@ func (s *srvCity) Study(ctx context.Context, req *proto.StudyReq) (*proto.None, 
 }
 
 func (s *srvCity) Build(ctx context.Context, req *proto.BuildReq) (*proto.None, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
@@ -92,9 +88,8 @@ func (s *srvCity) Build(ctx context.Context, req *proto.BuildReq) (*proto.None, 
 }
 
 func (s *srvCity) Train(ctx context.Context, req *proto.TrainReq) (*proto.None, error) {
-	latch := s.w.ReadLocker()
-	latch.Lock()
-	defer latch.Unlock()
+	s.w.RLock()
+	defer s.w.RUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
@@ -106,13 +101,88 @@ func (s *srvCity) Train(ctx context.Context, req *proto.TrainReq) (*proto.None, 
 }
 
 func (s *srvCity) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
-}
+	s.w.WLock()
+	defer s.w.WUnlock()
 
-func (s *srvCity) CreateTransport(ctx context.Context, req *proto.CreateTransportReq) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, uid := range req.Unit {
+		if city.Unit(uid) == nil {
+			return nil, status.Errorf(codes.NotFound, "Troop not found (id %v)", uid)
+		}
+	}
+
+	army, err := s.w.ArmyCreate(city, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, uid := range req.Unit {
+		city.TransferOwnUnit(army, uid)
+	}
+	return &proto.None{}, nil
 }
 
 func (s *srvCity) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	s.w.WLock()
+	defer s.w.WUnlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	army := s.w.ArmyGet(req.Army)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Army not found (id %v)", req.Army)
+	}
+
+	err = city.TransferOwnUnit(army, req.Unit...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &proto.None{}, nil
+}
+
+func (s *srvCity) CreateTransport(ctx context.Context, req *proto.CreateTransportReq) (*proto.None, error) {
+	s.w.WLock()
+	defer s.w.WUnlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	r := resAbsP2M(req.Stock)
+	if !city.Stock.GreaterOrEqualTo(r) {
+		return nil, status.Errorf(codes.FailedPrecondition, "Insufficient resources")
+	}
+	army, err := s.w.ArmyCreate(city, req.Name)
+	city.Stock.Remove(r)
+	army.Stock.Add(r)
+	return &proto.None{}, nil
+}
+
+func (s *srvCity) TransferResources(ctx context.Context, req *proto.TransferResourcesReq) (*proto.None, error) {
+	s.w.WLock()
+	defer s.w.WUnlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+	army := s.w.ArmyGet(req.Army)
+	if army != nil {
+		return nil, status.Errorf(codes.NotFound, "City Not found")
+	}
+
+	err = city.TransferOwnResources(army, resAbsP2M(req.Stock))
+	if err != nil {
+		return nil, err
+	}
+	return &proto.None{}, nil
 }
