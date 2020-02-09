@@ -16,6 +16,20 @@ func (s SetOfArmies) Len() int           { return len(s) }
 func (s SetOfArmies) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s SetOfArmies) Less(i, j int) bool { return s[i].Id < s[j].Id }
 
+func (s SetOfArmies) Check() error {
+	if !sort.IsSorted(s) {
+		return errors.New("Unsorted")
+	}
+	var lastId uint64
+	for _, a := range s {
+		if lastId == a.Id {
+			return errors.New("Dupplicate ID")
+		}
+		lastId = a.Id
+	}
+	return nil
+}
+
 func (s SetOfArmies) GetIndex(id uint64) int {
 	for idx, a := range s {
 		if a.Id == id {
@@ -51,20 +65,7 @@ func (s *SetOfArmies) Remove(a *Army) {
 	}
 }
 
-func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
-	a := &Army{
-		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
-		Name: name, Units: make(SetOfUnits, 0),
-		Targets: make([]Command, 0),
-	}
-	w.Live.Armies.Add(a)
-	c.armies.Add(a)
-	return a, nil
-}
-
-func (w *World) ArmyGet(id uint64) *Army {
-	return w.Live.Armies.Get(id)
-}
+func (a *Army) GetId() uint64 { return a.Id }
 
 func (a *Army) PopCommand() {
 	a.Targets = a.Targets[1:]
@@ -253,4 +254,19 @@ func (a *Army) Flea(w *World) error {
 // it becomes a defender.
 func (a *Army) Flip(w *World) error {
 	return errors.New("NYI")
+}
+
+func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
+	a := &Army{
+		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
+		Name: name, Units: make(SetOfUnits, 0),
+		Targets: make([]Command, 0),
+	}
+	w.Live.Armies.Add(a)
+	c.armies.Add(a)
+	return a, nil
+}
+
+func (w *World) ArmyGet(id uint64) *Army {
+	return w.Live.Armies.Get(id)
 }

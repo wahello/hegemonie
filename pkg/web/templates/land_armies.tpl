@@ -16,7 +16,9 @@
 
 <div><h2>Armies</h2>
     <ul>{% for a in Land.Assets.Armies %}
-        <li><a href="/game/army?cid={{Character.Id}}&lid={{Land.Id}}&aid={{a.Id}}">{{a.Name}}</a></li>{% endfor %}
+        <li>
+            <a href="/game/army?cid={{Character.Id}}&lid={{Land.Id}}&aid={{a.Id}}">{{a.Name}}</a>
+        </li>{% endfor %}
     </ul>
 </div>
 

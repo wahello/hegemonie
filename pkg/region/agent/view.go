@@ -172,3 +172,24 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	cv.Assets = ShowAssets(w, c)
 	return cv
 }
+
+func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
+	view := &proto.ArmyView{}
+	view.Id = a.Id
+	view.Name = a.Name
+	view.Location = a.Cell
+	view.Stock = resAbsM2P(a.Stock)
+	for _, u := range a.Units {
+		view.Units = append(view.Units, ShowUnit(w, u))
+	}
+	return view
+}
+
+func ShowUnit(w *region.World, u *region.Unit) *proto.UnitView {
+	view := &proto.UnitView{}
+	view.Id = u.Id
+	view.Name = ""
+	view.Ticks = u.Ticks
+	view.Health = u.Health
+	return view
+}

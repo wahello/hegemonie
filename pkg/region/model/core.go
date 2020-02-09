@@ -106,7 +106,7 @@ type Army struct {
 type KnowledgeType struct {
 	Id    uint64
 	Name  string
-	Ticks uint `json:",omitempty"`
+	Ticks uint32 `json:",omitempty"`
 
 	// Transient bonus of Popularity, when the Knowledge is present
 	PopBonus int64
@@ -128,7 +128,7 @@ type KnowledgeType struct {
 type Knowledge struct {
 	Id    uint64
 	Type  uint64
-	Ticks uint `json:",omitempty"`
+	Ticks uint32 `json:",omitempty"`
 }
 
 type BuildingType struct {
@@ -139,7 +139,7 @@ type BuildingType struct {
 	Name string
 
 	// How many ticks for the construction
-	Ticks uint `json:",omitempty"`
+	Ticks uint32 `json:",omitempty"`
 
 	// How much does the production cost
 	Cost Resources
@@ -188,7 +188,7 @@ type Building struct {
 	Type uint64
 
 	// How many construction rounds remain before the building's achievement
-	Ticks uint `json:",omitempty"`
+	Ticks uint32 `json:",omitempty"`
 
 	// Has the building been ruined?
 	Deleted bool `json:",omitempty"`
@@ -288,7 +288,7 @@ type UnitType struct {
 
 	// The number of health point for that type of unit.
 	// A health equal to 0 means the death of the unit.
-	Health uint
+	Health uint32
 
 	// How affected is that type of unit by a loss of Health.
 	// Must be between 0 and 1.
@@ -302,7 +302,7 @@ type UnitType struct {
 	Name string
 
 	// How many ticks
-	Ticks uint
+	Ticks uint32
 
 	// Instantiation cost of the current UnitType
 	Cost Resources
@@ -341,10 +341,10 @@ type Unit struct {
 	Type uint64
 
 	// How many ticks remain before the Troop training is finished
-	Ticks uint
+	Ticks uint32
 
 	// The number of health points of the unit, Health should be less or equal to HealthMax
-	Health uint `json:"H,omitempty"`
+	Health uint32 `json:"H,omitempty"`
 }
 
 type Fight struct {

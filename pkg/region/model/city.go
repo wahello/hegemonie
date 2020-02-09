@@ -14,6 +14,20 @@ func (s SetOfCities) Len() int           { return len(s) }
 func (s SetOfCities) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s SetOfCities) Less(i, j int) bool { return s[i].Id < s[j].Id }
 
+func (s SetOfCities) Check() error {
+	if !sort.IsSorted(s) {
+		return errors.New("Unsorted")
+	}
+	var lastId uint64
+	for _, a := range s {
+		if lastId == a.Id {
+			return errors.New("Dupplicate ID")
+		}
+		lastId = a.Id
+	}
+	return nil
+}
+
 func (s SetOfCities) Get(id uint64) *City {
 	for _, c := range s {
 		if c.Id == id {

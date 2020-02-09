@@ -23,7 +23,6 @@ type NoFlashPage func(*macaron.Context, session.Store)
 
 func (f *FrontService) routePages(m *macaron.Macaron) {
 	m.Get("/", serveRoot)
-	m.Get("/style.css", serveStyle)
 	m.Get("/game/admin", serveGameAdmin(f))
 	m.Get("/game/user", serveGameUser(f))
 	m.Get("/game/character", serveGameCharacter(f))
@@ -37,12 +36,6 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 
 	m.Get("/game/map/region", serveRegionMap(f))
 	m.Get("/game/map/city", serveCityMap(f))
-}
-
-func serveStyle(ctx *macaron.Context, sess session.Store) {
-	ctx.Data["url"] = "http://127.0.0.1:8080"
-	ctx.Header().Set("mime-type", "text/css")
-	ctx.HTML(200, "style")
 }
 
 func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
@@ -191,7 +184,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
 		if err != nil {
-			flash.Warning(err.Error())
+			flash.Warning("Auth error: " + err.Error())
 			ctx.Redirect("/game/user")
 			return
 		}
@@ -201,7 +194,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 		lView, err := cliReg.Show(context.Background(),
 			&region.CityId{Character: cView.Id, City: atou(ctx.Query("lid"))})
 		if err != nil {
-			flash.Warning("Region error: " + err.Error())
+			flash.Warning("City error: " + err.Error())
 			ctx.Redirect(fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cView.Id, lView.Id))
 			return
 		}
@@ -211,7 +204,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 		aView, err := cliArmy.Show(context.Background(),
 			&region.ArmyId{Character: cView.Id, City: lView.Id, Army: atou(ctx.Query("aid"))})
 		if err != nil {
-			flash.Warning("Region error: " + err.Error())
+			flash.Warning("Army error: " + err.Error())
 			ctx.Redirect(fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cView.Id, lView.Id))
 			return
 		}

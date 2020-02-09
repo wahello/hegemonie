@@ -99,6 +99,9 @@ message ArmyId {
 message ArmyView {
     uint64 id = 1;
     string name = 2;
+    uint64 location = 3;
+    ResourcesAbs stock = 4;
+    repeated UnitView units = 5;
 }
 
 message ArmyCommandReq {
@@ -167,7 +170,8 @@ message UnitView {
     uint64 id = 2;
     uint64 idType = 3;
     uint32 ticks = 4;
-    string name = 5;
+    uint32 health = 5;
+    string name = 6;
 }
 
 message BuildingView {

@@ -109,6 +109,13 @@ func (w *World) PostLoad() error {
 		sort.Sort(&c.Units)
 	}
 
+	if err := w.Live.Armies.Check(); err != nil {
+		return err
+	}
+	if err := w.Live.Cities.Check(); err != nil {
+		return err
+	}
+
 	// Link Armies and Cities
 	for _, a := range w.Live.Armies {
 		if a.City == 0 {

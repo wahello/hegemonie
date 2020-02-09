@@ -1,15 +1,17 @@
 BASE=github.com/jfsmig/hegemonie
 GO=go
 
-all:
+all: prepare
+	$(GO) install $(BASE)
+
+prepare:
 	protoc -I pkg/auth   pkg/auth/auth.proto --go_out=plugins=grpc:pkg/auth/proto
 	protoc -I pkg/region pkg/region/region.proto  --go_out=plugins=grpc:pkg/region/proto
-	$(GO) install $(BASE)
 
 clean:
 	$(GO) clean $(BASE)
 
-.PHONY: all clean test bench fmt try
+.PHONY: all prepare clean test bench fmt try
 
 fmt: all
 	find * -type f -name '*.go' \

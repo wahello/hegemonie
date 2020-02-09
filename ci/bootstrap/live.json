@@ -38,19 +38,25 @@
     ],
     "Armies": [
         {
-            "Id": 1, "City": 1, "Cell": 1, "Target": 0, "Name": "Un troupeau de buffles",
+            "Id": 1, "City": 1, "Fight": 0, "Cell": 1, "Name": "Un troupeau de buffles",
             "Stock": [0, 0, 0, 0, 0, 0],
-            "Units": []
+            "Units": [],
+            "Targets": [],
+            "Postures": []
         },
         {
-            "Id": 1, "City": 2, "Cell": 1, "Target": 0, "Name": "Les chacals",
+            "Id": 2, "City": 2, "Fight": 0, "Cell": 1, "Name": "Les chacals",
             "Stock": [0, 0, 0, 0, 0, 0],
-            "Units": []
+            "Units": [],
+            "Targets": [],
+            "Postures": []
         },
         {
-            "Id": 2, "City": 2, "Cell": 4, "Target": 0, "Name": "Les chacaux",
+            "Id": 3, "City": 2, "Fight": 0, "Cell": 4, "Name": "Les chacaux",
             "Stock": [0, 0, 0, 0, 0, 0],
-            "Units": []
+            "Units": [],
+            "Targets": [],
+            "Postures": []
         }
     ]
 }
