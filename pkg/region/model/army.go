@@ -12,61 +12,6 @@ import (
 	"sort"
 )
 
-func (s SetOfArmies) Len() int           { return len(s) }
-func (s SetOfArmies) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s SetOfArmies) Less(i, j int) bool { return s[i].Id < s[j].Id }
-
-func (s SetOfArmies) Check() error {
-	if !sort.IsSorted(s) {
-		return errors.New("Unsorted")
-	}
-	var lastId uint64
-	for _, a := range s {
-		if lastId == a.Id {
-			return errors.New("Dupplicate ID")
-		}
-		lastId = a.Id
-	}
-	return nil
-}
-
-func (s SetOfArmies) GetIndex(id uint64) int {
-	for idx, a := range s {
-		if a.Id == id {
-			return idx
-		}
-	}
-	return len(s)
-}
-
-func (s SetOfArmies) Get(id uint64) *Army {
-	idx := s.GetIndex(id)
-	if idx < len(s) {
-		return s[idx]
-	}
-	return nil
-}
-
-func (s *SetOfArmies) Add(a *Army) {
-	*s = append(*s, a)
-	sort.Sort(s)
-}
-
-func (s *SetOfArmies) Remove(a *Army) {
-	idx := s.GetIndex(a.Id)
-	if idx >= 0 && idx < len(*s) {
-		if len(*s) == 1 {
-			*s = (*s)[:0]
-		} else {
-			s.Swap(idx, s.Len()-1)
-			*s = (*s)[:s.Len()-1]
-			sort.Sort(*s)
-		}
-	}
-}
-
-func (a *Army) GetId() uint64 { return a.Id }
-
 func (a *Army) PopCommand() {
 	a.Targets = a.Targets[1:]
 }
@@ -118,6 +63,8 @@ func (a *Army) Move(w *World) {
 				}
 			case CmdCityOverlord:
 				a.Conquer(w, pLocalCity)
+			case CmdCityLiberate:
+				a.Liberate(w, pLocalCity)
 			case CmdCityBreak:
 				a.BreakBuilding(w, pLocalCity)
 			case CmdCityMassacre:
@@ -206,6 +153,19 @@ func (a *Army) Conquer(w *World, pCity *City) {
 	pOverlord.ConquerCity(w, pCity)
 }
 
+func (a *Army) Liberate(w *World, pCity *City) {
+	if pCity == nil {
+		panic("Impossible action: nil city")
+	}
+
+	pOverlord := w.CityGet(a.City)
+	if pOverlord == nil {
+		panic("Impossible action: nil overlord")
+	}
+
+	pOverlord.LiberateCity(w, pCity)
+}
+
 func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 	if pCity.Assault == nil {
 		return false
@@ -253,6 +213,46 @@ func (a *Army) Flea(w *World) error {
 // If the Army was defending, it becomes an attacker, if it was an attacker
 // it becomes a defender.
 func (a *Army) Flip(w *World) error {
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferAttack(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferDefend(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferBreak(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferDeposit(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferDisband(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferMassacre(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferConquer(w *World, t *City) error {
+	//FIXME(jfs):
+	return errors.New("NYI")
+}
+
+func (a *Army) DeferLiberate(w *World, t *City) error {
+	//FIXME(jfs):
 	return errors.New("NYI")
 }
 

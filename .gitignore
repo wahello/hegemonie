@@ -4,4 +4,8 @@
 # Vim temporary files
 **/.*.sw?
 
+# Auto-generated files
+**/*.pb.go
+**/*_auto.go
+
 hegemonie

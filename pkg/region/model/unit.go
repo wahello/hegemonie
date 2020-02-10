@@ -5,75 +5,10 @@
 
 package region
 
-import "sort"
-
-func (s SetOfUnits) Len() int           { return len(s) }
-func (s SetOfUnits) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s SetOfUnits) Less(i, j int) bool { return s[i].Id < s[j].Id }
-
-func (s *SetOfUnits) Add(u *Unit) {
-	*s = append(*s, u)
-	sort.Sort(s)
-}
-
-func (s SetOfUnits) Get(id uint64) *Unit {
-	for _, u := range s {
-		if id == u.Id {
-			return u
-		}
-	}
-	return nil
-}
-
-func (s SetOfUnits) Has(id uint64) bool { return nil != s.Get(id) }
-
-func (s SetOfUnits) getFollowerIndex(o *Unit) int {
-	for i, f := range s {
-		if f.Id == o.Id {
-			return i
-		}
-	}
-	return -1
-}
-
-func (s *SetOfUnits) removeFollower(index int) {
-	lastIdx := len(*s) - 1
-	if lastIdx != index {
-		(*s)[index] = (*s)[index]
-	}
-	(*s)[lastIdx] = nil
-	(*s) = (*s)[:lastIdx]
-	sort.Sort(s)
-}
-
-func (s *SetOfUnits) Remove(u *Unit) {
-	if idx := s.getFollowerIndex(u); idx >= 0 {
-		s.removeFollower(idx)
-	}
-}
-
 func (w *World) UnitGet(city, id uint64) *Unit {
 	c := w.CityGet(city)
 	if c != nil {
 		return c.Unit(id)
-	}
-	return nil
-}
-
-func (s SetOfUnitTypes) Len() int           { return len(s) }
-func (s SetOfUnitTypes) Less(i, j int) bool { return s[i].Id < s[j].Id }
-func (s SetOfUnitTypes) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-
-func (s *SetOfUnitTypes) Add(u *UnitType) {
-	*s = append(*s, u)
-	sort.Sort(s)
-}
-
-func (s SetOfUnitTypes) Get(id uint64) *UnitType {
-	for _, ut := range s {
-		if ut.Id == id {
-			return ut
-		}
 	}
 	return nil
 }
@@ -90,18 +25,6 @@ func (s SetOfUnitTypes) Frontier(owned []*Building) []*UnitType {
 		}
 	}
 	return result
-}
-
-func (s SetOfUnitTypes) Slice(marker uint64, max uint32) []*UnitType {
-	start := sort.Search(len(s), func(i int) bool { return s[i].Id > marker })
-	if start < 0 || start >= s.Len() {
-		return s[:0]
-	}
-	remaining := uint32(s.Len() - start)
-	if remaining > max {
-		remaining = max
-	}
-	return s[start : uint32(start)+remaining]
 }
 
 func (w *World) UnitTypeGet(id uint64) *UnitType {

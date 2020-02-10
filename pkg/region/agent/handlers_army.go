@@ -10,7 +10,6 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
@@ -20,47 +19,43 @@ type srvArmy struct {
 	w   *region.World
 }
 
+func (s *srvArmy) getAndCheckArmy(req *proto.ArmyId) (*region.City, *region.Army, error) {
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, nil, err
+	}
+	if army := s.w.ArmyGet(req.Army); army == nil {
+		return nil, nil, status.Errorf(codes.NotFound, "Army Not found")
+	} else if army.City != city.Id {
+		return nil, nil, status.Errorf(codes.PermissionDenied, "Army not controlled")
+	} else {
+		return city, army, err
+	}
+}
+
 func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView, error) {
 	s.w.RLock()
 	defer s.w.RUnlock()
 
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
-	if err != nil {
+	if _, army, err := s.getAndCheckArmy(req); err != nil {
 		return nil, err
+	} else {
+		return ShowArmy(s.w, army), nil
 	}
-	army := s.w.ArmyGet(req.Army)
-	if army == nil {
-		return nil, status.Errorf(codes.NotFound, "Army Not found")
-	}
-	log.Println(army)
-	log.Println(city)
-	if army.City != city.Id {
-		return nil, status.Errorf(codes.PermissionDenied, "Army not controlled")
-	}
-
-	return ShowArmy(s.w, army), nil
 }
 
 func (s *srvArmy) Flea(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
 	s.w.WLock()
 	defer s.w.WUnlock()
 
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
-	if err != nil {
-		return nil, err
-	}
-	army := s.w.ArmyGet(req.Army)
-	if army == nil {
-		return nil, status.Errorf(codes.NotFound, "Army Not found")
-	}
-	if army.City != city.Id {
-		return nil, status.Errorf(codes.PermissionDenied, "Army not controlled")
-	}
-
-	if err = army.Flea(s.w); err != nil {
+	if _, army, err := s.getAndCheckArmy(req); err != nil {
 		return nil, err
 	} else {
-		return &proto.None{}, nil
+		if err = army.Flea(s.w); err != nil {
+			return nil, err
+		} else {
+			return &proto.None{}, nil
+		}
 	}
 }
 
@@ -68,22 +63,14 @@ func (s *srvArmy) Flip(ctx context.Context, req *proto.ArmyId) (*proto.None, err
 	s.w.WLock()
 	defer s.w.WUnlock()
 
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
-	if err != nil {
-		return nil, err
-	}
-	army := s.w.ArmyGet(req.Army)
-	if army == nil {
-		return nil, status.Errorf(codes.NotFound, "Army Not found")
-	}
-	if army.City != city.Id {
-		return nil, status.Errorf(codes.PermissionDenied, "Army not controlled")
-	}
-
-	if err = army.Flip(s.w); err != nil {
+	if _, army, err := s.getAndCheckArmy(req); err != nil {
 		return nil, err
 	} else {
-		return &proto.None{}, nil
+		if err = army.Flip(s.w); err != nil {
+			return nil, err
+		} else {
+			return &proto.None{}, nil
+		}
 	}
 }
 
@@ -91,18 +78,39 @@ func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*prot
 	s.w.WLock()
 	defer s.w.WUnlock()
 
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	_, army, err := s.getAndCheckArmy(req.Id)
 	if err != nil {
 		return nil, err
 	}
-	army := s.w.ArmyGet(req.Army)
-	if army == nil {
-		return nil, status.Errorf(codes.NotFound, "Army Not found")
-	}
-	if army.City != city.Id {
-		return nil, status.Errorf(codes.PermissionDenied, "Army not controlled")
+	target := s.w.CityGet(req.Target)
+	if target == nil {
+		return nil, status.Errorf(codes.NotFound, "Target Not found")
 	}
 
-	// FIXME(jfs): NYI
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	switch req.Action {
+	case region.CmdCityAttack:
+		err = army.DeferAttack(s.w, target)
+	case region.CmdCityDefend:
+		err = army.DeferDefend(s.w, target)
+	case region.CmdCityOverlord:
+		err = army.DeferConquer(s.w, target)
+	case region.CmdCityLiberate:
+		err = army.DeferLiberate(s.w, target)
+	case region.CmdCityBreak:
+		err = army.DeferBreak(s.w, target)
+	case region.CmdCityMassacre:
+		err = army.DeferMassacre(s.w, target)
+	case region.CmdCityDeposit:
+		err = army.DeferDeposit(s.w, target)
+	case region.CmdCityDisband:
+		err = army.DeferDisband(s.w, target)
+	default:
+		return nil, status.Errorf(codes.NotFound, "Invalid action")
+	}
+
+	if err != nil {
+		return nil, err
+	} else {
+		return &proto.None{}, nil
+	}
 }

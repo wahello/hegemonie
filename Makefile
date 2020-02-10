@@ -1,21 +1,35 @@
 BASE=github.com/jfsmig/hegemonie
 GO=go
+PROTOC=protoc
+
+AUTO= pkg/region/model/world_auto.go
+AUTO+= pkg/auth/proto/auth.pb.go
+AUTO+= pkg/region/proto/region.pb.go
 
 all: prepare
 	$(GO) install $(BASE)
 
-prepare:
-	protoc -I pkg/auth   pkg/auth/auth.proto --go_out=plugins=grpc:pkg/auth/proto
-	protoc -I pkg/region pkg/region/region.proto  --go_out=plugins=grpc:pkg/region/proto
+prepare: $(AUTO)
+
+pkg/region/model/%_auto.go: pkg/region/model/core.go cmd/gen/gen-set.go
+	-rm $@
+	$(GO) generate github.com/jfsmig/hegemonie/pkg/region/model
+
+pkg/auth/proto/%.pb.go: pkg/auth/auth.proto
+	$(PROTOC) -I pkg/auth   pkg/auth/auth.proto --go_out=plugins=grpc:pkg/auth/proto
+
+pkg/region/proto/%.pb.go: pkg/region/region.proto
+	$(PROTOC) -I pkg/region pkg/region/region.proto  --go_out=plugins=grpc:pkg/region/proto
 
 clean:
-	$(GO) clean $(BASE)
+	-rm $(AUTO)
 
 .PHONY: all prepare clean test bench fmt try
 
-fmt: all
+fmt:
 	find * -type f -name '*.go' \
-		| grep -v '.pb.go$$' | while read F ; do dirname $$F ; done \
+		| grep -v -e '_auto.go$$' -e '.pb.go$$' \
+		| while read F ; do dirname $$F ; done \
 		| sort | uniq | while read D ; do ( set -x ; cd $$D && go fmt ) done
 
 test: all

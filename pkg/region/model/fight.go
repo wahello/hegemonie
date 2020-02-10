@@ -9,17 +9,6 @@ import (
 	"sort"
 )
 
-func (s SetOfId) Len() int           { return len(s) }
-func (s SetOfId) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s SetOfId) Less(i, j int) bool { return s[i] < s[j] }
-
-func (s *SetOfId) Add(id uint64) {
-	*s = append(*s, id)
-	if nb := len(*s); nb > 2 && !sort.IsSorted((*s)[nb-2:]) {
-		sort.Sort(*s)
-	}
-}
-
 func (s SetOfFights) Len() int      { return len(s) }
 func (s SetOfFights) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s SetOfFights) Less(i, j int) bool {

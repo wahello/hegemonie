@@ -22,14 +22,16 @@ const (
 	CmdCityDefend = 3
 	// Attack the City and become its overlord in case of victory
 	CmdCityOverlord = 4
+	// Attack the City and become its overlord in case of victory
+	CmdCityLiberate = 5
 	// Attack the City and break a building in case of victory
-	CmdCityBreak = 5
+	CmdCityBreak = 6
 	// Attack the City and reduce its production for the next turn
-	CmdCityMassacre = 6
+	CmdCityMassacre = 7
 	// Deposit all the resources of the Army to the local City
-	CmdCityDeposit = 7
+	CmdCityDeposit = 8
 	// Disband the Army and transfer its units and resources to the local City
-	CmdCityDisband = 8
+	CmdCityDisband = 9
 )
 
 type Resources [ResourceMax]uint64
@@ -397,27 +399,18 @@ type Map struct {
 	steps map[vector]uint64
 }
 
-type SetOfId []uint64
-
-type SetOfArmies []*Army
-
-type SetOfUnits []*Unit
-
-type SetOfUnitTypes []*UnitType
-
-type SetOfBuildings []*Building
-
-type SetOfBuildingTypes []*BuildingType
-
-type SetOfKnowledges []*Knowledge
-
-type SetOfKnowledgeTypes []*KnowledgeType
-
-type SetOfCities []*City
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *MapVertex     SetOfVertices
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Army          SetOfArmies
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *City          SetOfCities
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Building      SetOfBuildings
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *BuildingType  SetOfBuildingTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Knowledge     SetOfKnowledges
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *KnowledgeType SetOfKnowledgeTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Unit          SetOfUnits
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *UnitType      SetOfUnitTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen          region ./world_auto.go uint64         SetOfId
 
 type SetOfFights []*Fight
-
-type SetOfVertices []*MapVertex
 
 type SetOfEdges []*MapEdge
 

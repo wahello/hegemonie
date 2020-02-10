@@ -13,27 +13,6 @@ import (
 	"sync/atomic"
 )
 
-func (r SetOfVertices) Len() int           { return len(r) }
-func (r SetOfVertices) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
-func (r SetOfVertices) Less(i, j int) bool { return r[i].Id < r[j].Id }
-
-func (s SetOfVertices) Get(id uint64) *MapVertex {
-	i := sort.Search(len(s), func(i int) bool {
-		return s[i].Id >= id
-	})
-	if i < len(s) && s[i].Id == id {
-		return s[i]
-	}
-	return nil
-}
-
-func (s *SetOfVertices) Add(v *MapVertex) {
-	*s = append(*s, v)
-	if nb := len(*s); nb > 2 && !sort.IsSorted((*s)[nb-2:]) {
-		sort.Sort(*s)
-	}
-}
-
 func (r SetOfEdges) Len() int      { return len(r) }
 func (r SetOfEdges) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 func (r SetOfEdges) Less(i, j int) bool {
@@ -78,7 +57,7 @@ func (m *Map) CellGet(id uint64) *MapVertex {
 }
 
 func (m *Map) CellHas(id uint64) bool {
-	return m.CellGet(id) != nil
+	return m.Cells.Has(id)
 }
 
 func (m *Map) CellCreate() *MapVertex {
@@ -176,6 +155,9 @@ func (m *Map) CellAdjacency(id uint64) []uint64 {
 }
 
 func (m *Map) Check(w *World) error {
+	if err := m.Cells.Check(); err != nil {
+		return err
+	}
 	return nil
 }
 

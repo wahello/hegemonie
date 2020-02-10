@@ -5,56 +5,6 @@
 
 package region
 
-import "sort"
-
-func (s SetOfBuildings) Len() int           { return len(s) }
-func (s SetOfBuildings) Less(i, j int) bool { return s[i].Id < s[j].Id }
-func (s SetOfBuildings) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-
-func (s SetOfBuildings) Get(id uint64) *Building {
-	for _, b := range s {
-		if b.Id == id {
-			return b
-		}
-	}
-	return nil
-}
-
-func (s *SetOfBuildings) Add(b *Building) {
-	*s = append(*s, b)
-	sort.Sort(s)
-}
-
-func (s SetOfBuildingTypes) Len() int           { return len(s) }
-func (s SetOfBuildingTypes) Less(i, j int) bool { return s[i].Id < s[j].Id }
-func (s SetOfBuildingTypes) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-
-func (s SetOfBuildingTypes) Get(id uint64) *BuildingType {
-	for _, bt := range s {
-		if bt.Id == id {
-			return bt
-		}
-	}
-	return nil
-}
-
-func (s *SetOfBuildingTypes) Add(b *BuildingType) {
-	*s = append(*s, b)
-	sort.Sort(s)
-}
-
-func (s SetOfBuildingTypes) Slice(marker uint64, max uint32) []*BuildingType {
-	start := sort.Search(len(s), func(i int) bool { return s[i].Id > marker })
-	if start < 0 || start >= s.Len() {
-		return s[:0]
-	}
-	remaining := uint32(s.Len() - start)
-	if remaining > max {
-		remaining = max
-	}
-	return s[start : uint32(start)+remaining]
-}
-
 func (s SetOfBuildingTypes) Frontier(pop int64, built []*Building, owned []*Knowledge) []*BuildingType {
 	bmap := make(map[uint64]bool)
 	pending := make(map[uint64]bool)
