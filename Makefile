@@ -11,7 +11,7 @@ all: prepare
 
 prepare: $(AUTO)
 
-pkg/region/model/%_auto.go: pkg/region/model/core.go cmd/gen/gen-set.go
+pkg/region/model/%_auto.go: pkg/region/model/core.go cmd/gen-set/main.go
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/region/model
 

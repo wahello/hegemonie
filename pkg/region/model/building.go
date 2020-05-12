@@ -48,12 +48,3 @@ func (s SetOfBuildingTypes) Frontier(pop int64, built []*Building, owned []*Know
 	}
 	return result
 }
-
-func (w *World) BuildingGetFrontier(pop int64, built []*Building, owned []*Knowledge) []*BuildingType {
-	// TODO(jfs): Maybe speed the execution with a reverse index of Requires
-	return w.Definitions.Buildings.Frontier(pop, built, owned)
-}
-
-func (w *World) BuildingTypeGet(id uint64) *BuildingType {
-	return w.Definitions.Buildings.Get(id)
-}

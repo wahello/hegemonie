@@ -26,11 +26,3 @@ func (s SetOfUnitTypes) Frontier(owned []*Building) []*UnitType {
 	}
 	return result
 }
-
-func (w *World) UnitTypeGet(id uint64) *UnitType {
-	return w.Definitions.Units.Get(id)
-}
-
-func (w *World) UnitGetFrontier(owned []*Building) []*UnitType {
-	return w.Definitions.Units.Frontier(owned)
-}

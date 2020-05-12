@@ -209,3 +209,80 @@ func (w *World) Move() {
 		a.Move(w)
 	}
 }
+
+func (w *World) UnitTypeGet(id uint64) *UnitType {
+	return w.Definitions.Units.Get(id)
+}
+
+func (w *World) UnitGetFrontier(owned []*Building) []*UnitType {
+	return w.Definitions.Units.Frontier(owned)
+}
+
+func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
+	a := &Army{
+		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
+		Name: name, Units: make(SetOfUnits, 0),
+		Targets: make([]Command, 0),
+	}
+	w.Live.Armies.Add(a)
+	c.armies.Add(a)
+	return a, nil
+}
+
+func (w *World) ArmyGet(id uint64) *Army {
+	return w.Live.Armies.Get(id)
+}
+
+func (w *World) CityGet(id uint64) *City {
+	return w.Live.Cities.Get(id)
+}
+
+func (w *World) CityCheck(id uint64) bool {
+	return w.CityGet(id) != nil
+}
+
+func (w *World) CityCreate(loc uint64) (uint64, error) {
+	id := w.getNextId()
+	w.Live.Cities.Create(id, loc)
+	return id, nil
+}
+
+func (w *World) CityGetAndCheck(characterId, cityId uint64) (*City, error) {
+	// Fetch + sanity checks about the city
+	pCity := w.CityGet(cityId)
+	if pCity == nil {
+		return nil, errors.New("Not Found")
+	}
+	if pCity.Deputy != characterId && pCity.Owner != characterId {
+		return nil, errors.New("Forbidden")
+	}
+
+	return pCity, nil
+}
+
+func (w *World) Cities(idChar uint64) []*City {
+	rep := make([]*City, 0)
+	for _, c := range w.Live.Cities {
+		if c.Owner == idChar || c.Deputy == idChar {
+			rep = append(rep, c)
+		}
+	}
+	return rep[:]
+}
+
+func (w *World) BuildingTypeGet(id uint64) *BuildingType {
+	return w.Definitions.Buildings.Get(id)
+}
+
+func (w *World) BuildingGetFrontier(pop int64, built []*Building, owned []*Knowledge) []*BuildingType {
+	// TODO(jfs): Maybe speed the execution with a reverse index of Requires
+	return w.Definitions.Buildings.Frontier(pop, built, owned)
+}
+
+func (w *World) KnowledgeTypeGet(id uint64) *KnowledgeType {
+	return w.Definitions.Knowledges.Get(id)
+}
+
+func (w *World) KnowledgeGetFrontier(owned []*Knowledge) []*KnowledgeType {
+	return w.Definitions.Knowledges.Frontier(owned)
+}

@@ -5,12 +5,8 @@
 
 package region
 
-func (w *World) KnowledgeTypeGet(id uint64) *KnowledgeType {
-	return w.Definitions.Knowledges.Get(id)
-}
-
 // TODO(jfs): Maybe speed the execution with a reverse index of Requires
-func (w *World) KnowledgeGetFrontier(owned []*Knowledge) []*KnowledgeType {
+func (s SetOfKnowledgeTypes) Frontier(owned []*Knowledge) []*KnowledgeType {
 	pending := make(map[uint64]bool)
 	finished := make(map[uint64]bool)
 	for _, k := range owned {
@@ -39,7 +35,7 @@ func (w *World) KnowledgeGetFrontier(owned []*Knowledge) []*KnowledgeType {
 	}
 
 	result := make([]*KnowledgeType, 0)
-	for _, kt := range w.Definitions.Knowledges {
+	for _, kt := range s {
 		if valid(kt) {
 			result = append(result, kt)
 		}

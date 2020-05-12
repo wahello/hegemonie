@@ -5,9 +5,7 @@
 
 package region
 
-import (
-	"sync"
-)
+import "sync"
 
 const (
 	ResourceMax = 6
@@ -33,6 +31,56 @@ const (
 	// Disband the Army and transfer its units and resources to the local City
 	CmdCityDisband = 9
 )
+
+type World struct {
+	Definitions DefinitionsBase
+	Live        LiveBase
+	Places      Map
+
+	NextId uint64
+	Salt   string
+	rw     sync.RWMutex
+}
+
+type DefinitionsBase struct {
+	Units      SetOfUnitTypes
+	Buildings  SetOfBuildingTypes
+	Knowledges SetOfKnowledgeTypes
+
+	// Ratio applied to the production of resources that is applied for each
+	// Massacre underwent by any city. It only impacts the production of the City itself.
+	MassacreImpact float64
+
+	// Should resource transfers happen instantly or should an actual transport
+	// be emitted by the sender? Set to `true` for an instant transfer or to
+	// `false` for a transport.
+	InstantTransfers bool
+
+	// Permanent bonus to the Popularity when a City creates an Army
+	PopBonusArmyCreate int64
+
+	// Permanent bonus to the Popularity when a City disband an Army
+	PopBonusArmyDisband int64
+
+	// Transient bonus to the Popularity of a City for each of its live Army
+	PopBonusArmyAlive int64
+
+	// Default Overlord rate: percentage of the production of a City that is
+	// taxed by its Overlord
+	RateOverlord float64
+}
+
+type LiveBase struct {
+	// Free armies on the map, not involved in any Fight
+	Armies SetOfArmies
+
+	// All the cities present on the Region
+	Cities SetOfCities
+
+	// Fights currently happening. The armies involved in the Fight are owned
+	// By the Fight and do not appear in the "Armies" field.
+	Fights SetOfFights
+}
 
 type Resources [ResourceMax]uint64
 
@@ -399,67 +447,17 @@ type Map struct {
 	steps map[vector]uint64
 }
 
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *MapVertex     SetOfVertices
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Army          SetOfArmies
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *City          SetOfCities
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Building      SetOfBuildings
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *BuildingType  SetOfBuildingTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Knowledge     SetOfKnowledges
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *KnowledgeType SetOfKnowledgeTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *Unit          SetOfUnits
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen -acc .Id region ./world_auto.go *UnitType      SetOfUnitTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen          region ./world_auto.go uint64         SetOfId
-
 type SetOfFights []*Fight
 
 type SetOfEdges []*MapEdge
 
-type DefinitionsBase struct {
-	Units      SetOfUnitTypes
-	Buildings  SetOfBuildingTypes
-	Knowledges SetOfKnowledgeTypes
-
-	// Ratio applied to the production of resources that is applied for each
-	// Massacre underwent by any city. It only impacts the production of the City itself.
-	MassacreImpact float64
-
-	// Should resource transfers happen instantly or should an actual transport
-	// be emitted by the sender? Set to `true` for an instant transfer or to
-	// `false` for a transport.
-	InstantTransfers bool
-
-	// Permanent bonus to the Popularity when a City creates an Army
-	PopBonusArmyCreate int64
-
-	// Permanent bonus to the Popularity when a City disband an Army
-	PopBonusArmyDisband int64
-
-	// Transient bonus to the Popularity of a City for each of its live Army
-	PopBonusArmyAlive int64
-
-	// Default Overlord rate: percentage of the production of a City that is
-	// taxed by its Overlord
-	RateOverlord float64
-}
-
-type LiveBase struct {
-	// Free armies on the map, not involved in any Fight
-	Armies SetOfArmies
-
-	// All the cities present on the Region
-	Cities SetOfCities
-
-	// Fights currently happening. The armies involved in the Fight are owned
-	// By the Fight and do not appear in the "Armies" field.
-	Fights SetOfFights
-}
-
-type World struct {
-	Definitions DefinitionsBase
-	Live        LiveBase
-	Places      Map
-
-	NextId uint64
-	Salt   string
-	rw     sync.RWMutex
-}
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *MapVertex     SetOfVertices
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Army          SetOfArmies
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *City          SetOfCities
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Building      SetOfBuildings
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *BuildingType  SetOfBuildingTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Knowledge     SetOfKnowledges
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *KnowledgeType SetOfKnowledgeTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Unit          SetOfUnits
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *UnitType      SetOfUnitTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set          region ./world_auto.go uint64         SetOfId

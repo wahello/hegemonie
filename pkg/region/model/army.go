@@ -255,18 +255,3 @@ func (a *Army) DeferLiberate(w *World, t *City) error {
 	//FIXME(jfs):
 	return errors.New("NYI")
 }
-
-func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
-	a := &Army{
-		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
-		Name: name, Units: make(SetOfUnits, 0),
-		Targets: make([]Command, 0),
-	}
-	w.Live.Armies.Add(a)
-	c.armies.Add(a)
-	return a, nil
-}
-
-func (w *World) ArmyGet(id uint64) *Army {
-	return w.Live.Armies.Get(id)
-}

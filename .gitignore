@@ -8,4 +8,14 @@
 **/*.pb.go
 **/*_auto.go
 
-hegemonie
+**/hegemonie
+**/gen-map
+**/gen-map-test
+**/gen-set
+
+**/CMakeCache.txt
+**/CMakeFiles
+**/Makefile
+**/cmake-build-debug
+**/cmake_install.cmake
+
