@@ -9,9 +9,6 @@
 **/*_auto.go
 
 **/hegemonie
-**/gen-map
-**/gen-map-test
-**/gen-set
 
 **/CMakeCache.txt
 **/CMakeFiles

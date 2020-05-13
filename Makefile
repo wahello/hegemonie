@@ -8,6 +8,7 @@ AUTO+= pkg/region/proto/region.pb.go
 
 all: prepare
 	$(GO) install $(BASE)
+	$(GO) install $(BASE)/cmd/hege-mapper
 
 prepare: $(AUTO)
 
