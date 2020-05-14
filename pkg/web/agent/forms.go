@@ -97,7 +97,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		if err != nil {
 			flash.Warning(err.Error())
 		}
-		ctx.Redirect("/admin")
+		ctx.Redirect("/game/admin")
 	}
 
 	doProduce := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
@@ -113,7 +113,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		if err != nil {
 			flash.Warning(err.Error())
 		}
-		ctx.Redirect("/admin")
+		ctx.Redirect("/game/admin")
 	}
 
 	doCityStudy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityStudy) {
