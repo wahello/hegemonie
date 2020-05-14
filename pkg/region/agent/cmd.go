@@ -71,9 +71,13 @@ func (self *regionConfig) execute() error {
 			obj    interface{}
 		}
 		cfgSections := []cfgSection{
-			{"defs.json", &w.Definitions},
+			{"def_config.json", &w.Definitions},
+			{"def_units.json", &w.Definitions.Units},
+			{"def_buildings.json", &w.Definitions.Buildings},
+			{"def_knowledge.json", &w.Definitions.Knowledges},
 			{"map.json", &w.Places},
-			{"live.json", &w.Live},
+			{"live_cities.json", &w.Live.Cities},
+			{"live_armies.json", &w.Live.Armies},
 		}
 		for _, section := range cfgSections {
 			var in io.ReadCloser
