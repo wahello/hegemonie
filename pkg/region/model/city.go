@@ -472,7 +472,7 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 	if pType == nil {
 		return 0, errors.New("Building Type not found")
 	}
-	if pType.Unique {
+	if !pType.MultipleAllowed {
 		for _, b := range c.Buildings {
 			if b.Type == bId {
 				return 0, errors.New("Building already present")

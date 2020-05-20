@@ -47,7 +47,7 @@ func TestBuildingFrontier(t *testing.T) {
 	bt := SetOfBuildingTypes{}
 	bt.Add(&BuildingType{Id: 1})
 	bt.Add(&BuildingType{Id: 2, PopRequired: 1})
-	bt.Add(&BuildingType{Id: 3, Requires: []uint64{3}, Unique: true})
+	bt.Add(&BuildingType{Id: 3, Requires: []uint64{3}, MultipleAllowed: false})
 
 	b := SetOfBuildings{}
 	b.Add(&Building{Id: 1, Type: 1})

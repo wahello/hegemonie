@@ -227,7 +227,7 @@ type BuildingType struct {
 	Cost Resources
 
 	// Has the building to be unique a the City
-	Unique bool `json:",omitempty"`
+	MultipleAllowed bool `json:",omitempty"`
 
 	// Amount of total popularity required to start the construction of the building
 	PopRequired int64
