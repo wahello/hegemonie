@@ -18,7 +18,7 @@
 #   OUTPUT:      the path to the live DB of the world (actual map, users, cities, armies) plus a copy of the expanded description.
 #
 
-set -xe
+set -e
 
 function usage() { echo -e "USAGE:\n  $0  /path/to/map_seed.json  /path/to/definitions  /path/to/live" ; }
 function error() { echo $@ 1>&2 ; exit 2 ; }
@@ -60,15 +60,18 @@ check_file "${HEGE_LIVE}/armies.json"
 check_file "${HEGE_LIVE}/fights.json"
 check_file "${TMP}/auth.json"
 
-cp -v -p \
+cp -p \
   "${HEGE_DEFS}/units.json" \
   "${HEGE_DEFS}/config.json" \
   "${HEGE_DEFS}/buildings.json" \
   "${HEGE_DEFS}/knowledge.json" \
-	"${TMP}/map_seed.json" \
   "${OUT}/definitions/"
 
-cp -v -p \
+cp -p \
+	"${TMP}/map_seed.json" \
+  "${OUT}/"
+
+cp -p \
   "${HEGE_LIVE}/armies.json" \
   "${HEGE_LIVE}/fights.json" \
   "${HEGE_LIVE}/cities.json" \
@@ -76,4 +79,7 @@ cp -v -p \
   "${TMP}/auth.json" \
 	"${OUT}/live/"
 
+rm -rf "${TMP}"
+
 echo $OUT
+

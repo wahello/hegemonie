@@ -11,7 +11,7 @@
 #   ci/hegeIV-calaquyr/
 #
 
-set -xe
+set -e
 
 function usage() { echo -e "USAGE:\n  $0  DIR_DEFS  DIR_LIVE [DIR_SAVE}" ; }
 function error() { ( echo $@ ; usage ) 1>&2 ; exit 2 ; }
