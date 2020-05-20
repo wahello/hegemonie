@@ -51,10 +51,10 @@ func (s *srvMap) Cities(ctx context.Context, req *proto.CitiesReq) (*proto.ListO
 			rep.Items = append(rep.Items, &proto.PublicCity{
 				Id: x.Id, Name: x.Name, Cell: x.Cell,
 				Alignment: x.Alignment,
-				Chaos: x.Chaotic,
-				Cult: x.Cult,
-				Politics: x.PoliticalGroup,
-				Ethny: x.EthnicGroup,
+				Chaos:     x.Chaotic,
+				Cult:      x.Cult,
+				Politics:  x.PoliticalGroup,
+				Ethny:     x.EthnicGroup,
 			})
 		}
 	}

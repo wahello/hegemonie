@@ -149,10 +149,10 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 		Owner:  c.Owner,
 		Deputy: c.Deputy,
 
-		Cult:        c.Cult,
-		Chaotic:     c.Chaotic,
-		Alignment:   c.Alignment,
-		EthnicGroup: c.EthnicGroup,
+		Cult:           c.Cult,
+		Chaotic:        c.Chaotic,
+		Alignment:      c.Alignment,
+		EthnicGroup:    c.EthnicGroup,
 		PoliticalGroup: c.PoliticalGroup,
 
 		TickMassacres: c.TicksMassacres,

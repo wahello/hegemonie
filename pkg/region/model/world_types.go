@@ -191,14 +191,14 @@ type KnowledgeType struct {
 	Prod ResourceModifiers
 
 	// Amount of resources spent when the City starts learning this knowledge
-	Cost0     Resources
+	Cost0 Resources
 
 	// Amount of resources spent to advance of one tick
-	Cost      Resources
+	Cost Resources
 
 	// All the knowledges that are required to start the current Knowledge
 	// (this is an AND, not an OR)
-	Requires  []uint64
+	Requires []uint64
 
 	// All the knowledge that are forbidden by the current knowledge
 	Conflicts []uint64

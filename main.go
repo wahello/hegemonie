@@ -7,12 +7,8 @@ package main
 
 import (
 	"errors"
-	"github.com/jfsmig/hegemonie/pkg/api/agent"
-	"github.com/jfsmig/hegemonie/pkg/api/client"
 	"github.com/jfsmig/hegemonie/pkg/auth/agent"
 	"github.com/jfsmig/hegemonie/pkg/auth/client"
-	"github.com/jfsmig/hegemonie/pkg/events/agent"
-	"github.com/jfsmig/hegemonie/pkg/events/client"
 	"github.com/jfsmig/hegemonie/pkg/region/agent"
 	"github.com/jfsmig/hegemonie/pkg/region/client"
 	"github.com/jfsmig/hegemonie/pkg/web/agent"

@@ -121,7 +121,7 @@ func (w *World) Cities(idChar uint64) []*City {
 			rep = append(rep, c)
 		}
 	}
-	sort.Slice(rep, func (i, j int) bool { return rep[i].Id < rep[j].Id })
+	sort.Slice(rep, func(i, j int) bool { return rep[i].Id < rep[j].Id })
 	return rep[:]
 }
 

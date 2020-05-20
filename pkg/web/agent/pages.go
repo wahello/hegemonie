@@ -252,7 +252,7 @@ type RawEdge struct {
 }
 
 type RawCity struct {
-	Id uint64 `json:"id"`
+	Id   uint64 `json:"id"`
 	Name string `json:"name"`
 	Cell uint64 `json:"cell"`
 }

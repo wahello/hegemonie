@@ -211,8 +211,8 @@ func CommandExport() *cobra.Command {
 			u.Admin = true
 			u.Password = ":plop"
 			u.Characters = append(u.Characters, auth.Character{
-				Id: aaa.NextId,
-				Name: "Waku",
+				Id:     aaa.NextId,
+				Name:   "Waku",
 				Region: "Calaquyr",
 			})
 			aaa.ReHash()
