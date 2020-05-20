@@ -13,14 +13,13 @@ import (
 	proto "github.com/jfsmig/hegemonie/pkg/auth/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"io"
 	"net"
 	"os"
 )
 
 type authConfig struct {
 	endpoint string
-	pathLoad string
+	pathLive string
 	pathSave string
 }
 
@@ -48,7 +47,7 @@ func Command() *cobra.Command {
 		&cfg.endpoint, "endpoint", "127.0.0.1:8080",
 		"IP:PORT endpoint for the TCP/IP server")
 	agent.Flags().StringVar(
-		&cfg.pathLoad, "load", "",
+		&cfg.pathLive, "live", "",
 		"Path of the DB backup to load at startup")
 	agent.Flags().StringVar(
 		&cfg.pathSave, "save", "",
@@ -62,35 +61,35 @@ func e(format string, args ...interface{}) error {
 }
 
 func (service *authService) execute() error {
-	var err error
-
 	service.db.Init()
 
-	if service.cfg.pathLoad != "" {
-		p := service.cfg.pathLoad
+	if service.cfg.pathLive == "" {
+		return errors.New("Missing: path to the live data directory")
+	}
 
-		var in io.ReadCloser
-		in, err = os.Open(p)
-		if err != nil {
-			return e("Failed to open the DB from [%s]: %s", p, err.Error())
-		}
-		err = json.NewDecoder(in).Decode(&service.db)
-		in.Close()
+	var p string
+	p = service.cfg.pathLive + "/auth.json"
+	if in, err := os.Open(p); err != nil {
+		return e("Failed to open the DB from [%s]: %s", p, err.Error())
+	} else {
+		err = json.NewDecoder(in).Decode(&service.db.UsersById)
+		_ = in.Close()
 		if err != nil {
 			return e("Failed to load the DB from [%s]: %s", p, err.Error())
 		}
-
-		if err = service.postLoad(); err != nil {
-			return e("Inconsistent DB in [%s]: %s", service.cfg.pathLoad, err.Error())
-		}
 	}
 
-	if err = service.db.Check(); err != nil {
+	if err := service.postLoad(); err != nil {
+		return e("Inconsistent DB in [%s]: %s", service.cfg.pathLive, err.Error())
+	}
+
+	if err := service.db.Check(); err != nil {
 		return e("Inconsistent DB: %s", err.Error())
 	}
 
-	lis, err := net.Listen("tcp", service.cfg.endpoint)
-	if err != nil {
+	var lis net.Listener
+	var err error
+	if lis, err = net.Listen("tcp", service.cfg.endpoint); err != nil {
 		return e("failed to listen: %v", err)
 	}
 
@@ -105,7 +104,6 @@ func (service *authService) execute() error {
 			return e("Failed to save the DB at exit: %s", err.Error())
 		}
 	}
-
 	return nil
 }
 

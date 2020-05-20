@@ -32,4 +32,8 @@
         </table>
     </div>
 
+    <div class="large">
+        <svg width="1024" height="768" id="interactive-map"/>
+    </div>
+
 {% include "footer.tpl" %}

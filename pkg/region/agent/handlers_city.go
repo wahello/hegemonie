@@ -35,15 +35,22 @@ func (s *srvCity) ListArmies(ctx context.Context, req *proto.CityId) (*proto.Lis
 	return rep, nil
 }
 
-func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfNamedItems, error) {
+func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfCities, error) {
 	s.w.RLock()
 	defer s.w.RUnlock()
 
-	rep := &proto.ListOfNamedItems{}
+	rep := &proto.ListOfCities{}
 	cities := s.w.Cities(req.Character)
 
 	for _, c := range cities {
-		rep.Items = append(rep.Items, &proto.NamedItem{Id: c.Id, Name: c.Name})
+		rep.Items = append(rep.Items, &proto.PublicCity{
+			Id: c.Id, Name: c.Name, Cell: c.Cell,
+			Politics: c.PoliticalGroup,
+			Chaos: c.Chaotic,
+			Alignment: c.Alignment,
+			Ethny: c.EthnicGroup,
+			Cult: c.Cult,
+		})
 	}
 	return rep, nil
 }

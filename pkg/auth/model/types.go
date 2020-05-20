@@ -32,8 +32,8 @@ type User struct {
 }
 
 type Db struct {
-	UsersById   []*User          `json:"users"`
-	UsersByMail map[string]*User `json:""`
+	UsersById   []*User
+	UsersByMail map[string]*User
 
 	NextId uint64
 	Salt   string

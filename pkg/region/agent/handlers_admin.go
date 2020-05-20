@@ -35,8 +35,7 @@ func (s *srvAdmin) Save(ctx context.Context, req *proto.None) (*proto.None, erro
 	s.w.RLock()
 	defer s.w.RUnlock()
 
-	err := s.cfg.save(s.w)
-	if err != nil {
+	if _, err := s.w.SaveLiveToFiles(s.cfg.pathSave); err != nil {
 		return nil, err
 	} else {
 		return &proto.None{}, nil

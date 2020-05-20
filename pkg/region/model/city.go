@@ -9,14 +9,26 @@ import (
 	"errors"
 )
 
-func (s *SetOfCities) Create(id, loc uint64) {
-	c := &City{
-		Id: id, Cell: loc,
+func MakeCity() *City {
+	return &City{
+		Id:         0,
+		Cell:       0,
 		Units:      make(SetOfUnits, 0),
 		Buildings:  make(SetOfBuildings, 0),
 		Knowledges: make(SetOfKnowledges, 0),
+		armies:     make(map[uint64]*Army),
+		lieges:     make(SetOfCities, 0),
 	}
-	s.Add(c)
+}
+
+func CopyCity(original *City) *City {
+	c := MakeCity()
+	if original != nil {
+		c.Stock.Set(original.Stock)
+		c.Production.Set(original.Production)
+		c.StockCapacity.Set(original.StockCapacity)
+	}
+	return c
 }
 
 // Return a Unit owned by the current City, given the Unit ID
@@ -35,12 +47,16 @@ func (c *City) Knowledge(id uint64) *Knowledge {
 }
 
 func (c *City) Armies() []*Army {
-	return c.armies[:]
+	tab := make([]*Army, 0)
+	for _, a := range c.armies {
+		tab = append(tab, a)
+	}
+	return tab
 }
 
 // Return total Popularity of the current City (permanent + transient)
-func (c *City) Popularity(w *World) int64 {
-	var pop int64 = c.Pop
+func (c *City) GetActualPopularity(w *World) int64 {
+	var pop int64 = c.PermanentPopularity
 
 	// Add Transient values for Units in the Armies
 	for _, a := range c.armies {
@@ -48,7 +64,7 @@ func (c *City) Popularity(w *World) int64 {
 			ut := w.UnitTypeGet(u.Type)
 			pop += ut.PopBonus
 		}
-		pop += w.Definitions.PopBonusArmyAlive
+		pop += w.Config.PopBonusArmyAlive
 	}
 
 	// Add Transient values for Units in the City
@@ -160,7 +176,18 @@ func (c *City) MakeDefence(w *World) *Army {
 		Postures: []int64{int64(c.Id)},
 		Targets:  make([]Command, 0),
 	}
-	w.Live.Armies.Add(a)
+	w.Live.Armies[a.Id] = a
+	c.armies[a.Id] = a
+
+	uid := make([]uint64, 0)
+	for _, pUnit := range c.Units {
+		uid = append(uid, pUnit.Id)
+	}
+	for _, id := range uid {
+		if err := c.TransferOwnUnit(a, id); err != nil {
+			panic(err.Error())
+		}
+	}
 	return a
 }
 
@@ -168,7 +195,7 @@ func (c *City) MakeDefence(w *World) *Army {
 func (c *City) ProduceLocally(w *World, p *CityProduction) Resources {
 	var prod Resources = p.Actual
 	if c.TicksMassacres > 0 {
-		mult := MultiplierUniform(w.Definitions.MassacreImpact)
+		mult := MultiplierUniform(w.Config.MassacreImpact)
 		for i := uint32(0); i < c.TicksMassacres; i++ {
 			prod.Multiply(mult)
 		}
@@ -201,7 +228,7 @@ func (c *City) Produce(w *World) {
 			// TODO(jfs): check for potential shortage
 			//  shortage := c.Tax.GreaterThan(tax)
 
-			if w.Definitions.InstantTransfers {
+			if w.Config.InstantTransfers {
 				c.pOverlord.Stock.Add(tax)
 			} else {
 				c.SendResourcesTo(w, c.pOverlord, tax)
@@ -306,15 +333,16 @@ func (c *City) ConquerCity(w *World, other *City) {
 	//pre := other.pOverlord
 	other.pOverlord = c
 	other.Overlord = c.Id
-	other.TaxRate = MultiplierUniform(w.Definitions.RateOverlord)
+	other.TaxRate = MultiplierUniform(w.Config.RateOverlord)
 
 	// FIXME(jfs): Notify 'pre'
 	// FIXME(jfs): Notify 'c'
 	// FIXME(jfs): Notify 'other'
 }
 
-func (c *City) SendResourcesTo(w *World, overlord *City, amount Resources) {
+func (c *City) SendResourcesTo(w *World, overlord *City, amount Resources) error {
 	// FIXME(jfs): NYI
+	return errors.New("SendResourcesTo() not implemented")
 }
 
 func (c *City) TransferOwnResources(a *Army, r Resources) error {
@@ -363,7 +391,7 @@ func (c *City) KnowledgeFrontier(w *World) []*KnowledgeType {
 }
 
 func (c *City) BuildingFrontier(w *World) []*BuildingType {
-	return w.BuildingGetFrontier(c.Popularity(w), c.Buildings, c.Knowledges)
+	return w.BuildingGetFrontier(c.GetActualPopularity(w), c.Buildings, c.Knowledges)
 }
 
 // Return a collection of UnitType that may be trained by the current City
@@ -389,11 +417,11 @@ func (c *City) UnitAllowed(pType *UnitType) bool {
 
 // Create a Unit of the given UnitType.
 // No check is performed to verify the City has all the requirements.
-func (c *City) UnitCreate(w *World, pType *UnitType) uint64 {
+func (c *City) UnitCreate(w *World, pType *UnitType) *Unit {
 	id := w.getNextId()
 	u := &Unit{Id: id, Type: pType.Id, Ticks: pType.Ticks, Health: pType.Health}
 	c.Units.Add(u)
-	return id
+	return u
 }
 
 // Start the training of a Unit of the given UnitType (id).
@@ -407,7 +435,8 @@ func (c *City) Train(w *World, idType uint64) (uint64, error) {
 		return 0, errors.New("Precondition Failed: no suitable building")
 	}
 
-	return c.UnitCreate(w, pType), nil
+	u := c.UnitCreate(w, pType)
+	return u.Id, nil
 }
 
 func (c *City) Study(w *World, kId uint64) (uint64, error) {
@@ -465,6 +494,10 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 		if !owned[k] {
 			return 0, errors.New("Precondition Failed")
 		}
+	}
+
+	if !c.Stock.GreaterOrEqualTo(pType.Cost0) {
+		return 0, errors.New("Not enough ressources")
 	}
 
 	id := w.getNextId()

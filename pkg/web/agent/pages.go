@@ -9,17 +9,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-macaron/session"
-	"gopkg.in/macaron.v1"
-	"io/ioutil"
-	"net/http"
-
 	auth "github.com/jfsmig/hegemonie/pkg/auth/proto"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"gopkg.in/macaron.v1"
 )
 
 type ActionPage func(*macaron.Context, session.Store, *session.Flash)
 
 type NoFlashPage func(*macaron.Context, session.Store)
+
+type StatelessPage func(*macaron.Context)
 
 func (f *FrontService) routePages(m *macaron.Macaron) {
 	m.Get("/", serveRoot)
@@ -34,8 +33,8 @@ func (f *FrontService) routePages(m *macaron.Macaron) {
 	m.Get("/game/land/knowledges", serveGameCityKnowledges(f))
 	m.Get("/game/army", serveGameArmyDetail(f))
 
-	m.Get("/game/map/region", serveRegionMap(f))
-	m.Get("/game/map/city", serveCityMap(f))
+	m.Get("/map/region", serveRegionMap(f))
+	m.Get("/map/cities", serveRegionCities(f))
 }
 
 func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
@@ -240,58 +239,88 @@ func serveGameCityBudget(f *FrontService) ActionPage {
 	return serveGameCityPage(f, "land_budget")
 }
 
-func serveRegionMap(f *FrontService) NoFlashPage {
-	return func(ctx *macaron.Context, s session.Store) {
-		// TODO(VDO): handle error
-		resp, _ := http.Get("http://" + f.endpointRegion + "/cmd_back_region/places")
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			// Backend error
-			ctx.Resp.WriteHeader(503)
+type RawVertex struct {
+	Id   uint64 `json:"id"`
+	X    uint64 `json:"x"`
+	Y    uint64 `json:"y"`
+	City uint64 `json:"city"`
+}
+
+type RawEdge struct {
+	Src uint64 `json:"src"`
+	Dst uint64 `json:"dst"`
+}
+
+type RawCity struct {
+	Id uint64 `json:"id"`
+	Name string `json:"name"`
+	Cell uint64 `json:"cell"`
+}
+
+type RawMap struct {
+	Cells map[uint64]RawVertex `json:"cells"`
+	Roads []RawEdge            `json:"roads"`
+}
+
+func serveRegionMap(f *FrontService) StatelessPage {
+	return func(ctx *macaron.Context) {
+		id := ctx.Query("id")
+		if id != "calaquyr" {
+			ctx.Error(400, "Invalid region")
 			return
 		}
-		mapBytes, _ := ioutil.ReadAll(resp.Body)
 
-		resp2, _ := http.Get("http://" + f.endpointRegion + "/cmd_back_region/cities")
-		defer resp2.Body.Close()
-		if resp2.StatusCode != http.StatusOK {
-			// Backend error
-			ctx.Resp.WriteHeader(503)
+		m := RawMap{
+			Cells: make(map[uint64]RawVertex),
+			Roads: make([]RawEdge, 0),
+		}
+		cliReg := region.NewMapClient(f.cnxRegion)
+
+		// FIXME(jfs): iterate in case of a truncated result
+		vertices, err := cliReg.Vertices(context.Background(), &region.ListVerticesReq{})
+		if err != nil {
+			ctx.Error(502, err.Error())
 			return
 		}
-		mapCities, _ := ioutil.ReadAll(resp2.Body)
+		for _, v := range vertices.Items {
+			m.Cells[v.Id] = RawVertex{Id: v.Id, X: v.X, Y: v.Y, City: v.CityId}
+		}
 
-		ctx.Data["map"] = string(mapBytes)
-		ctx.Data["cities"] = string(mapCities)
+		// FIXME(jfs): iterate in case of a truncated result
+		edges, err := cliReg.Edges(context.Background(), &region.ListEdgesReq{})
+		if err != nil {
+			ctx.Error(502, err.Error())
+			return
+		}
+		for _, e := range edges.Items {
+			m.Roads = append(m.Roads, RawEdge{Src: e.Src, Dst: e.Dst})
+		}
 
-		ctx.HTML(200, "map")
+		ctx.JSON(200, m)
 	}
 }
 
-func serveCityMap(f *FrontService) NoFlashPage {
-	return func(ctx *macaron.Context, s session.Store) {
-		// TODO(VDO): handle error
-		resp, _ := http.Get("http://" + f.endpointRegion + "/cmd_back_region/places")
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			// Backend error
-			ctx.Resp.WriteHeader(503)
+func serveRegionCities(f *FrontService) StatelessPage {
+	return func(ctx *macaron.Context) {
+		id := ctx.Query("id")
+		if id != "calaquyr" {
+			ctx.Error(400, "Invalid region")
 			return
 		}
-		mapBytes, _ := ioutil.ReadAll(resp.Body)
 
-		resp2, _ := http.Get("http://" + f.endpointRegion + "/cmd_back_region/cities")
-		defer resp2.Body.Close()
-		if resp2.StatusCode != http.StatusOK {
-			// Backend error
-			ctx.Resp.WriteHeader(503)
+		tab := make([]RawCity, 0)
+		cli := region.NewMapClient(f.cnxRegion)
+
+		// FIXME(jfs): iterate in case of a truncated result
+		cities, err := cli.Cities(context.Background(), &region.CitiesReq{})
+		if err != nil {
+			ctx.Error(502, err.Error())
 			return
 		}
-		mapCities, _ := ioutil.ReadAll(resp2.Body)
+		for _, v := range cities.Items {
+			tab = append(tab, RawCity{Id: v.Id, Name: v.Name, Cell: v.Cell})
+		}
 
-		ctx.Data["map"] = string(mapBytes)
-		ctx.Data["cities"] = string(mapCities)
-
-		ctx.HTML(200, "map")
+		ctx.JSON(200, tab)
 	}
 }

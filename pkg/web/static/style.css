@@ -24,6 +24,11 @@ body.science {
     color: black;
 }
 
+svg > line { stroke:black; stroke-width:1; }
+svg > circle { stroke:black; stroke-width:1; fill:white; }
+svg > .city { fill:gray; }
+svg > .city:hover { fill:green; }
+
 main h1 {
     font-size: 36px;
 }

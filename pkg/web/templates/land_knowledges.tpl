@@ -1,7 +1,7 @@
 {% include "header.tpl" %}
 <div><h2>Knowledge</h2>
     <ul>{% for k in Land.Assets.Knowledges %}
-        <li>{{k.Type.Name}} (id {{k.Id}})</li>{% endfor %}
+        <li>{{k.Type.Name}} (id {{k.Id}}) ETA({{k.Ticks}} ticks)</li>{% endfor %}
     </ul>
 </div>
 <div><h2>Learn</h2>

@@ -35,6 +35,7 @@ func makeRawMap() MapRaw {
 func (mr *MapRaw) Finalize() (Map, error) {
 	var err error
 	m := makeMap()
+
 	for _, s := range mr.Sites {
 		m.sites[s.Id] = &Site{
 			raw:   s,

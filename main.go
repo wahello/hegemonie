@@ -21,27 +21,6 @@ import (
 )
 
 func main() {
-	apiCmd := &cobra.Command{
-		Use:   "api",
-		Short: "API server group of commands",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("Missing subcommand")
-		},
-	}
-	apiCmd.AddCommand(hegemonie_api_agent.Command())
-	apiCmd.AddCommand(hegemonie_api_client.Command())
-
-	evtCmd := &cobra.Command{
-		Use:     "events",
-		Aliases: []string{"evt"},
-		Short:   "Events server group of commands",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("Missing subcommand")
-		},
-	}
-	evtCmd.AddCommand(hegemonie_events_agent.Command())
-	evtCmd.AddCommand(hegemonie_events_client.Command())
-
 	regCmd := &cobra.Command{
 		Use:     "region",
 		Aliases: []string{"reg"},
@@ -83,8 +62,6 @@ func main() {
 		},
 	}
 	rootCmd.AddCommand(aaaCmd)
-	rootCmd.AddCommand(apiCmd)
-	rootCmd.AddCommand(evtCmd)
 	rootCmd.AddCommand(regCmd)
 	rootCmd.AddCommand(webCmd)
 

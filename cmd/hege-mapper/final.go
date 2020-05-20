@@ -9,6 +9,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"sort"
 	"strconv"
 )
 
@@ -79,9 +80,28 @@ func (m *Map) UniqueRoads() <-chan Road {
 	return out
 }
 
+func (m *Map) SortedSites() <-chan *Site {
+	out := make(chan *Site)
+	go func() {
+		keys := make([]string, 0, len(m.sites))
+		for k, _ := range m.sites {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		if !sort.StringsAreSorted(keys) {
+			panic("bug")
+		}
+		for _, k := range keys {
+			out <- m.sites[k]
+		}
+		close(out)
+	}()
+	return out
+}
+
 func (m *Map) Raw() MapRaw {
 	rm := makeRawMap()
-	for _, s := range m.sites {
+	for s := range m.SortedSites() {
 		rm.Sites = append(rm.Sites, s.raw)
 	}
 	for r := range m.UniqueRoads() {

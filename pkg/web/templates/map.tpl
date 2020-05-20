@@ -1,69 +1,20 @@
-<!--
-Copyright (C) 2018-2019 Hegemonie's AUTHORS
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
--->
-{% include "header_map.tpl" %}
-<script>
-
-    var map = "{{ map }}"
-    var cities = "{{ cities }}"
-
-    function getTileStyle(tile) {
-        tile--;
-        var x = (tile % 20) * 5.25;
-        var y = Math.floor(tile/20) * 5.25;
-        return 'background-position:' + x + '% ' + y + '%'
-    }
-
-    function getCityInfo(id) {
-        for (cid in cities) {
-            if (cities[cid].Id == id) {
-                return cities[cid]
-            }
-        }
-    }
-
-    function enablePanDrag() {
-      var current = [0, 0];
-      var canvas = $("#canvas");
-      const ROT = "rotateX(64deg) rotateY(0deg) rotateZ(-45deg)";
-      canvas.panzoom({'cursor':'default', 'easing': null, 'disableZoom': true, transition: false, onPan: function(e, panzoom) {
-        var matrix = panzoom.getMatrix();
-        canvas.css(
-            {'transform': 'translate('+ (parseInt(matrix[4]) + parseInt(current[0])) + 'px,'+ (parseInt(matrix[5]) + parseInt(current[1])) +'px) ' + ROT})
-      }})
-
-      canvas.on('panzoomend', function(e, panzoom, matrix, changed) {
-        current = [parseInt(matrix[4]) + parseInt(current[0]),   parseInt(matrix[5]) + parseInt(current[1])]
-        canvas.css({'transform': 'translate('+ current[0] + 'px,'+ current[1] +'px) ' + ROT})
-      });
-    }
-
-
-    $(document).ready(function() {
-        map = JSON.parse(map.replace(/&quot;/g, '\"'))
-        cities = JSON.parse(cities.replace(/&quot;/g, '\"'));
-
-        canvas = $("#canvas")
-        for (idx in map.Cells) {
-            toAppend = "<div class='tile' style='" + getTileStyle(map.Cells[idx].Biome) + "'>";
-            if (map.Cells[idx].City > 0) {
-                toAppend += "<div class='city' style='" + getTileStyle(121) + "'>" +
-                    "<span class='cityName'>" + getCityInfo(map.Cells[idx].City).Name + "</span>"
-                + "</div>"
-            }
-            toAppend += "</div>"
-            canvas.append(toAppend)
-        }
-
-        enablePanDrag()
-    })
-</script>
-<div class="frame">
-    <div id="canvas" class="canvas"></div>
-    <div class="sidebar">
-
-    </div>
-</div>
+<svg width="100%" viewbox="0 0 1024 768" id="interactive-map"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<symbol id="shield" width="60" height="60">
+  <g transform="scale(0.5, 0.5)">
+		<path d="M51.991,7.982c-14.628,0-21.169-7.566-21.232-7.64c-0.38-0.456-1.156-0.456-1.536,0c-0.064,0.076-6.537,7.64-21.232,7.64
+			c-0.552,0-1,0.448-1,1v19.085c0,10.433,4.69,20.348,12.546,26.521c3.167,2.489,6.588,4.29,10.169,5.352
+			c0.093,0.028,0.189,0.042,0.285,0.042s0.191-0.014,0.285-0.042c3.581-1.063,7.002-2.863,10.169-5.352
+			c7.856-6.174,12.546-16.088,12.546-26.521V8.982C52.991,8.43,52.544,7.982,51.991,7.982z M50.991,28.067
+			c0,9.824-4.404,19.151-11.782,24.949c-2.883,2.266-5.983,3.92-9.218,4.921c-3.235-1-6.335-2.655-9.218-4.921
+			C13.395,47.219,8.991,37.891,8.991,28.067V9.971c12.242-0.272,18.865-5.497,21-7.545c2.135,2.049,8.758,7.273,21,7.545V28.067z"/>
+		<path d="M29.429,7.986c-3.015,2.049-8.163,4.689-15.564,5.633c-0.5,0.064-0.874,0.489-0.874,0.992v13.457
+			c0,8.607,3.833,16.758,10.254,21.804c2.022,1.589,4.169,2.835,6.381,3.703c0.118,0.046,0.242,0.069,0.365,0.069
+			c0.198,0,0.395-0.059,0.563-0.174c0.273-0.187,0.437-0.496,0.437-0.826V8.813c0-0.371-0.205-0.71-0.532-0.884
+			C30.133,7.757,29.736,7.779,29.429,7.986z"/>
+  </g>
+</symbol>
+</defs>
+</svg>

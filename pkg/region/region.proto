@@ -7,9 +7,17 @@ syntax = "proto3";
 
 package hegemonie.region.proto;
 
+service Map {
+    rpc Vertices(ListVerticesReq) returns (ListOfVertices) {}
+
+    rpc Edges(ListEdgesReq) returns (ListOfEdges) {}
+
+    rpc Cities (CitiesReq) returns (ListOfCities) {}
+}
+
 service City {
     // Returns a list of cities owned by the given character
-    rpc List (ListReq) returns (ListOfNamedItems) {}
+    rpc List (ListReq) returns (ListOfCities) {}
 
     // Returns a view of the City
     // Be careful, the request might fail because of a too large object.
@@ -151,16 +159,20 @@ message ResourcesMod {
 message UnitTypeView {
     uint64 id = 1;
     string name = 2;
+    uint32 ticks = 3;
+    uint32 health = 4;
 }
 
 message BuildingTypeView {
     uint64 id = 1;
     string name = 2;
+    uint32 ticks = 3;
 }
 
 message KnowledgeTypeView {
     uint64 id = 1;
     string name = 2;
+    uint32 ticks = 3;
 }
 
 message UnitView {
@@ -230,26 +242,27 @@ message CityView {
     uint64 owner = 3;
     uint64 deputy = 4;
 
-    uint32 cult = 5;
-    uint32 chaotic = 6;
-    uint32 alignment = 7;
+    int32 chaotic = 5;
+    int32 alignment = 6;
+    uint32 cult = 7;
     uint32 ethnicGroup = 8;
+    uint32 politicalGroup = 9;
 
-    uint32 tickMassacres = 9;
-    bool auto = 10;
-    bool deleted = 11;
+    uint32 tickMassacres = 10;
+    bool auto = 11;
+    bool deleted = 12;
 
-    CityPolitics politics = 12;
+    CityPolitics politics = 13;
 
     // The resources owned by the City
-    StockView stock = 13;
-    ProductionView production = 14;
+    StockView stock = 14;
+    ProductionView production = 15;
 
     // All the things owned by the current city
     CityAssets assets = 16;
 
     // All the things that the current may start to own
-    CityEvolution evol = 15;
+    CityEvolution evol = 17;
 }
 
 message StudyReq {
@@ -298,6 +311,10 @@ message TransferResourcesReq {
     ResourcesAbs stock = 4;
 }
 
+message CitiesReq {
+    uint64 marker = 1;
+}
+
 message ListReq {
     uint64 character = 1;
 }
@@ -323,4 +340,48 @@ message ListOfBuildingTypes {
 
 message ListOfKnowledgeTypes {
     repeated KnowledgeTypeView items = 1;
+}
+
+message ListVerticesReq {
+    uint64 marker = 1;
+}
+
+message ListEdgesReq {
+    uint64 markerSrc = 1;
+    uint64 markerDst = 2;
+}
+
+message ListOfVertices {
+    repeated Vertex items = 1;
+}
+
+message ListOfEdges {
+    repeated Edge items = 1;
+}
+
+message ListOfCities {
+    repeated PublicCity items = 1;
+}
+
+message PublicCity {
+    uint64 id = 1;
+    string name = 2;
+    uint64 cell = 3;
+    int32 alignment = 4;
+    int32 chaos = 5;
+    uint32 politics = 6;
+    uint32 cult = 7;
+    uint32 ethny = 8;
+}
+
+message Vertex {
+    uint64 id = 1;
+    uint64 x = 2;
+    uint64 y = 3;
+    uint64 cityId = 4;
+}
+
+message Edge {
+    uint64 src = 1;
+    uint64 dst = 2;
 }

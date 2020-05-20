@@ -23,7 +23,8 @@ func (s *srvDefinitions) ListUnits(ctx context.Context, req *proto.PaginatedQuer
 	v := s.w.Definitions.Units.Slice(req.Marker, ClampU32(req.Max, 1, 1000))
 	rep := &proto.ListOfUnitTypes{}
 	for _, i := range v {
-		rep.Items = append(rep.Items, &proto.UnitTypeView{Id: i.Id, Name: i.Name})
+		rep.Items = append(rep.Items, &proto.UnitTypeView{
+			Id: i.Id, Name: i.Name, Ticks: i.Ticks, Health: i.Health})
 	}
 	return rep, nil
 }
@@ -35,7 +36,8 @@ func (s *srvDefinitions) ListBuildings(ctx context.Context, req *proto.Paginated
 	v := s.w.Definitions.Buildings.Slice(req.Marker, ClampU32(req.Max, 1, 1000))
 	rep := &proto.ListOfBuildingTypes{}
 	for _, i := range v {
-		rep.Items = append(rep.Items, &proto.BuildingTypeView{Id: i.Id, Name: i.Name})
+		rep.Items = append(rep.Items, &proto.BuildingTypeView{
+			Id: i.Id, Name: i.Name, Ticks: i.Ticks})
 	}
 	return rep, nil
 }
@@ -47,7 +49,8 @@ func (s *srvDefinitions) ListKnowledges(ctx context.Context, req *proto.Paginate
 	v := s.w.Definitions.Knowledges.Slice(req.Marker, ClampU32(req.Max, 1, 1000))
 	rep := &proto.ListOfKnowledgeTypes{}
 	for _, i := range v {
-		rep.Items = append(rep.Items, &proto.KnowledgeTypeView{Id: i.Id, Name: i.Name})
+		rep.Items = append(rep.Items, &proto.KnowledgeTypeView{
+			Id: i.Id, Name: i.Name, Ticks: i.Ticks})
 	}
 	return rep, nil
 }

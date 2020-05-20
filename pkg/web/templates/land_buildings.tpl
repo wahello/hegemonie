@@ -1,7 +1,7 @@
 {% include "header.tpl" %}
 <div><h2>Buildings</h2>
     <ul>{% for b in Land.Assets.Buildings %}
-        <li>{{b.Type.Name}} (id {{b.Id}})</li>{% endfor %}
+        <li>{{b.Type.Name}} (id {{b.Id}}) ETA({{b.Ticks}} ticks)</li>{% endfor %}
     </ul>
 </div>
 <div><h2>Construction</h2>

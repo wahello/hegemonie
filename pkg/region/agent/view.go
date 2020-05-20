@@ -128,13 +128,15 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 	}
 	for _, u := range c.Units {
 		v.Units = append(v.Units, &proto.UnitView{
-			Id: u.Id, IdType: u.Type, Ticks: uint32(u.Ticks),
+			Id: u.Id, IdType: u.Type, Ticks: uint32(u.Ticks), Health: u.Health,
 		})
 	}
 
 	for _, a := range c.Armies() {
 		v.Armies = append(v.Armies, &proto.ArmyView{
-			Id: a.Id, Name: a.Name})
+			Id: a.Id, Name: a.Name, Location: a.Cell,
+			Stock: resAbsM2P(a.Stock),
+		})
 	}
 
 	return v
@@ -151,6 +153,7 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 		Chaotic:     c.Chaotic,
 		Alignment:   c.Alignment,
 		EthnicGroup: c.EthnicGroup,
+		PoliticalGroup: c.PoliticalGroup,
 
 		TickMassacres: c.TicksMassacres,
 		Auto:          c.Auto,

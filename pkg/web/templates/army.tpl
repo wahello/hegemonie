@@ -1,8 +1,33 @@
 {% include "header.tpl" %}
-<div><h2>Armies</h2>
-    <ul>{% for a in Land.Assets.Armies %}
-        <li>{{a.Name}} (id {{a.Id}})</li>{% endfor %}
-    </ul>
+<script src="/static/hege-map.js"></script>
+<script>
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+window.addEventListener("load", function() {
+  let svg1 = document.getElementById('interactive-map');
+  drawNamedMap(svg1, "calaquyr",
+    function (position) {
+      document.getElementById('Position').value = position;
+      document.getElementById('CityId').value = null;
+      document.getElementById('CityName').value = null;
+    },
+    function (position, cityId, cityName) {
+      document.getElementById('Position').value = position;
+      document.getElementById('CityId').value = cityId;
+      document.getElementById('CityName').value = cityName;
+    },
+    function (position, army) {
+      document.getElementById('Position').value = null;
+      document.getElementById('CityId').value = null;
+      document.getElementById('CityName').value = null;
+    });
+});
+</script>
+{% include "map.tpl" %}
+
+<div>
 </div>
 
 <div><h2>Disband</h2>

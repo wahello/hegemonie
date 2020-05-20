@@ -8,7 +8,13 @@ package region
 import "sync"
 
 const (
-	ResourceMax = 6
+	ResourceActions   = iota
+	ResourceGold      = iota
+	ResourceCereal    = iota
+	ResourceLivestock = iota
+	ResourceStone     = iota
+	ResourceWood      = iota
+	ResourceMax       = iota
 )
 
 const (
@@ -33,6 +39,7 @@ const (
 )
 
 type World struct {
+	Config      Configuration
 	Definitions DefinitionsBase
 	Live        LiveBase
 	Places      Map
@@ -42,11 +49,7 @@ type World struct {
 	rw     sync.RWMutex
 }
 
-type DefinitionsBase struct {
-	Units      SetOfUnitTypes
-	Buildings  SetOfBuildingTypes
-	Knowledges SetOfKnowledgeTypes
-
+type Configuration struct {
 	// Ratio applied to the production of resources that is applied for each
 	// Massacre underwent by any city. It only impacts the production of the City itself.
 	MassacreImpact float64
@@ -68,14 +71,25 @@ type DefinitionsBase struct {
 	// Default Overlord rate: percentage of the production of a City that is
 	// taxed by its Overlord
 	RateOverlord float64
+
+	// A city pattern is picked randomly among this set when a city is created.
+	// So the configuration of the world may introduce a variation between
+	// Cities
+	CityPatterns []City
+}
+
+type DefinitionsBase struct {
+	Units      SetOfUnitTypes
+	Buildings  SetOfBuildingTypes
+	Knowledges SetOfKnowledgeTypes
 }
 
 type LiveBase struct {
 	// Free armies on the map, not involved in any Fight
-	Armies SetOfArmies
+	Armies map[uint64]*Army
 
 	// All the cities present on the Region
-	Cities SetOfCities
+	Cities map[uint64]*City
 
 	// Fights currently happening. The armies involved in the Fight are owned
 	// By the Fight and do not appear in the "Armies" field.
@@ -170,8 +184,23 @@ type KnowledgeType struct {
 	// Permanent bonus of Popularity (to the robber) when the Knowledge is stolen
 	PopBonusStealActor int64
 
+	// Impat of the current Building on the total storage capacity of the City.
+	Stock ResourceModifiers
+
+	// Increment of resources produced by this building.
+	Prod ResourceModifiers
+
+	// Amount of resources spent when the City starts learning this knowledge
+	Cost0     Resources
+
+	// Amount of resources spent to advance of one tick
 	Cost      Resources
+
+	// All the knowledges that are required to start the current Knowledge
+	// (this is an AND, not an OR)
 	Requires  []uint64
+
+	// All the knowledge that are forbidden by the current knowledge
 	Conflicts []uint64
 }
 
@@ -191,7 +220,10 @@ type BuildingType struct {
 	// How many ticks for the construction
 	Ticks uint32 `json:",omitempty"`
 
-	// How much does the production cost
+	// How much does the production cost to start the the building process.
+	Cost0 Resources
+
+	// How much does the production cost at each tick.
 	Cost Resources
 
 	// Has the building to be unique a the City
@@ -274,18 +306,21 @@ type City struct {
 
 	// Permanent Popularity of the current City
 	// The total value is the permanent value plus several "transient" bonus
-	Pop int64
+	PermanentPopularity int64
 
-	// From Lawful to Neutral
-	Chaotic uint32
+	// From Lawful (<0) to Chaotic (>0) (0 for neutral)
+	Chaotic int32
 
-	// From Good to Bad
-	Alignment uint32
+	// From Bad (<0) to Good (>0) (0 for neutral)
+	Alignment int32
 
-	// Race, Tribe, whatever
+	// Race, Tribe, whatever (0 for unset)
 	EthnicGroup uint32
 
-	// God, Pantheon, Philosophy
+	// Major political orientation (0 for none)
+	PoliticalGroup uint32
+
+	// God, Pantheon, Philosophy (0 for unset)
 	Cult uint32
 
 	// Resources stock owned by the current City
@@ -321,7 +356,7 @@ type City struct {
 
 	// PRIVATE
 	// Armies under the responsibility of the current City
-	armies SetOfArmies
+	armies map[uint64]*Army
 
 	// PRIVATE
 	// Pointer to the current Overlord of the current City
@@ -354,9 +389,6 @@ type UnitType struct {
 	// How many ticks
 	Ticks uint32
 
-	// Instantiation cost of the current UnitType
-	Cost Resources
-
 	// Transient bonus of Popularity, when the Unit is alive
 	PopBonus int64
 
@@ -372,10 +404,16 @@ type UnitType struct {
 	// Permanent bonus of Popularity given to the ownerof the Unit when it is disbanded.
 	PopBonusDisband int64
 
+	// Instantiation cost of the current UnitType at the beginning of the process
+	Cost0 Resources
+
+	// Instantiation cost of the current UnitType, at each step of the process.
+	Cost Resources
+
 	// Might positive (resource boost) or more commonly negative (maintenance cost)
 	Prod ResourceModifiers
 
-	// Required Popularity to start trzaining this type of troop
+	// Required Popularity to start training this type of troop
 	ReqPop int64
 
 	// A UnitType is only dependant on the presence of a Building of that BuildingType.
@@ -406,20 +444,20 @@ type Fight struct {
 
 	// The set of Id of armies involved in the current Fight on the "attack" side
 	// (the side that initiated the fight)
-	Attack SetOfArmies
+	Attack map[uint64]*Army
 
 	/// The set of Id of armies involved in the current Fight on the "defence" side
 	// the (side that has been pforce-pulled).
-	Defense SetOfArmies
+	Defense map[uint64]*Army
 }
 
 // A MapEdge is an edge if the transportation directed graph
 type MapEdge struct {
 	// Unique identifier of the source Cell
-	S uint64
+	S uint64 `json:"src"`
 
 	// Unique identifier of the destination Cell
-	D uint64
+	D uint64 `json:"dst"`
 
 	// May the road be used by Units
 	Deleted bool `json:",omitempty"`
@@ -428,21 +466,25 @@ type MapEdge struct {
 // A MapVertex is a vertex in the transportation directed graph
 type MapVertex struct {
 	// The unique identifier of the current cell.
-	Id uint64
+	Id uint64 `json:"id"`
 
-	// Biome in which the cell is
-	Biome uint64
+	// // Biome in which the cell is
+	// Biome uint64
+
+	// Position of the Cell on the map. Used for rendering
+	X uint64 `json:"x"`
+	Y uint64 `json:"y"`
 
 	// The unique ID of the city present at this location.
-	City uint64 `json:",omitempty"`
+	City uint64 `json:"city,omitempty"`
 }
 
 // A Map is a directed graph destined to be used as a transport network,
 // organised as an adjacency list.
 type Map struct {
-	Cells  SetOfVertices
-	Roads  SetOfEdges
-	NextId uint64
+	Cells  map[uint64]*MapVertex `json:"cells"`
+	Roads  SetOfEdges            `json:"roads"`
+	NextId uint64                `json:""`
 
 	steps map[vector]uint64
 }
@@ -451,8 +493,6 @@ type SetOfFights []*Fight
 
 type SetOfEdges []*MapEdge
 
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *MapVertex     SetOfVertices
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Army          SetOfArmies
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *City          SetOfCities
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Building      SetOfBuildings
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *BuildingType  SetOfBuildingTypes

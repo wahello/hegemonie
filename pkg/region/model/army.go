@@ -24,6 +24,9 @@ func (a *Army) Move(w *World) {
 	if a.Deleted {
 		return
 	}
+	if a.Fight != 0 {
+		return
+	}
 
 	if len(a.Targets) <= 0 {
 		// The Army has no command pending. It just stays.
@@ -177,9 +180,10 @@ func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 		panic("inconsistency")
 	}
 
-	w.Live.Armies.Remove(a)
-	pCity.Assault.Defense.Add(a)
 	a.Fight = pCity.Assault.Id
+	pCity.Assault.Defense[a.Id] = a
+	delete(w.Live.Armies, a.Id)
+
 	return true
 }
 
@@ -187,9 +191,11 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 	if pCity.Assault == nil {
 		pCity.Assault = &Fight{
 			Id: w.getNextId(), Cell: pCity.Cell,
-			Defense: make(SetOfArmies, 0),
-			Attack:  make(SetOfArmies, 0)}
-		pCity.Assault.Defense.Add(pCity.MakeDefence(w))
+			Defense: make(map[uint64]*Army),
+			Attack:  make(map[uint64]*Army)}
+		def := pCity.MakeDefence(w)
+		def.Fight = pCity.Assault.Id
+		pCity.Assault.Defense[def.Id] = def
 	}
 
 	if pCity.Assault.Cell != a.Cell {
@@ -199,9 +205,9 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 		panic("inconsistency")
 	}
 
-	w.Live.Armies.Remove(a)
-	pCity.Assault.Attack.Add(a)
 	a.Fight = pCity.Assault.Id
+	pCity.Assault.Attack[a.Id] = a
+	delete(w.Live.Armies, a.Id)
 }
 
 // Leave the Fight as a loser

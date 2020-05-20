@@ -6,25 +6,22 @@
 package hegemonie_region_agent
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"io"
-	"net"
-	"os"
-	"path/filepath"
-	"time"
-
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"log"
+	"net"
+	"os"
 )
 
 type regionConfig struct {
 	endpoint string
-	pathLoad string
 	pathSave string
+	pathDefs string
+	pathLive string
 }
 
 func Command() *cobra.Command {
@@ -40,10 +37,12 @@ func Command() *cobra.Command {
 	}
 	agent.Flags().StringVar(&cfg.endpoint,
 		"endpoint", "127.0.0.1:8080", "IP:PORT endpoint for the TCP/IP server")
-	agent.Flags().StringVar(&cfg.pathLoad,
-		"load", "/data/defs", "File to be loaded")
 	agent.Flags().StringVar(&cfg.pathSave,
-		"save", "/data/dump", "Directory for persistent")
+		"save", "/tmp/hegemonie/dump", "Directory for persistent")
+	agent.Flags().StringVar(&cfg.pathDefs,
+		"defs", "/data/defs", "File to be loaded")
+	agent.Flags().StringVar(&cfg.pathLive,
+		"live", "/data/live", "File to be loaded")
 
 	return agent
 }
@@ -65,37 +64,26 @@ func (self *regionConfig) execute() error {
 		}
 	}
 
-	if self.pathLoad != "" {
-		type cfgSection struct {
-			suffix string
-			obj    interface{}
-		}
-		cfgSections := []cfgSection{
-			{"def_config.json", &w.Definitions},
-			{"def_units.json", &w.Definitions.Units},
-			{"def_buildings.json", &w.Definitions.Buildings},
-			{"def_knowledge.json", &w.Definitions.Knowledges},
-			{"map.json", &w.Places},
-			{"live_cities.json", &w.Live.Cities},
-			{"live_armies.json", &w.Live.Armies},
-		}
-		for _, section := range cfgSections {
-			var in io.ReadCloser
-			p := self.pathLoad + "/" + section.suffix
-			in, err = os.Open(p)
-			if err != nil {
-				return e("Failed to load the World from [%s]: %s", p, err.Error())
-			}
-			err = json.NewDecoder(in).Decode(section.obj)
-			in.Close()
-			if err != nil {
-				return e("Failed to load the World from [%s]: %s", p, err.Error())
-			}
-		}
-		err = w.PostLoad()
-		if err != nil {
-			return e("Inconsistent World from [%s]: %s", self.pathLoad, err.Error())
-		}
+	if self.pathLive == "" {
+		return e("Missing path for live data")
+	}
+	if self.pathDefs == "" {
+		return e("Missing path for definitions data")
+	}
+
+	err = w.LoadDefinitionsFromFiles(self.pathDefs)
+	if err != nil {
+		return err
+	}
+
+	err = w.LoadLiveFromFiles(self.pathLive)
+	if err != nil {
+		return err
+	}
+
+	err = w.PostLoad()
+	if err != nil {
+		return e("Inconsistent World from [%s] and [%s]: %s", self.pathDefs, self.pathLive, err.Error())
 	}
 
 	err = w.Check()
@@ -110,6 +98,7 @@ func (self *regionConfig) execute() error {
 
 	srv := grpc.NewServer()
 
+	proto.RegisterMapServer(srv, &srvMap{cfg: self, w: &w})
 	proto.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})
 	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: self, w: &w})
 	proto.RegisterAdminServer(srv, &srvAdmin{cfg: self, w: &w})
@@ -119,39 +108,12 @@ func (self *regionConfig) execute() error {
 	}
 
 	if self.pathSave != "" {
-		err = self.save(&w)
-		if err != nil {
+		if p, err := w.SaveLiveToFiles(self.pathSave); err != nil {
 			return e("Failed to save the World at exit: %s", err.Error())
+		} else {
+			log.Fatalf("World saved at [%s]", p)
 		}
 	}
 
 	return nil
-}
-
-func (self *regionConfig) save(w *region.World) error {
-	if self.pathSave == "" {
-		return errors.New("No save path configured")
-	}
-	p := self.pathSave + "/" + makeSaveFilename()
-	p = filepath.Clean(p)
-	out, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	err = w.DumpJSON(out)
-	out.Close()
-	if err != nil {
-		_ = os.Remove(p)
-		return err
-	}
-
-	latest := self.pathSave + "/latest"
-	_ = os.Remove(latest)
-	_ = os.Symlink(p, latest)
-	return nil
-}
-
-func makeSaveFilename() string {
-	now := time.Now().Round(1 * time.Second)
-	return "save-" + now.Format("20060102_030405")
 }

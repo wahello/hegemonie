@@ -55,6 +55,12 @@ func (r *Resources) Zero() {
 	}
 }
 
+func (r *Resources) Set(o Resources) {
+	for i := 0; i < ResourceMax; i++ {
+		r[i] = o[i]
+	}
+}
+
 func (r *Resources) Add(o Resources) {
 	for i := 0; i < ResourceMax; i++ {
 		r[i] = r[i] + o[i]
@@ -88,10 +94,29 @@ func (r *Resources) Multiply(m ResourcesMultiplier) {
 	}
 }
 
-func MultiplierUniform(nb float64) ResourcesMultiplier {
-	var rc ResourcesMultiplier
+func (m *ResourcesMultiplier) Add(o ResourcesMultiplier) {
+	for i := 0; i < ResourceMax; i++ {
+		m[i] += o[i]
+	}
+}
+
+func MultiplierUniform(nb float64) (rc ResourcesMultiplier) {
 	for i := 0; i < ResourceMax; i++ {
 		rc[i] = nb
+	}
+	return rc
+}
+
+func IncrementUniform(nb int64) (rc ResourcesIncrement) {
+	for i := 0; i < ResourceMax; i++ {
+		rc[i] += nb
+	}
+	return rc
+}
+
+func ResourcesUniform(nb uint64) (rc Resources) {
+	for i := 0; i < ResourceMax; i++ {
+		rc[i] += nb
 	}
 	return rc
 }
