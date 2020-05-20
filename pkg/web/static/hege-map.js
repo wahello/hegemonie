@@ -4,7 +4,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 const installAction = function (obj, cls, action) {
-    var elements = obj.getElementsByClassName('clickable')
+    let elements = obj.getElementsByClassName('clickable')
     for (i = 0; i < elements.length; i++) {
         let element = elements[i];
         element.onclick = action
@@ -12,8 +12,12 @@ const installAction = function (obj, cls, action) {
 };
 
 const drawCircle = function (svg1, cell) {
-    var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    c.setAttribute("class", "cell clickable");
+    let c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    if (cell.city != null && cell.city != 0) {
+        c.setAttribute("class", "city clickable");
+    } else {
+        c.setAttribute("class", "cell clickable");
+    }
     c.setAttribute("id", cell.id);
     c.setAttribute("cx", cell.x);
     c.setAttribute("cy", cell.y);
@@ -23,7 +27,7 @@ const drawCircle = function (svg1, cell) {
 };
 
 const drawLine = function (svg1, src, dst) {
-    var l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    let l = document.createElementNS("http://www.w3.org/2000/svg", "line");
     l.setAttribute("class", "road");
     l.setAttribute("x2", src.x);
     l.setAttribute("y2", src.y);
@@ -44,6 +48,7 @@ const drawMap = function (svg1, map, onClickPosition) {
         let c = drawCircle(svg1, cell);
         if (onClickPosition != null) {
             c.onclick = function (e) {
+                console.log("onClickPosition")
                 onClickPosition(key);
             };
         }
@@ -53,13 +58,12 @@ const drawMap = function (svg1, map, onClickPosition) {
 
 const patchWithArmies = function (svg1, map, armies, onClickArmy) {
     const pad = 5;
-    console.log(armies);
     armies.forEach(function (army, idx, tab) {
         let c = map.cells[army.cell];
         let cDom = document.getElementById(army.cell);
         let a = document.createElementNS("http://www.w3.org/2000/svg", "use");
-        a.setAttribute("fill", "yellow");
-        a.setAttribute("stroke", "yellow");
+        a.setAttribute("fill", "black");
+        a.setAttribute("stroke", "black");
         a.setAttribute("stroke-width", 2);
         let r = cDom.getAttribute("r");
         a.setAttribute("x", c.x - r + pad);
@@ -68,7 +72,7 @@ const patchWithArmies = function (svg1, map, armies, onClickArmy) {
         svg1.appendChild(a);
         if (onClickArmy != null) {
             c.onclick = function (e) {
-                onClickArmy(army.cell, army.Id);
+                onClickArmy(army.cell, army.id);
             };
         }
     });
@@ -84,11 +88,11 @@ const patchWithCities = function (svg1, name, map, onClickCity, onClickArmy) {
             Object.keys(data).forEach(function (key, idx, tab) {
                 let city = data[key];
                 let c = svg1.getElementById(city.cell);
-                c.setAttribute("r", 20);
-                c.setAttribute("class", c.getAttribute("class") + " city");
+                c.setAttribute("r", 23);
                 if (onClickCity != null) {
                     c.onclick = function (e) {
-                        onClickCity(city.cell, city.Id, city.Name);
+                        console.log("onClickCity")
+                        onClickCity(city.cell, city.id, city.name);
                     };
                 }
             })
@@ -117,3 +121,10 @@ const drawMapWithArmies = function (svg1, name, armies, onClickArmy) {
         });
 }
 
+const hightlightCell = function (svg1, id) {
+    let c = svg1.getElementById(id);
+    console.log(c);
+    if (c != null) {
+        c.setAttribute("class", c.getAttribute("class") + " here");
+    }
+}

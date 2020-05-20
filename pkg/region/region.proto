@@ -241,6 +241,7 @@ message CityView {
     string name = 2;
     uint64 owner = 3;
     uint64 deputy = 4;
+    uint64 location = 18;
 
     int32 chaotic = 5;
     int32 alignment = 6;

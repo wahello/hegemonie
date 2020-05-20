@@ -293,7 +293,9 @@ func CommandExport() *cobra.Command {
 				// Create one Army per City
 				_ = pCity.UnitCreate(&w, w.Definitions.Units[0])
 				_ = pCity.MakeDefence(&w)
-				// Create one Unit per City
+				// Create one finished Unit per City
+				pCity.UnitCreate(&w, w.Definitions.Units[0]).Ticks = 0
+				// Create one pending Unit per City
 				_ = pCity.UnitCreate(&w, w.Definitions.Units[0])
 			}
 

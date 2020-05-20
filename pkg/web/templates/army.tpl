@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 window.addEventListener("load", function() {
   let svg1 = document.getElementById('interactive-map');
-  drawNamedMap(svg1, "calaquyr",
+  let armies = [{"id":{{aid}}, "cell":{{Army.Location}}}];
+  drawMapWithCities(svg1, "calaquyr",
     function (position) {
       document.getElementById('Position').value = position;
       document.getElementById('CityId').value = null;
@@ -17,71 +18,83 @@ window.addEventListener("load", function() {
       document.getElementById('Position').value = position;
       document.getElementById('CityId').value = cityId;
       document.getElementById('CityName').value = cityName;
-    },
-    function (position, army) {
-      document.getElementById('Position').value = null;
-      document.getElementById('CityId').value = null;
-      document.getElementById('CityName').value = null;
-    });
+    })
+    .then(map => {
+      hightlightCell(svg1, {{Land.Location}});
+      return map;
+    })
+    .then(map => {
+      return patchWithArmies(svg1, map, armies);
+    })
+    .catch(err => { console.log(err); });
 });
 </script>
 {% include "map.tpl" %}
 
-<div>
+<div><h2>Actions</h2>
+<form>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="position" id="Position" value=""/>
+    <input type="hidden" name="cityId" id="CityId" value=""/>
+    <input type="text" id="CityName" value=""/>
+    <table class="action-set">
+        <tbody>
+            <tr>
+                <td><input type="submit" value="Move"/></td>
+                <td><p>Just move there. Wait'n see.</p></td>
+            </tr>
+            <tr>
+                <td><input type="submit" value="Attack"/></td>
+                <td><p>Move to the given City and attack it. Will you dare?</p></td>
+            </tr>
+            <tr>
+                <td><input type="submit" value="Defend"/></td>
+                <td><p>Move to the given City and join its defence, or wait there for an assault to start against it.</p></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><input type="submit" value="Disband"/></td>
+                <td><p>Cancel the Army and give both its freight and its troops
+                 to the local City.</p></td>
+            </tr>
+            <tr>
+                <td><input type="submit" value="Cancel"/></td>
+                <td><p>Cancel the Army and return both its freight and its troops
+                 back to {{Land.Name}}. The action only works if the army is at home.</p></td>
+            </tr>
+        </tfoot>
+    </table>
+</form>
 </div>
 
-<div><h2>Disband</h2>
-    <p>Cancel the Army and give both its freight and its troops to the local City.
-    The action only works if there is a City on the local position of the Army.</p>
-    <form action="/action/army/disband" method="post">
-        <input type="hidden" name="aid" value="{{a.Id}}"/>
-        <input type="hidden" name="cid" value="{{Character.Id}}"/>
-        <input type="hidden" name="lid" value="{{Land.Id}}"/>
-        <input type="submit" value="Disband!"/>
-    </form>
+<div><h2>Commands</h2>
 </div>
 
-<div><h2>Cancellation</h2>
-    <p>Cancel the Army and return both its freight and its troops back to the owner City.
-    The action only works if the army is on the position of its owner City.</p>
-    <form action="/action/army/cancel" method="post">
-        <input type="hidden" name="aid" value="{{a.Id}}"/>
-        <input type="hidden" name="cid" value="{{Character.Id}}"/>
-        <input type="hidden" name="lid" value="{{Land.Id}}"/>
-        <input type="submit" value="Disband!"/>
-    </form>
+<div><h2>Payload</h2>
+    <p>
+    Gold ({{Army.Stock.R1}}),
+    Cereals ({{Army.Stock.R2}}),
+    Livestock ({{Army.Stock.R3}}),
+    Wood ({{Army.Stock.R4}}),
+    Stone ({{Army.Stock.R5}})
+    </p>
 </div>
 
-<div><h2>Attack</h2>
-    <p>Move to the given City and attack it. will you dare?</p>
-    <form action="/action/army/command" method="post">
-        <input type="hidden" name="action" value="attack"/>
-        <input type="hidden" name="aid" value="{{a.Id}}"/>
-        <input type="hidden" name="cid" value="{{Character.Id}}"/>
-        <input type="hidden" name="lid" value="{{Land.Id}}"/>
-        <input type="submit" value="Attack!"/>
-    </form>
+<div><h2>Enroll</h2>
+    {% for u in Land.Assets.Units %}
+    {% if u.Ticks == 0 %}
+    <p>{{u.Type.Name}} (id {{u.Id}}) Health({{u.Health}}/{{u.Type.Health}})</p>
+    {% endif %}
+    {% endfor %}
 </div>
 
-<div><h2>Defend</h2>
-    <p>Move to the given City and join its defence, or wait there for an assault to start against it.</p>
-    <form action="/action/army/command" method="post">
-        <input type="hidden" name="action" value="defend"/>
-        <input type="hidden" name="aid" value="{{a.Id}}"/>
-        <input type="hidden" name="cid" value="{{Character.Id}}"/>
-        <input type="hidden" name="lid" value="{{Land.Id}}"/>
-        <input type="submit" value="Defend!"/>
-    </form>
-</div>
-
-<div><h2>Move</h2>
-    <p>Just move by thegiven City.</p>
-    <form action="/action/army/move" method="post">
-        <input type="hidden" name="aid" value="{{a.Id}}"/>
-        <input type="hidden" name="cid" value="{{Character.Id}}"/>
-        <input type="hidden" name="lid" value="{{Land.Id}}"/>
-        <input type="submit" value="Move!"/>
-    </form>
+<div><h2>Units</h2>
+    {% for u in Army.Units %}
+    <p>{{u.Type.Name}} (id {{u.Id}}) Health({{u.Health}}/{{u.Type.Health}})</p>
+    {% endfor %}
 </div>
 
 {% include "footer.tpl" %}

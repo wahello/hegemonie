@@ -145,6 +145,11 @@ func serveGameCityPage(f *FrontService, template string) ActionPage {
 		for _, item := range lView.Assets.Knowledges {
 			item.Type = f.knowledge[item.IdType]
 		}
+		for _, item := range lView.Assets.Armies {
+			for _, u := range item.Units {
+				u.Type = f.units[u.IdType]
+			}
+		}
 		f.rw.RUnlock()
 
 		ctx.Data["Title"] = cView.Name + "|" + lView.Name
@@ -154,7 +159,6 @@ func serveGameCityPage(f *FrontService, template string) ActionPage {
 		ctx.Data["Character"] = cView
 		ctx.Data["lid"] = utoa(lView.Id)
 		ctx.Data["Land"] = lView
-
 		ctx.HTML(200, template)
 	}
 }
@@ -218,6 +222,14 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 		}
 		for _, item := range lView.Assets.Knowledges {
 			item.Type = f.knowledge[item.IdType]
+		}
+		for _, item := range lView.Assets.Armies {
+			for _, u := range item.Units {
+				u.Type = f.units[u.IdType]
+			}
+		}
+		for _, u := range aView.Units {
+			u.Type = f.units[u.IdType]
 		}
 		f.rw.RUnlock()
 

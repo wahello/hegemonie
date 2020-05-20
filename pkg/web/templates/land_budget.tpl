@@ -1,6 +1,6 @@
 {% include "header.tpl" %}
 <div class="large"><h2>Stock</h2>
-    <table>
+    <table class="budget">
         <thead>
         <tr>
             <td class="title">Now</td>

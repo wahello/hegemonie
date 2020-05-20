@@ -24,10 +24,28 @@ body.science {
     color: black;
 }
 
-svg > line { stroke:black; stroke-width:1; }
-svg > circle { stroke:black; stroke-width:1; fill:white; }
-svg > .city { fill:gray; }
-svg > .city:hover { fill:green; }
+svg > line {
+    stroke: black;
+    stroke-width: 1;
+}
+
+svg > circle {
+    stroke: black;
+    stroke-width: 1;
+    fill: white;
+}
+
+svg > .city {
+    fill: gray;
+}
+
+svg > .here {
+    fill: deepskyblue;
+}
+
+svg > .city:hover {
+    fill: green;
+}
 
 main h1 {
     font-size: 36px;
@@ -64,20 +82,20 @@ em {
     font-weight: bold;
 }
 
-td {
+table.budget > td {
     padding: 0px 5px 0px 5px;
-    text-align: right;
+    text-align: left;
 }
 
-thead td {
+table.budget thead td {
     border-bottom: 1px solid black;
 }
 
-thead td {
+table.budget thead td {
     font-weight: bold;
 }
 
-tfoot td {
+table.budget tfoot td {
     font-weight: bold;
     border-top: 1px solid black;
 }

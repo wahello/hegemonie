@@ -5,6 +5,9 @@
 <meta name="theme-color" content="#FFF"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="description" content="Hegemone {{Land.Name}}"/>
+<link rel="icon" type="image/png" href="https://www.hegemonie.be/static/favicon.png"/>
+<link rel="shortcut icon" type="image/png" href="https://www.hegemonie.be/static/favicon.png"/>
+<link rel="apple-touch-icon" type="image/png" href="https://www.hegemonie.be/static/favicon-apple.png"/>
 <link rel="stylesheet" type="text/css" href="/static/style.css"/>
 </head>
 <body>

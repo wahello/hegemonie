@@ -144,10 +144,11 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 
 func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	cv := &proto.CityView{
-		Id:     c.Id,
-		Name:   c.Name,
-		Owner:  c.Owner,
-		Deputy: c.Deputy,
+		Id:       c.Id,
+		Name:     c.Name,
+		Owner:    c.Owner,
+		Deputy:   c.Deputy,
+		Location: c.Cell,
 
 		Cult:           c.Cult,
 		Chaotic:        c.Chaotic,
@@ -177,11 +178,12 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 }
 
 func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
-	view := &proto.ArmyView{}
-	view.Id = a.Id
-	view.Name = a.Name
-	view.Location = a.Cell
-	view.Stock = resAbsM2P(a.Stock)
+	view := &proto.ArmyView{
+		Id:       a.Id,
+		Name:     a.Name,
+		Location: a.Cell,
+		Stock:    resAbsM2P(a.Stock),
+	}
 	for _, u := range a.Units {
 		view.Units = append(view.Units, ShowUnit(w, u))
 	}
@@ -189,10 +191,11 @@ func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
 }
 
 func ShowUnit(w *region.World, u *region.Unit) *proto.UnitView {
-	view := &proto.UnitView{}
-	view.Id = u.Id
-	view.Name = ""
-	view.Ticks = u.Ticks
-	view.Health = u.Health
-	return view
+	return &proto.UnitView{
+		Id:     u.Id,
+		IdType: u.Type,
+		Name:   "",
+		Ticks:  u.Ticks,
+		Health: u.Health,
+	}
 }

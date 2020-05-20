@@ -12,7 +12,12 @@ window.addEventListener("load", function() {
       {"id":{{a.Id}}, "cell":{{a.Location}}},
   {% endfor %}
   ];
-  drawMapWithArmies(svg1, "calaquyr", armies).catch(err => { console.log(err); });
+  drawMapWithArmies(svg1, "calaquyr", armies)
+    .then(map => {
+        hightlightCell(svg1, {{Land.Location}});
+        return map;
+    })
+    .catch(err => { console.log(err); });
 });
 </script>
 {% include "map.tpl" %}
