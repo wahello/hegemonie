@@ -62,8 +62,8 @@ func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView,
 }
 
 func (s *srvCity) Study(ctx context.Context, req *proto.StudyReq) (*proto.None, error) {
-	s.w.RLock()
-	defer s.w.RUnlock()
+	s.w.WLock()
+	defer s.w.WUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
@@ -75,8 +75,8 @@ func (s *srvCity) Study(ctx context.Context, req *proto.StudyReq) (*proto.None, 
 }
 
 func (s *srvCity) Build(ctx context.Context, req *proto.BuildReq) (*proto.None, error) {
-	s.w.RLock()
-	defer s.w.RUnlock()
+	s.w.WLock()
+	defer s.w.WUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
@@ -88,8 +88,8 @@ func (s *srvCity) Build(ctx context.Context, req *proto.BuildReq) (*proto.None, 
 }
 
 func (s *srvCity) Train(ctx context.Context, req *proto.TrainReq) (*proto.None, error) {
-	s.w.RLock()
-	defer s.w.RUnlock()
+	s.w.WLock()
+	defer s.w.WUnlock()
 
 	city, err := s.w.CityGetAndCheck(req.Character, req.City)
 	if err != nil {

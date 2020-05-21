@@ -125,48 +125,6 @@ type CityStock struct {
 	Usage Resources
 }
 
-type Command struct {
-	// The unique ID of the Cell to target
-	Cell uint64
-
-	// What to do once arrived at the given Cell.
-	Action uint
-}
-
-type Army struct {
-	// The unique ID of the current Army
-	Id uint64
-
-	// The ID of the City that controls the current Army
-	City uint64 `json:",omitempty"`
-
-	// The ID of the Fight this Army is involved in.
-	Fight uint64 `json:",omitempty"`
-
-	// The ID of the Cell the Army is on
-	Cell uint64 `json:",omitempty"`
-
-	// Is the current Army still alive?
-	// This flag is used to save array handlings.
-	Deleted bool `json:",omitempty"`
-
-	// A display name for the current City
-	Name string
-
-	// How many resources are carried by that Army
-	Stock Resources
-
-	Units SetOfUnits
-
-	// The IS of a Cell of the Map that is a goal of the current movement of the Army
-	Targets []Command `json:",omitempty"`
-
-	// An array of Postures against armies of other cities.
-	// A positive value means "defend"
-	// A negative value means "assault"
-	Postures []int64 `json:",omitempty"`
-}
-
 type KnowledgeType struct {
 	Id    uint64
 	Name  string
@@ -433,6 +391,48 @@ type Unit struct {
 
 	// The number of health points of the unit, Health should be less or equal to HealthMax
 	Health uint32 `json:"H,omitempty"`
+}
+
+type Command struct {
+	// The unique ID of the Cell to target
+	Cell uint64
+
+	// What to do once arrived at the given Cell.
+	Action uint
+}
+
+type Army struct {
+	// The unique ID of the current Army
+	Id uint64
+
+	// The ID of the City that controls the current Army
+	City uint64 `json:",omitempty"`
+
+	// The ID of the Fight this Army is involved in.
+	Fight uint64 `json:",omitempty"`
+
+	// The ID of the Cell the Army is on
+	Cell uint64 `json:",omitempty"`
+
+	// Is the current Army still alive?
+	// This flag is used to save array handlings.
+	Deleted bool `json:",omitempty"`
+
+	// A display name for the current City
+	Name string
+
+	// How many resources are carried by that Army
+	Stock Resources
+
+	Units SetOfUnits
+
+	// The IS of a Cell of the Map that is a goal of the current movement of the Army
+	Targets []Command `json:",omitempty"`
+
+	// An array of Postures against armies of other cities.
+	// A positive value means "defend"
+	// A negative value means "assault"
+	Postures []int64 `json:",omitempty"`
 }
 
 type Fight struct {

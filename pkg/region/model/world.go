@@ -18,25 +18,19 @@ func (w *World) WUnlock() { w.rw.Unlock() }
 
 func (w *World) RLock() { w.rw.RLock() }
 
-func (w *World) RUnlock() { w.rw.RLock() }
+func (w *World) RUnlock() { w.rw.RUnlock() }
 
 func (w *World) getNextId() uint64 {
 	return atomic.AddUint64(&w.NextId, 1)
 }
 
 func (w *World) Produce() {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
 	for _, c := range w.Live.Cities {
 		c.Produce(w)
 	}
 }
 
 func (w *World) Move() {
-	w.rw.Lock()
-	defer w.rw.Unlock()
-
 	for _, a := range w.Live.Armies {
 		a.Move(w)
 	}

@@ -15,8 +15,8 @@ import (
 )
 
 func (w *World) Init() {
-	w.rw.Lock()
-	defer w.rw.Unlock()
+	w.WLock()
+	defer w.WUnlock()
 
 	w.Places.Init()
 
