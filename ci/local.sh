@@ -8,5 +8,5 @@
 set -e
 make -s
 DST=$(mktemp -d)
-./ci/bootstrap.sh docs/hegeIV/map-calaquyr.json docs/hegeIV/definitions/ $DST
-./ci/run.sh $DST/{definitions,live}
+nice ionice ./ci/bootstrap.sh docs/hegeIV/map-calaquyr.json docs/hegeIV/definitions/ $DST
+nice ionice ./ci/run.sh $DST/{definitions,live}
