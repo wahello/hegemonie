@@ -62,7 +62,7 @@ service Admin {
     // Make all the armies on the Region to move on step
     rpc Move(None) returns (None) {}
 
-    rpc GetScores(None) returns (ScoreBoard) {}
+    rpc GetScores(None) returns (ListOfCities) {}
 }
 
 service Army {
@@ -77,15 +77,6 @@ service Army {
 
     // Append the specified command on the list of the Army.
     rpc Command (ArmyCommandReq) returns (None) {}
-}
-
-message ScoredCity {
-    uint64 city = 1;
-    int64 score = 2;
-}
-
-message ScoreBoard {
-    repeated ScoredCity items = 1;
 }
 
 message NamedItem {
@@ -241,29 +232,31 @@ message CityView {
     string name = 2;
     uint64 owner = 3;
     uint64 deputy = 4;
-    uint64 location = 18;
+    uint64 location = 5;
 
-    int32 chaotic = 5;
-    int32 alignment = 6;
-    uint32 cult = 7;
-    uint32 ethnicGroup = 8;
-    uint32 politicalGroup = 9;
+    int32 chaotic = 6;
+    int32 alignment = 7;
+    uint32 cult = 8;
+    uint32 ethnicGroup = 9;
+    uint32 politicalGroup = 10;
 
-    uint32 tickMassacres = 10;
-    bool auto = 11;
-    bool deleted = 12;
+    int64 popularity = 11;
 
-    CityPolitics politics = 13;
+    uint32 tickMassacres = 12;
+    bool auto = 13;
+    bool deleted = 14;
+
+    CityPolitics politics = 15;
 
     // The resources owned by the City
-    StockView stock = 14;
-    ProductionView production = 15;
+    StockView stock = 16;
+    ProductionView production = 17;
 
     // All the things owned by the current city
-    CityAssets assets = 16;
+    CityAssets assets = 18;
 
     // All the things that the current may start to own
-    CityEvolution evol = 17;
+    CityEvolution evol = 19;
 }
 
 message StudyReq {
@@ -367,12 +360,13 @@ message ListOfCities {
 message PublicCity {
     uint64 id = 1;
     string name = 2;
-    uint64 cell = 3;
+    uint64 location = 3;
     int32 alignment = 4;
     int32 chaos = 5;
     uint32 politics = 6;
     uint32 cult = 7;
     uint32 ethny = 8;
+    int64 score = 9;
 }
 
 message Vertex {

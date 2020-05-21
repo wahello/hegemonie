@@ -199,3 +199,21 @@ func ShowUnit(w *region.World, u *region.Unit) *proto.UnitView {
 		Health: u.Health,
 	}
 }
+
+func ShowCityPublic(w *region.World, c *region.City, scored bool) *proto.PublicCity {
+	var score int64
+	if scored {
+		score = c.GetActualPopularity(w)
+	}
+	return &proto.PublicCity{
+		Id:        c.Id,
+		Name:      c.Name,
+		Score:     score,
+		Location:  c.Cell,
+		Alignment: c.Alignment,
+		Chaos:     c.Chaotic,
+		Cult:      c.Cult,
+		Politics:  c.PoliticalGroup,
+		Ethny:     c.EthnicGroup,
+	}
+}

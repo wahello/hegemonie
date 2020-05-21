@@ -43,14 +43,7 @@ func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfCi
 	cities := s.w.Cities(req.Character)
 
 	for _, c := range cities {
-		rep.Items = append(rep.Items, &proto.PublicCity{
-			Id: c.Id, Name: c.Name, Cell: c.Cell,
-			Politics:  c.PoliticalGroup,
-			Chaos:     c.Chaotic,
-			Alignment: c.Alignment,
-			Ethny:     c.EthnicGroup,
-			Cult:      c.Cult,
-		})
+		rep.Items = append(rep.Items, ShowCityPublic(s.w, c, false))
 	}
 	return rep, nil
 }

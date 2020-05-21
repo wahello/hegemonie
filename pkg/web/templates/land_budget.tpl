@@ -90,11 +90,11 @@
         </tfoot>
     </table>
 </div>
-<div class="large"><h2>Resources</h2>
-    <table>
+<div class="large"><h2>Production</h2>
+    <table class="budget">
         <thead>
         <tr>
-            <td class="title">Production</td>
+            <td class="title">Total</td>
             <td>{{Land.Production.Actual.R0}}</td>
             <td>{{Land.Production.Actual.R1}}</td>
             <td>{{Land.Production.Actual.R2}}</td>

@@ -48,14 +48,7 @@ func (s *srvMap) Cities(ctx context.Context, req *proto.CitiesReq) (*proto.ListO
 	rep := &proto.ListOfCities{}
 	for _, x := range s.w.Live.Cities {
 		if !x.Deleted {
-			rep.Items = append(rep.Items, &proto.PublicCity{
-				Id: x.Id, Name: x.Name, Cell: x.Cell,
-				Alignment: x.Alignment,
-				Chaos:     x.Chaotic,
-				Cult:      x.Cult,
-				Politics:  x.PoliticalGroup,
-				Ethny:     x.EthnicGroup,
-			})
+			rep.Items = append(rep.Items, ShowCityPublic(s.w, x, false))
 		}
 	}
 	return rep, nil

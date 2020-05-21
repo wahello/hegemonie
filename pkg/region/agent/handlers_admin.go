@@ -8,9 +8,6 @@ package hegemonie_region_agent
 import (
 	"context"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
@@ -20,15 +17,30 @@ type srvAdmin struct {
 }
 
 func (s *srvAdmin) Produce(ctx context.Context, req *proto.None) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	s.w.WLock()
+	defer s.w.WUnlock()
+
+	s.w.Produce()
+	return &proto.None{}, nil
 }
 
 func (s *srvAdmin) Move(ctx context.Context, req *proto.None) (*proto.None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+	s.w.WLock()
+	defer s.w.WUnlock()
+
+	s.w.Move()
+	return &proto.None{}, nil
 }
 
-func (s *srvAdmin) GetScores(ctx context.Context, req *proto.None) (*proto.ScoreBoard, error) {
-	return nil, status.Errorf(codes.Unimplemented, "NYI")
+func (s *srvAdmin) GetScores(ctx context.Context, req *proto.None) (*proto.ListOfCities, error) {
+	s.w.RLock()
+	defer s.w.RUnlock()
+
+	sb := &proto.ListOfCities{}
+	for _, c := range s.w.Live.Cities {
+		sb.Items = append(sb.Items, ShowCityPublic(s.w, c, true))
+	}
+	return sb, nil
 }
 
 func (s *srvAdmin) Save(ctx context.Context, req *proto.None) (*proto.None, error) {
