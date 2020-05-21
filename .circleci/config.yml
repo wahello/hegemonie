@@ -8,6 +8,9 @@ jobs:
     steps:
       - checkout
       - run: go get -v -t -d ./...
+      - run: go get -u -t github.com/golang/protobuf
+      - run: go get -u -t google.golang.org/grpc
+      - run: go install github.com/golang/protobuf/protoc-gen-go/
       - run: sudo apt-get update
       - run: sudo apt-get install -y protobuf-compiler
       - run: make
