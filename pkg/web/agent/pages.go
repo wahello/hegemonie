@@ -6,7 +6,6 @@
 package hegemonie_web_agent
 
 import (
-	"context"
 	"github.com/go-macaron/session"
 	auth "github.com/jfsmig/hegemonie/pkg/auth/proto"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
@@ -47,7 +46,7 @@ func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 
 func serveGameUser(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		uView, err := f.authenticateUserFromSession(sess)
+		uView, err := f.authenticateUserFromSession(ctx, sess)
 		if err != nil {
 			flash.Error(err.Error())
 			ctx.Redirect("/")
@@ -56,7 +55,7 @@ func serveGameUser(f *FrontService) ActionPage {
 
 		cliReg := region.NewCityClient(f.cnxRegion)
 		for _, c := range uView.Characters {
-			l, err := cliReg.List(context.Background(), &region.ListReq{Character: c.Id})
+			l, err := cliReg.List(contextMacaronToGrpc(ctx, sess), &region.ListReq{Character: c.Id})
 			if err != nil {
 				flash.Warning("Error with " + c.Name)
 			} else {
@@ -75,7 +74,7 @@ func serveGameUser(f *FrontService) ActionPage {
 
 func serveGameCharacter(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
+		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -84,7 +83,7 @@ func serveGameCharacter(f *FrontService) ActionPage {
 
 		// Load the Cities managed by the current Character
 		cliReg := region.NewCityClient(f.cnxRegion)
-		list, err := cliReg.List(context.Background(), &region.ListReq{Character: cView.Id})
+		list, err := cliReg.List(contextMacaronToGrpc(ctx, sess), &region.ListReq{Character: cView.Id})
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")

@@ -101,12 +101,17 @@ message ArmyView {
     uint64 location = 3;
     ResourcesAbs stock = 4;
     repeated UnitView units = 5;
+    repeated ArmyCommand commands = 6;
+}
+
+message ArmyCommand {
+    uint64 target = 2;
+    uint64 action = 3;
 }
 
 message ArmyCommandReq {
     ArmyId id = 1;
-    uint64 target = 2;
-    uint64 action = 3;
+    ArmyCommand command = 2;
 }
 
 // Identifies a City and Character who is

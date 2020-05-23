@@ -11,6 +11,7 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/auth/client"
 	"github.com/jfsmig/hegemonie/pkg/region/agent"
 	"github.com/jfsmig/hegemonie/pkg/region/client"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/jfsmig/hegemonie/pkg/web/agent"
 	"github.com/spf13/cobra"
 	"log"
@@ -60,6 +61,7 @@ func main() {
 	rootCmd.AddCommand(aaaCmd)
 	rootCmd.AddCommand(regCmd)
 	rootCmd.AddCommand(webCmd)
+	utils.PatchCommandLogs(rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln("Command error:", err)

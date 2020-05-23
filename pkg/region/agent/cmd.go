@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"log"
@@ -96,8 +97,7 @@ func (self *regionConfig) execute() error {
 		return e("failed to listen: %v", err)
 	}
 
-	srv := grpc.NewServer()
-
+	srv := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
 	proto.RegisterMapServer(srv, &srvMap{cfg: self, w: &w})
 	proto.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})
 	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: self, w: &w})

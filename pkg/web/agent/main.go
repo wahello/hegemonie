@@ -8,20 +8,25 @@ package hegemonie_web_agent
 import (
 	"context"
 	"errors"
-	"github.com/go-macaron/pongo2"
-	"github.com/go-macaron/session"
-	region "github.com/jfsmig/hegemonie/pkg/region/proto"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"gopkg.in/macaron.v1"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	region "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/go-macaron/pongo2"
+	"github.com/go-macaron/session"
+	_ "github.com/go-macaron/session/memcache"
+	"gopkg.in/macaron.v1"
 )
 
 func Command() *cobra.Command {
@@ -42,8 +47,9 @@ func Command() *cobra.Command {
 				return errors.New("Invalid path for the directory of static files")
 			}
 
-			m := macaron.Classic()
-			m.SetDefaultCookieSecret("hege_session")
+			m := macaron.New()
+			m.Use(macaron.Recovery())
+			m.SetDefaultCookieSecret("hegemonie-session-NOT-SET")
 			m.Use(pongo2.Pongoer(pongo2.Options{
 				Directory:       front.dirTemplates,
 				Extensions:      []string{".tpl", ".html", ".tmpl"},
@@ -52,7 +58,11 @@ func Command() *cobra.Command {
 				IndentJSON:      true,
 				IndentXML:       true,
 			}))
-			m.Use(session.Sessioner())
+			m.Use(session.Sessioner(session.Options{
+				Provider:       "memcache",
+				ProviderConfig: "127.0.0.1:11211",
+			}))
+			m.Use(zeroLogger())
 			m.Use(func(ctx *macaron.Context, s session.Store) {
 				auth := func() {
 					uid := s.Get("userid")
@@ -69,7 +79,8 @@ func Command() *cobra.Command {
 			})
 			front.routePages(m)
 			m.Use(macaron.Static(front.dirStatic, macaron.StaticOptions{
-				Prefix: "static",
+				Prefix:      "static",
+				SkipLogging: true,
 			}))
 			front.routeForms(m)
 
@@ -85,7 +96,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			go front.loopReload()
+			go front.loopReload(context.Background())
 
 			return http.ListenAndServe(front.endpointNorth, m)
 		},
@@ -114,9 +125,9 @@ type FrontService struct {
 	knowledge map[uint64]*region.KnowledgeTypeView
 }
 
-func (f *FrontService) reload() {
-	ctx := context.Background()
+func (f *FrontService) reload(sessionId string, ctx0 context.Context) {
 	cli := region.NewDefinitionsClient(f.cnxRegion)
+	ctx := metadata.AppendToOutgoingContext(ctx0, "session-id", sessionId)
 
 	func() {
 		last := uint64(0)
@@ -201,14 +212,15 @@ func (f *FrontService) reload() {
 	}()
 }
 
-func (f *FrontService) loopReload() {
+func (f *FrontService) loopReload(ctx context.Context) {
 	go func() {
+		sessionId := uuid.New().String()
 		for _, v := range []int{2, 4, 8, 16} {
-			f.reload()
+			f.reload(sessionId, ctx)
 			<-time.After(time.Duration(v) * time.Second)
 		}
 		for {
-			f.reload()
+			f.reload(sessionId, ctx)
 			<-time.After(61 * time.Second)
 		}
 	}()
@@ -234,12 +246,26 @@ func ptou(p interface{}) uint64 {
 	return atou(p.(string))
 }
 
-func randomSecret() string {
-	var sb strings.Builder
-	sb.WriteString(strconv.FormatInt(time.Now().UnixNano(), 16))
-	sb.WriteRune('-')
-	sb.WriteString(strconv.FormatUint(uint64(rand.Uint32()), 16))
-	sb.WriteRune('-')
-	sb.WriteString(strconv.FormatUint(uint64(rand.Uint32()), 16))
-	return sb.String()
+func zeroLogger() macaron.Handler {
+	return func(ctx *macaron.Context, s session.Store) {
+		start := time.Now()
+		rw := ctx.Resp.(macaron.ResponseWriter)
+		ctx.Next()
+		z := utils.Logger.Info().
+			Str("peer", ctx.RemoteAddr()).
+			Str("local", ctx.Req.Host).
+			Str("verb", ctx.Req.Method).
+			Str("uri", ctx.Req.RequestURI).
+			Int("rc", rw.Status()).
+			TimeDiff("t", time.Now(), start)
+		if sessionId := s.Get("session-id"); sessionId != nil {
+			z.Str("session", sessionId.(string))
+		}
+		z.Send()
+	}
+}
+
+func contextMacaronToGrpc(ctx *macaron.Context, s session.Store) context.Context {
+	return metadata.AppendToOutgoingContext(ctx.Req.Context(),
+		"session-id", s.Get("session-id").(string))
 }

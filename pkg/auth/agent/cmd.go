@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/jfsmig/hegemonie/pkg/auth/model"
 	proto "github.com/jfsmig/hegemonie/pkg/auth/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"net"
@@ -93,7 +94,7 @@ func (service *authService) execute() error {
 		return e("failed to listen: %v", err)
 	}
 
-	server := grpc.NewServer()
+	server := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
 	proto.RegisterAuthServer(server, service)
 	if err := server.Serve(lis); err != nil {
 		return e("failed to serve: %v", err)

@@ -6,7 +6,6 @@
 package hegemonie_web_agent
 
 import (
-	"context"
 	"github.com/go-macaron/session"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"gopkg.in/macaron.v1"
@@ -15,7 +14,7 @@ import (
 
 func serveGameAdmin(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		uView, err := f.authenticateAdminFromSession(sess)
+		uView, err := f.authenticateAdminFromSession(ctx, sess)
 		if err != nil {
 			flash.Error(err.Error())
 			ctx.Redirect("/")
@@ -23,7 +22,7 @@ func serveGameAdmin(f *FrontService) ActionPage {
 		}
 
 		cli := region.NewAdminClient(f.cnxRegion)
-		scoreBoard, err := cli.GetScores(context.Background(), &region.None{})
+		scoreBoard, err := cli.GetScores(contextMacaronToGrpc(ctx, sess), &region.None{})
 		if err != nil {
 			flash.Warning("Region error: " + err.Error())
 			ctx.Redirect("/game/admin")

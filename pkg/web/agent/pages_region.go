@@ -6,7 +6,7 @@
 package hegemonie_web_agent
 
 import (
-	"context"
+	"github.com/go-macaron/session"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"gopkg.in/macaron.v1"
 )
@@ -34,8 +34,8 @@ type RawMap struct {
 	Roads []RawEdge            `json:"roads"`
 }
 
-func serveRegionMap(f *FrontService) StatelessPage {
-	return func(ctx *macaron.Context) {
+func serveRegionMap(f *FrontService) NoFlashPage {
+	return func(ctx *macaron.Context, sess session.Store) {
 		id := ctx.Query("id")
 		if id != "calaquyr" {
 			ctx.Error(400, "Invalid region")
@@ -49,7 +49,7 @@ func serveRegionMap(f *FrontService) StatelessPage {
 		cliReg := region.NewMapClient(f.cnxRegion)
 
 		// FIXME(jfs): iterate in case of a truncated result
-		vertices, err := cliReg.Vertices(context.Background(), &region.ListVerticesReq{})
+		vertices, err := cliReg.Vertices(contextMacaronToGrpc(ctx, sess), &region.ListVerticesReq{})
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return
@@ -59,7 +59,7 @@ func serveRegionMap(f *FrontService) StatelessPage {
 		}
 
 		// FIXME(jfs): iterate in case of a truncated result
-		edges, err := cliReg.Edges(context.Background(), &region.ListEdgesReq{})
+		edges, err := cliReg.Edges(contextMacaronToGrpc(ctx, sess), &region.ListEdgesReq{})
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return
@@ -72,8 +72,8 @@ func serveRegionMap(f *FrontService) StatelessPage {
 	}
 }
 
-func serveRegionCities(f *FrontService) StatelessPage {
-	return func(ctx *macaron.Context) {
+func serveRegionCities(f *FrontService) NoFlashPage {
+	return func(ctx *macaron.Context, sess session.Store) {
 		id := ctx.Query("id")
 		if id != "calaquyr" {
 			ctx.Error(400, "Invalid region")
@@ -84,7 +84,7 @@ func serveRegionCities(f *FrontService) StatelessPage {
 		cli := region.NewMapClient(f.cnxRegion)
 
 		// FIXME(jfs): iterate in case of a truncated result
-		cities, err := cli.Cities(context.Background(), &region.CitiesReq{})
+		cities, err := cli.Cities(contextMacaronToGrpc(ctx, sess), &region.CitiesReq{})
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return

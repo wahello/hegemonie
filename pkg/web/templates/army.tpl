@@ -71,6 +71,9 @@ window.addEventListener("load", function() {
 </div>
 
 <div><h2>Commands</h2>
+{% for cmd in Commands %}
+<p>{{cmd.Target}}</p>
+{% endfor %}
 </div>
 
 <div><h2>Payload</h2>

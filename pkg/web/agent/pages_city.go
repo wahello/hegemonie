@@ -6,7 +6,6 @@
 package hegemonie_web_agent
 
 import (
-	"context"
 	"fmt"
 	"github.com/go-macaron/session"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
@@ -15,7 +14,7 @@ import (
 
 func serveGameCityPage(f *FrontService, template string) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
+		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -24,7 +23,7 @@ func serveGameCityPage(f *FrontService, template string) ActionPage {
 
 		// Load the chosen City
 		cliReg := region.NewCityClient(f.cnxRegion)
-		lView, err := cliReg.Show(context.Background(),
+		lView, err := cliReg.Show(contextMacaronToGrpc(ctx, sess),
 			&region.CityId{Character: cView.Id, City: atou(ctx.Query("lid"))})
 		if err != nil {
 			flash.Warning("Region error: " + err.Error())
@@ -83,7 +82,7 @@ func serveGameCityArmies(f *FrontService) ActionPage {
 
 func serveGameArmyDetail(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		uView, cView, err := f.authenticateCharacterFromSession(sess, atou(ctx.Query("cid")))
+		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
 		if err != nil {
 			flash.Warning("Auth error: " + err.Error())
 			ctx.Redirect("/game/user")
@@ -92,7 +91,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 
 		// Load the chosen City
 		cliReg := region.NewCityClient(f.cnxRegion)
-		lView, err := cliReg.Show(context.Background(),
+		lView, err := cliReg.Show(contextMacaronToGrpc(ctx, sess),
 			&region.CityId{Character: cView.Id, City: atou(ctx.Query("lid"))})
 		if err != nil {
 			flash.Warning("City error: " + err.Error())
@@ -102,7 +101,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 
 		// Load the chosen Army
 		cliArmy := region.NewArmyClient(f.cnxRegion)
-		aView, err := cliArmy.Show(context.Background(),
+		aView, err := cliArmy.Show(contextMacaronToGrpc(ctx, sess),
 			&region.ArmyId{Character: cView.Id, City: lView.Id, Army: atou(ctx.Query("aid"))})
 		if err != nil {
 			flash.Warning("Army error: " + err.Error())
@@ -140,6 +139,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 		ctx.Data["Land"] = lView
 		ctx.Data["aid"] = utoa(aView.Id)
 		ctx.Data["Army"] = aView
+		ctx.Data["Commands"] = aView.Commands
 
 		ctx.HTML(200, "army")
 	}

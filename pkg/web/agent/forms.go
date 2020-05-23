@@ -6,16 +6,16 @@
 package hegemonie_web_agent
 
 import (
-	"context"
 	"errors"
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/session"
+	"github.com/google/uuid"
 	auth "github.com/jfsmig/hegemonie/pkg/auth/proto"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"gopkg.in/macaron.v1"
 )
 
-func (f *FrontService) authenticateUserFromSession(sess session.Store) (*auth.UserView, error) {
+func (f *FrontService) authenticateUserFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
 	// Validate the session data
 	userid := ptou(sess.Get("userid"))
 	if userid == 0 {
@@ -24,12 +24,12 @@ func (f *FrontService) authenticateUserFromSession(sess session.Store) (*auth.Us
 
 	// Authorize the character with the user
 	cliAuth := auth.NewAuthClient(f.cnxAuth)
-	return cliAuth.UserShow(context.Background(),
+	return cliAuth.UserShow(contextMacaronToGrpc(ctx, sess),
 		&auth.UserShowReq{Id: userid})
 }
 
-func (f *FrontService) authenticateAdminFromSession(sess session.Store) (*auth.UserView, error) {
-	uView, err := f.authenticateUserFromSession(sess)
+func (f *FrontService) authenticateAdminFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
+	uView, err := f.authenticateUserFromSession(ctx, sess)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (f *FrontService) authenticateAdminFromSession(sess session.Store) (*auth.U
 	return uView, nil
 }
 
-func (f *FrontService) authenticateCharacterFromSession(sess session.Store, idChar uint64) (*auth.UserView, *auth.CharacterView, error) {
+func (f *FrontService) authenticateCharacterFromSession(ctx *macaron.Context, sess session.Store, idChar uint64) (*auth.UserView, *auth.CharacterView, error) {
 	// Validate the session data
 	userid := ptou(sess.Get("userid"))
 	if userid == 0 || idChar == 0 {
@@ -48,7 +48,7 @@ func (f *FrontService) authenticateCharacterFromSession(sess session.Store, idCh
 
 	// Authorize the character with the user
 	cliAuth := auth.NewAuthClient(f.cnxAuth)
-	uView, err := cliAuth.CharacterShow(context.Background(),
+	uView, err := cliAuth.CharacterShow(contextMacaronToGrpc(ctx, sess),
 		&auth.CharacterShowReq{User: userid, Character: idChar})
 	if err != nil {
 		return nil, nil, err
@@ -62,9 +62,12 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		// Cleanup a previous session
 		sess.Flush()
 
+		sessionId := uuid.New().String()
+		sess.Set("session-id", sessionId)
+
 		// Authorize the character with the user
 		cliAuth := auth.NewAuthClient(f.cnxAuth)
-		uView, err := cliAuth.UserAuth(context.Background(),
+		uView, err := cliAuth.UserAuth(contextMacaronToGrpc(ctx, sess),
 			&auth.UserAuthReq{Mail: info.UserMail, Pass: info.UserPass})
 
 		if err != nil {
@@ -85,7 +88,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doMove := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		_, err := f.authenticateAdminFromSession(sess)
+		_, err := f.authenticateAdminFromSession(ctx, sess)
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/")
@@ -93,7 +96,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		}
 
 		cliReg := region.NewAdminClient(f.cnxRegion)
-		_, err = cliReg.Move(context.Background(), &region.None{})
+		_, err = cliReg.Move(contextMacaronToGrpc(ctx, sess), &region.None{})
 		if err != nil {
 			flash.Warning(err.Error())
 		}
@@ -101,7 +104,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doProduce := func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		_, err := f.authenticateAdminFromSession(sess)
+		_, err := f.authenticateAdminFromSession(ctx, sess)
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -109,7 +112,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		}
 
 		cliReg := region.NewAdminClient(f.cnxRegion)
-		_, err = cliReg.Produce(context.Background(), &region.None{})
+		_, err = cliReg.Produce(contextMacaronToGrpc(ctx, sess), &region.None{})
 		if err != nil {
 			flash.Warning(err.Error())
 		}
@@ -117,7 +120,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityStudy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityStudy) {
-		_, _, err := f.authenticateCharacterFromSession(sess, info.CharacterId)
+		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterId)
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -125,7 +128,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		}
 
 		cliReg := region.NewCityClient(f.cnxRegion)
-		_, err = cliReg.Study(context.Background(),
+		_, err = cliReg.Study(contextMacaronToGrpc(ctx, sess),
 			&region.StudyReq{City: info.CityId, Character: info.CharacterId, KnowledgeType: info.KnowledgeId})
 		if err != nil {
 			flash.Warning(err.Error())
@@ -135,7 +138,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityBuild := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityBuild) {
-		_, _, err := f.authenticateCharacterFromSession(sess, info.CharacterId)
+		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterId)
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -143,7 +146,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		}
 
 		cliReg := region.NewCityClient(f.cnxRegion)
-		_, err = cliReg.Build(context.Background(),
+		_, err = cliReg.Build(contextMacaronToGrpc(ctx, sess),
 			&region.BuildReq{City: info.CityId, Character: info.CharacterId, BuildingType: info.BuildingId})
 		if err != nil {
 			flash.Warning(err.Error())
@@ -153,7 +156,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityTrain := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityTrain) {
-		_, _, err := f.authenticateCharacterFromSession(sess, info.CharacterId)
+		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterId)
 		if err != nil {
 			flash.Warning(err.Error())
 			ctx.Redirect("/game/user")
@@ -161,7 +164,7 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		}
 
 		cliReg := region.NewCityClient(f.cnxRegion)
-		_, err = cliReg.Train(context.Background(),
+		_, err = cliReg.Train(contextMacaronToGrpc(ctx, sess),
 			&region.TrainReq{City: info.CityId, Character: info.CharacterId, UnitType: info.UnitId})
 		if err != nil {
 			flash.Warning(err.Error())
@@ -171,94 +174,46 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityCreateArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCreate) {
-		/*
-			reply := hclient.CityCreateArmyReply{}
-			args := hclient.CityCreateArmyArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				Name:        info.Name,
-			}
-			err := f.region.CityCreateArmy(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
 	doCityTransferUnit := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityUnitTransfer) {
-		/*
-			reply := hclient.CityTransferUnitReply{}
-			args := hclient.CityTransferUnitArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				UnitId:      info.UnitId,
-				ArmyId:      info.ArmyId,
-			}
-			err := f.region.CityTransferUnit(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
 	doCityCommandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCommand) {
-		/*
-			reply := hclient.CityCommandArmyReply{}
-			args := hclient.CityCommandArmyArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				ArmyId:      info.ArmyId,
-				Cell:        info.Cell,
-				Action:      info.Action,
-			}
-			err := f.region.CityCommandArmy(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
-		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
+		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterId)
+		if err != nil {
+			flash.Warning(err.Error())
+			ctx.Redirect("/game/user")
+			return
+		}
+
+		cli := region.NewArmyClient(f.cnxRegion)
+		_, err = cli.Command(contextMacaronToGrpc(ctx, sess),
+			&region.ArmyCommandReq{
+				Id: &region.ArmyId{
+					Character: info.CharacterId,
+					City:      info.CityId,
+					Army:      info.ArmyId,
+				},
+				Command: &region.ArmyCommand{
+					Action: info.Action,
+					Target: info.Cell,
+				},
+			})
+		if err != nil {
+			flash.Warning(err.Error())
+		}
+
+		ctx.Redirect("/game/army?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId) + "&aid=" + utoa(info.ArmyId))
 	}
 
 	doCityDisbandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyDisband) {
-		/*
-			reply := hclient.CityCommandArmyReply{}
-			args := hclient.CityCommandArmyArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				ArmyId:      info.ArmyId,
-				Cell:        info.Cell,
-				Action:      info.Action,
-			}
-			err := f.region.CityCommandArmy(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 
 	doCityCancelArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCancel) {
-		/*
-			reply := hclient.CityCommandArmyReply{}
-			args := hclient.CityCommandArmyArgs{
-				UserId:      ptou(sess.Get("userid")),
-				CharacterId: info.CharacterId,
-				CityId:      info.CityId,
-				ArmyId:      info.ArmyId,
-				Cell:        info.Cell,
-				Action:      info.Action,
-			}
-			err := f.region.CityCommandArmy(&args, &reply)
-			if err != nil {
-				flash.Error("Action error: " + err.Error())
-			}
-		*/
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId))
 	}
 

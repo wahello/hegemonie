@@ -82,12 +82,12 @@ func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*prot
 	if err != nil {
 		return nil, err
 	}
-	target := s.w.CityGet(req.Target)
+	target := s.w.CityGet(req.Command.Target)
 	if target == nil {
 		return nil, status.Errorf(codes.NotFound, "Target Not found")
 	}
 
-	switch req.Action {
+	switch req.Command.Action {
 	case region.CmdCityAttack:
 		err = army.DeferAttack(s.w, target)
 	case region.CmdCityDefend:
