@@ -56,7 +56,7 @@ func (a *Army) Move(w *World) {
 		if nxt == dst {
 			var preventPopping bool
 			switch cmd.Action {
-			case CmdPause:
+			case CmdMove:
 				// Just a stop on the way
 			case CmdCityAttack:
 				a.JoinCityAttack(w, pLocalCity)
@@ -66,8 +66,6 @@ func (a *Army) Move(w *World) {
 				}
 			case CmdCityOverlord:
 				a.Conquer(w, pLocalCity)
-			case CmdCityLiberate:
-				a.Liberate(w, pLocalCity)
 			case CmdCityBreak:
 				a.BreakBuilding(w, pLocalCity)
 			case CmdCityMassacre:
@@ -156,19 +154,6 @@ func (a *Army) Conquer(w *World, pCity *City) {
 	pOverlord.ConquerCity(w, pCity)
 }
 
-func (a *Army) Liberate(w *World, pCity *City) {
-	if pCity == nil {
-		panic("Impossible action: nil city")
-	}
-
-	pOverlord := w.CityGet(a.City)
-	if pOverlord == nil {
-		panic("Impossible action: nil overlord")
-	}
-
-	pOverlord.LiberateCity(w, pCity)
-}
-
 func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 	if pCity.Assault == nil {
 		return false
@@ -182,7 +167,7 @@ func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 
 	a.Fight = pCity.Assault.Id
 	pCity.Assault.Defense[a.Id] = a
-	delete(w.Live.Armies, a.Id)
+	w.Live.Armies.Remove(a)
 
 	return true
 }
@@ -191,8 +176,8 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 	if pCity.Assault == nil {
 		pCity.Assault = &Fight{
 			Id: w.getNextId(), Cell: pCity.Cell,
-			Defense: make(map[uint64]*Army),
-			Attack:  make(map[uint64]*Army)}
+			Defense: make(SetOfArmies, 0),
+			Attack:  make(SetOfArmies, 0)}
 		def := pCity.MakeDefence(w)
 		def.Fight = pCity.Assault.Id
 		pCity.Assault.Defense[def.Id] = def
@@ -207,57 +192,62 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 
 	a.Fight = pCity.Assault.Id
 	pCity.Assault.Attack[a.Id] = a
-	delete(w.Live.Armies, a.Id)
+	w.Live.Armies.Remove(a)
 }
 
 // Leave the Fight as a loser
 func (a *Army) Flea(w *World) error {
-	return errors.New("NYI")
+	return errors.New("Flea NYI")
 }
 
 // Change the side in the Fight.
 // If the Army was defending, it becomes an attacker, if it was an attacker
 // it becomes a defender.
 func (a *Army) Flip(w *World) error {
-	return errors.New("NYI")
+	return errors.New("Flip NYI")
 }
 
-func (a *Army) DeferAttack(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferAttack(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityAttack, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferDefend(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferDefend(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityDefend, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferBreak(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferBreak(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityBreak, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferDeposit(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferDeposit(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityDeposit, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferDisband(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferDisband(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityDisband, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferMassacre(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferMassacre(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityMassacre, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferConquer(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferOverlord(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdCityOverlord, Cell: t.Id})
+	return nil
 }
 
-func (a *Army) DeferLiberate(w *World, t *City) error {
-	//FIXME(jfs):
-	return errors.New("NYI")
+func (a *Army) DeferMove(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdMove, Cell: t.Id})
+	return nil
+}
+
+func (a *Army) DeferWait(w *World, t *MapVertex) error {
+	a.Targets = append(a.Targets, Command{Action: CmdWait, Cell: t.Id})
+	return nil
 }

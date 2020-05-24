@@ -7,7 +7,6 @@ package region
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -45,8 +44,8 @@ func (s SetOfEdges) Get(src, dst uint64) *MapEdge {
 }
 
 func (m *Map) Init() {
-	m.Cells = make(map[uint64]*MapVertex, 0)
-	m.Roads = make([]*MapEdge, 0)
+	m.Cells = make(SetOfVertices, 0)
+	m.Roads = make(SetOfEdges, 0)
 }
 
 func (m *Map) getNextId() uint64 {
@@ -54,18 +53,17 @@ func (m *Map) getNextId() uint64 {
 }
 
 func (m *Map) CellGet(id uint64) *MapVertex {
-	return m.Cells[id]
+	return m.Cells.Get(id)
 }
 
 func (m *Map) CellHas(id uint64) bool {
-	_, ok := m.Cells[id]
-	return ok
+	return m.Cells.Has(id)
 }
 
 func (m *Map) CellCreate() *MapVertex {
 	id := m.getNextId()
 	c := &MapVertex{Id: id}
-	m.Cells[id] = c
+	m.Cells.Add(c)
 	return c
 }
 
@@ -155,15 +153,6 @@ func (m *Map) CellAdjacency(id uint64) []uint64 {
 	}
 
 	return adj
-}
-
-func (m *Map) Check(w *World) error {
-	for id, pCell := range m.Cells {
-		if pCell.Id != id {
-			return errors.New(fmt.Sprintf("Map: inconsistent key [%v] for cell [%v]", id, *pCell))
-		}
-	}
-	return nil
 }
 
 func (m *Map) Dot() string {

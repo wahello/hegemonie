@@ -8,7 +8,6 @@ package hegemonie_web_agent
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -123,6 +122,8 @@ type FrontService struct {
 	units     map[uint64]*region.UnitTypeView
 	buildings map[uint64]*region.BuildingTypeView
 	knowledge map[uint64]*region.KnowledgeTypeView
+	cities    map[uint64]*region.PublicCity
+	locations map[uint64]*region.Vertex
 }
 
 func (f *FrontService) reload(sessionId string, ctx0 context.Context) {
@@ -137,7 +138,7 @@ func (f *FrontService) reload(sessionId string, ctx0 context.Context) {
 			args := &region.PaginatedQuery{Marker: last, Max: 100}
 			l, err := cli.ListUnits(ctx, args)
 			if err != nil {
-				log.Println("Reload error (units):", err.Error())
+				utils.Logger.Warn().Err(err).Str("step", "units").Msg("Reload error")
 				return
 			}
 			if len(l.Items) <= 0 {
@@ -164,7 +165,7 @@ func (f *FrontService) reload(sessionId string, ctx0 context.Context) {
 			args := &region.PaginatedQuery{Marker: last, Max: 100}
 			l, err := cli.ListBuildings(ctx, args)
 			if err != nil {
-				log.Println("Reload error (buildings):", err.Error())
+				utils.Logger.Warn().Err(err).Str("step", "buildings").Msg("Reload error")
 				return
 			}
 			if len(l.Items) <= 0 {
@@ -191,7 +192,7 @@ func (f *FrontService) reload(sessionId string, ctx0 context.Context) {
 			args := &region.PaginatedQuery{Marker: last, Max: 100}
 			l, err := cli.ListKnowledges(ctx, args)
 			if err != nil {
-				log.Println("Reload error (knowledge):", err.Error())
+				utils.Logger.Warn().Err(err).Str("step", "knowledges").Msg("Reload error")
 				return
 			}
 			if len(l.Items) <= 0 {

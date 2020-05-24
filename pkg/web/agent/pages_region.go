@@ -49,7 +49,7 @@ func serveRegionMap(f *FrontService) NoFlashPage {
 		cliReg := region.NewMapClient(f.cnxRegion)
 
 		// FIXME(jfs): iterate in case of a truncated result
-		vertices, err := cliReg.Vertices(contextMacaronToGrpc(ctx, sess), &region.ListVerticesReq{})
+		vertices, err := cliReg.Vertices(contextMacaronToGrpc(ctx, sess), &region.PaginatedQuery{})
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return
@@ -84,7 +84,7 @@ func serveRegionCities(f *FrontService) NoFlashPage {
 		cli := region.NewMapClient(f.cnxRegion)
 
 		// FIXME(jfs): iterate in case of a truncated result
-		cities, err := cli.Cities(contextMacaronToGrpc(ctx, sess), &region.CitiesReq{})
+		cities, err := cli.Cities(contextMacaronToGrpc(ctx, sess), &region.PaginatedQuery{})
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return

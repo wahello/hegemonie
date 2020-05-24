@@ -8,7 +8,6 @@ package region
 import (
 	"errors"
 	"math/rand"
-	"sort"
 	"sync/atomic"
 )
 
@@ -50,17 +49,17 @@ func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
 		Name: name, Units: make(SetOfUnits, 0),
 		Targets: make([]Command, 0),
 	}
-	w.Live.Armies[a.Id] = a
-	c.armies[a.Id] = a
+	w.Live.Armies.Add(a)
+	c.armies.Add(a)
 	return a, nil
 }
 
 func (w *World) ArmyGet(id uint64) *Army {
-	return w.Live.Armies[id]
+	return w.Live.Armies.Get(id)
 }
 
 func (w *World) CityGet(id uint64) *City {
-	return w.Live.Cities[id]
+	return w.Live.Cities.Get(id)
 }
 
 func (w *World) CityCheck(id uint64) bool {
@@ -77,7 +76,7 @@ func (w *World) CityCreateModel(loc uint64, model *City) (uint64, error) {
 	city := CopyCity(model)
 	city.Id = id
 	cell.City = id
-	w.Live.Cities[id] = city
+	w.Live.Cities.Add(city)
 	return id, nil
 }
 
@@ -115,8 +114,7 @@ func (w *World) Cities(idChar uint64) []*City {
 			rep = append(rep, c)
 		}
 	}
-	sort.Slice(rep, func(i, j int) bool { return rep[i].Id < rep[j].Id })
-	return rep[:]
+	return rep
 }
 
 func (w *World) BuildingTypeGet(id uint64) *BuildingType {

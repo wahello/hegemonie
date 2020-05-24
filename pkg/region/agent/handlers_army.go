@@ -82,30 +82,32 @@ func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*prot
 	if err != nil {
 		return nil, err
 	}
-	target := s.w.CityGet(req.Command.Target)
+	target := s.w.Places.CellGet(req.Command.Target)
 	if target == nil {
-		return nil, status.Errorf(codes.NotFound, "Target Not found")
-	}
-
-	switch req.Command.Action {
-	case region.CmdCityAttack:
-		err = army.DeferAttack(s.w, target)
-	case region.CmdCityDefend:
-		err = army.DeferDefend(s.w, target)
-	case region.CmdCityOverlord:
-		err = army.DeferConquer(s.w, target)
-	case region.CmdCityLiberate:
-		err = army.DeferLiberate(s.w, target)
-	case region.CmdCityBreak:
-		err = army.DeferBreak(s.w, target)
-	case region.CmdCityMassacre:
-		err = army.DeferMassacre(s.w, target)
-	case region.CmdCityDeposit:
-		err = army.DeferDeposit(s.w, target)
-	case region.CmdCityDisband:
-		err = army.DeferDisband(s.w, target)
-	default:
-		return nil, status.Errorf(codes.NotFound, "Invalid action")
+		err = status.Errorf(codes.NotFound, "Target Not found")
+	} else {
+		switch req.Command.Action {
+		case proto.ArmyCommandType_Move:
+			err = army.DeferMove(s.w, target)
+		case proto.ArmyCommandType_Attack:
+			err = army.DeferAttack(s.w, target)
+		case proto.ArmyCommandType_Defend:
+			err = army.DeferDefend(s.w, target)
+		case proto.ArmyCommandType_Wait:
+			err = army.DeferWait(s.w, target)
+		case proto.ArmyCommandType_Overlord:
+			err = army.DeferOverlord(s.w, target)
+		case proto.ArmyCommandType_Break:
+			err = army.DeferBreak(s.w, target)
+		case proto.ArmyCommandType_Massacre:
+			err = army.DeferMassacre(s.w, target)
+		case proto.ArmyCommandType_Deposit:
+			err = army.DeferDeposit(s.w, target)
+		case proto.ArmyCommandType_Disband:
+			err = army.DeferDisband(s.w, target)
+		default:
+			err = status.Errorf(codes.InvalidArgument, "Invalid action")
+		}
 	}
 
 	if err != nil {

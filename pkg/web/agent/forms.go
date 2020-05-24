@@ -12,7 +12,9 @@ import (
 	"github.com/google/uuid"
 	auth "github.com/jfsmig/hegemonie/pkg/auth/proto"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"gopkg.in/macaron.v1"
+	"strings"
 )
 
 func (f *FrontService) authenticateUserFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
@@ -182,31 +184,60 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 	}
 
 	doCityCommandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCommand) {
+		url := "/game/army?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId) + "&aid=" + utoa(info.ArmyId)
+
 		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterId)
 		if err != nil {
 			flash.Warning(err.Error())
-			ctx.Redirect("/game/user")
+			ctx.Redirect(url)
+			return
+		}
+
+		actionId := region.ArmyCommandType_Move
+		switch strings.ToLower(info.Action) {
+		case "move":
+			actionId = region.ArmyCommandType_Move
+		case "attack":
+			actionId = region.ArmyCommandType_Attack
+		case "defend":
+			actionId = region.ArmyCommandType_Defend
+		case "wait":
+			actionId = region.ArmyCommandType_Wait
+		case "overlord":
+			actionId = region.ArmyCommandType_Overlord
+		case "break":
+			actionId = region.ArmyCommandType_Break
+		case "massacre":
+			actionId = region.ArmyCommandType_Massacre
+		case "deposit":
+			actionId = region.ArmyCommandType_Deposit
+		case "disband":
+			actionId = region.ArmyCommandType_Disband
+		default:
+			flash.Warning("Invalid action name")
+			ctx.Redirect(url)
 			return
 		}
 
 		cli := region.NewArmyClient(f.cnxRegion)
-		_, err = cli.Command(contextMacaronToGrpc(ctx, sess),
-			&region.ArmyCommandReq{
-				Id: &region.ArmyId{
-					Character: info.CharacterId,
-					City:      info.CityId,
-					Army:      info.ArmyId,
-				},
-				Command: &region.ArmyCommand{
-					Action: info.Action,
-					Target: info.Cell,
-				},
-			})
+		cmd := &region.ArmyCommandReq{
+			Id: &region.ArmyId{
+				Character: info.CharacterId,
+				City:      info.CityId,
+				Army:      info.ArmyId,
+			},
+			Command: &region.ArmyCommand{
+				Action: actionId,
+				Target: info.Location,
+			},
+		}
+		utils.Logger.Warn().Interface("req", cmd).Send()
+		_, err = cli.Command(contextMacaronToGrpc(ctx, sess), cmd)
 		if err != nil {
 			flash.Warning(err.Error())
 		}
 
-		ctx.Redirect("/game/army?cid=" + utoa(info.CharacterId) + "&lid=" + utoa(info.CityId) + "&aid=" + utoa(info.ArmyId))
+		ctx.Redirect(url)
 	}
 
 	doCityDisbandArmy := func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyDisband) {
@@ -273,8 +304,8 @@ type FormCityArmyCommand struct {
 	CityId      uint64 `form:"lid" binding:"Required"`
 	ArmyId      uint64 `form:"aid" binding:"Required"`
 
-	Cell   uint64 `form:"cell" binding:"Required"`
-	Action uint64 `form:"what" binding:"Required"`
+	Location uint64 `form:"location" binding:"Required"`
+	Action   string `form:"action" binding:"Required"`
 }
 
 type FormCityArmyDisband struct {

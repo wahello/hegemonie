@@ -16,7 +16,7 @@ type srvMap struct {
 	w   *region.World
 }
 
-func (s *srvMap) Vertices(ctx context.Context, req *proto.ListVerticesReq) (*proto.ListOfVertices, error) {
+func (s *srvMap) Vertices(ctx context.Context, req *proto.PaginatedQuery) (*proto.ListOfVertices, error) {
 	s.w.RLock()
 	defer s.w.RUnlock()
 
@@ -41,7 +41,7 @@ func (s *srvMap) Edges(ctx context.Context, req *proto.ListEdgesReq) (*proto.Lis
 	return rep, nil
 }
 
-func (s *srvMap) Cities(ctx context.Context, req *proto.CitiesReq) (*proto.ListOfCities, error) {
+func (s *srvMap) Cities(ctx context.Context, req *proto.PaginatedQuery) (*proto.ListOfCities, error) {
 	s.w.RLock()
 	defer s.w.RUnlock()
 

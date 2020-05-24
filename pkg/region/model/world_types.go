@@ -19,15 +19,15 @@ const (
 
 const (
 	// Do nothing. Useful for waypoints
-	CmdPause = 0
+	CmdMove = 0
+	// Like CmdMove but the command doesn't expire
+	CmdWait = 1
 	// Start a fight or join a running fight on the side of the attackers
 	CmdCityAttack = 2
 	// Join a running fight on the side of the defenders, or Watch the City if
 	CmdCityDefend = 3
 	// Attack the City and become its overlord in case of victory
 	CmdCityOverlord = 4
-	// Attack the City and become its overlord in case of victory
-	CmdCityLiberate = 5
 	// Attack the City and break a building in case of victory
 	CmdCityBreak = 6
 	// Attack the City and reduce its production for the next turn
@@ -86,10 +86,10 @@ type DefinitionsBase struct {
 
 type LiveBase struct {
 	// Free armies on the map, not involved in any Fight
-	Armies map[uint64]*Army
+	Armies SetOfArmies
 
 	// All the cities present on the Region
-	Cities map[uint64]*City
+	Cities SetOfCities
 
 	// Fights currently happening. The armies involved in the Fight are owned
 	// By the Fight and do not appear in the "Armies" field.
@@ -314,7 +314,7 @@ type City struct {
 
 	// PRIVATE
 	// Armies under the responsibility of the current City
-	armies map[uint64]*Army
+	armies SetOfArmies
 
 	// PRIVATE
 	// Pointer to the current Overlord of the current City
@@ -444,11 +444,11 @@ type Fight struct {
 
 	// The set of Id of armies involved in the current Fight on the "attack" side
 	// (the side that initiated the fight)
-	Attack map[uint64]*Army
+	Attack SetOfArmies
 
 	/// The set of Id of armies involved in the current Fight on the "defence" side
 	// the (side that has been pforce-pulled).
-	Defense map[uint64]*Army
+	Defense SetOfArmies
 }
 
 // A MapEdge is an edge if the transportation directed graph
@@ -482,9 +482,9 @@ type MapVertex struct {
 // A Map is a directed graph destined to be used as a transport network,
 // organised as an adjacency list.
 type Map struct {
-	Cells  map[uint64]*MapVertex `json:"cells"`
-	Roads  SetOfEdges            `json:"roads"`
-	NextId uint64                `json:""`
+	Cells  SetOfVertices `json:"cells"`
+	Roads  SetOfEdges    `json:"roads"`
+	NextId uint64        `json:""`
 
 	steps map[vector]uint64
 }
@@ -493,11 +493,13 @@ type SetOfFights []*Fight
 
 type SetOfEdges []*MapEdge
 
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *City          SetOfCities
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Army          SetOfArmies
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Building      SetOfBuildings
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *BuildingType  SetOfBuildingTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *City          SetOfCities
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set          region ./world_auto.go uint64         SetOfId
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Knowledge     SetOfKnowledges
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *KnowledgeType SetOfKnowledgeTypes
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Unit          SetOfUnits
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *UnitType      SetOfUnitTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set          region ./world_auto.go uint64         SetOfId
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *MapVertex     SetOfVertices

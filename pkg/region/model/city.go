@@ -16,7 +16,7 @@ func MakeCity() *City {
 		Units:      make(SetOfUnits, 0),
 		Buildings:  make(SetOfBuildings, 0),
 		Knowledges: make(SetOfKnowledges, 0),
-		armies:     make(map[uint64]*Army),
+		armies:     make(SetOfArmies, 0),
 		lieges:     make(SetOfCities, 0),
 	}
 }
@@ -46,13 +46,7 @@ func (c *City) Knowledge(id uint64) *Knowledge {
 	return c.Knowledges.Get(id)
 }
 
-func (c *City) Armies() []*Army {
-	tab := make([]*Army, 0)
-	for _, a := range c.armies {
-		tab = append(tab, a)
-	}
-	return tab
-}
+func (c *City) Armies() []*Army { return c.armies[:] }
 
 // Return total Popularity of the current City (permanent + transient)
 func (c *City) GetActualPopularity(w *World) int64 {
@@ -176,8 +170,8 @@ func (c *City) MakeDefence(w *World) *Army {
 		Postures: []int64{int64(c.Id)},
 		Targets:  make([]Command, 0),
 	}
-	w.Live.Armies[a.Id] = a
-	c.armies[a.Id] = a
+	w.Live.Armies.Add(a)
+	c.armies.Add(a)
 
 	uid := make([]uint64, 0)
 	for _, pUnit := range c.Units {

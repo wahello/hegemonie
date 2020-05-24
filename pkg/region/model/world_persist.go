@@ -23,8 +23,8 @@ func (w *World) Init() {
 	if w.NextId <= 0 {
 		w.NextId = 1
 	}
-	w.Live.Armies = make(map[uint64]*Army, 0)
-	w.Live.Cities = make(map[uint64]*City)
+	w.Live.Armies = make(SetOfArmies, 0)
+	w.Live.Cities = make(SetOfCities, 0)
 	w.Live.Fights = make(SetOfFights, 0)
 	w.Definitions.Units = make(SetOfUnitTypes, 0)
 	w.Definitions.Buildings = make(SetOfBuildingTypes, 0)
@@ -32,35 +32,44 @@ func (w *World) Init() {
 }
 
 func (w *World) Check() error {
-	var err error
-	err = w.Places.Check(w)
-	if err != nil {
-		return err
+	if !sort.IsSorted(&w.Places.Cells) {
+		return errors.New("locations unsorted")
+	}
+	if !sort.IsSorted(&w.Places.Roads) {
+		return errors.New("roads unsorted")
 	}
 
 	if !sort.IsSorted(&w.Definitions.Knowledges) {
-		return errors.New("knowledge sequence: unsorted")
+		return errors.New("knowledge types unsorted")
 	}
-
 	if !sort.IsSorted(&w.Definitions.Buildings) {
-		return errors.New("building sequence: unsorted")
+		return errors.New("building types unsorted")
+	}
+	if !sort.IsSorted(&w.Definitions.Units) {
+		return errors.New("unit types unsorted")
 	}
 
-	if !sort.IsSorted(&w.Definitions.Units) {
-		return errors.New("unit sequence: unsorted")
+	if !sort.IsSorted(&w.Live.Armies) {
+		return errors.New("armies unsorted")
+	}
+	if !sort.IsSorted(&w.Live.Cities) {
+		return errors.New("cities unsorted")
+	}
+	if !sort.IsSorted(&w.Live.Fights) {
+		return errors.New("fights unsorted")
 	}
 
 	for _, a := range w.Live.Armies {
 		if !sort.IsSorted(&a.Units) {
-			return errors.New("unit sequence: unsorted")
+			return errors.New("units unsorted")
 		}
 	}
 	for _, a := range w.Live.Cities {
 		if !sort.IsSorted(&a.Knowledges) {
-			return errors.New("knowledge sequence: unsorted")
+			return errors.New("knowledge unsorted")
 		}
 		if !sort.IsSorted(&a.Buildings) {
-			return errors.New("building sequence: unsorted")
+			return errors.New("building unsorted")
 		}
 		if !sort.IsSorted(&a.Units) {
 			return errors.New("unit sequence: unsorted")
@@ -72,9 +81,14 @@ func (w *World) Check() error {
 
 func (w *World) PostLoad() error {
 	// Sort all the lookup arrays
+	sort.Sort(&w.Places.Cells)
+	sort.Sort(&w.Places.Roads)
 	sort.Sort(&w.Definitions.Knowledges)
 	sort.Sort(&w.Definitions.Buildings)
 	sort.Sort(&w.Definitions.Units)
+	sort.Sort(&w.Live.Armies)
+	sort.Sort(&w.Live.Cities)
+	sort.Sort(&w.Live.Fights)
 	for _, a := range w.Live.Armies {
 		sort.Sort(&a.Units)
 	}
@@ -83,7 +97,9 @@ func (w *World) PostLoad() error {
 		sort.Sort(&c.Buildings)
 		sort.Sort(&c.Units)
 		if c.armies == nil {
-			c.armies = make(map[uint64]*Army)
+			c.armies = make(SetOfArmies, 0)
+		} else {
+			sort.Sort(&c.armies)
 		}
 	}
 
@@ -94,7 +110,7 @@ func (w *World) PostLoad() error {
 		} else if c := w.CityGet(a.City); c == nil {
 			return errors.New(fmt.Sprintf("Army %v points to ghost City", a))
 		} else {
-			c.armies[a.Id] = a
+			c.armies.Add(a)
 		}
 	}
 

@@ -177,6 +177,31 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	return cv
 }
 
+func ShowArmyCommand(c *region.Command) *proto.ArmyCommand {
+	t := proto.ArmyCommandType_Move
+	switch c.Action {
+	case region.CmdMove:
+		t = proto.ArmyCommandType_Move
+	case region.CmdWait:
+		t = proto.ArmyCommandType_Wait
+	case region.CmdCityAttack:
+		t = proto.ArmyCommandType_Attack
+	case region.CmdCityDefend:
+		t = proto.ArmyCommandType_Defend
+	case region.CmdCityOverlord:
+		t = proto.ArmyCommandType_Overlord
+	case region.CmdCityBreak:
+		t = proto.ArmyCommandType_Break
+	case region.CmdCityMassacre:
+		t = proto.ArmyCommandType_Massacre
+	case region.CmdCityDeposit:
+		t = proto.ArmyCommandType_Deposit
+	case region.CmdCityDisband:
+		t = proto.ArmyCommandType_Disband
+	}
+	return &proto.ArmyCommand{Action: t, Target: c.Cell}
+}
+
 func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
 	view := &proto.ArmyView{
 		Id:       a.Id,
@@ -186,6 +211,9 @@ func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
 	}
 	for _, u := range a.Units {
 		view.Units = append(view.Units, ShowUnit(w, u))
+	}
+	for _, c := range a.Targets {
+		view.Commands = append(view.Commands, ShowArmyCommand(&c))
 	}
 	return view
 }
