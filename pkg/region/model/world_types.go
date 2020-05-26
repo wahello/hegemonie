@@ -29,13 +29,13 @@ const (
 	// Attack the City and become its overlord in case of victory
 	CmdCityOverlord = 4
 	// Attack the City and break a building in case of victory
-	CmdCityBreak = 6
+	CmdCityBreak = 5
 	// Attack the City and reduce its production for the next turn
-	CmdCityMassacre = 7
+	CmdCityMassacre = 6
 	// Deposit all the resources of the Army to the local City
-	CmdCityDeposit = 8
+	CmdCityDeposit = 7
 	// Disband the Army and transfer its units and resources to the local City
-	CmdCityDisband = 9
+	CmdCityDisband = 8
 )
 
 type World struct {
@@ -296,9 +296,6 @@ type City struct {
 	// It takes one production turn to recover one Massacre.
 	TicksMassacres uint32 `json:",omitempty"`
 
-	// Is the city still usable
-	Deleted bool `json:",omitempty"`
-
 	// Tells if the City is in automatic mode.
 	// The "auto" mode is intented for inactive or absent players.
 	// The armies come home to defend the City, no new building or unit is spawned.
@@ -471,7 +468,7 @@ type MapVertex struct {
 	// // Biome in which the cell is
 	// Biome uint64
 
-	// Position of the Cell on the map. Used for rendering
+	// Location of the Cell on the map. Used for rendering
 	X uint64 `json:"x"`
 	Y uint64 `json:"y"`
 

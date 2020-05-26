@@ -48,7 +48,6 @@ const drawMap = function (svg1, map, onClickPosition) {
         let c = drawCircle(svg1, cell);
         if (onClickPosition != null) {
             c.onclick = function (e) {
-                console.log("onClickPosition")
                 onClickPosition(key);
             };
         }
@@ -91,7 +90,6 @@ const patchWithCities = function (svg1, name, map, onClickCity, onClickArmy) {
                 c.setAttribute("r", 23);
                 if (onClickCity != null) {
                     c.onclick = function (e) {
-                        console.log("onClickCity")
                         onClickCity(city.cell, city.id, city.name);
                     };
                 }
@@ -123,7 +121,6 @@ const drawMapWithArmies = function (svg1, name, armies, onClickArmy) {
 
 const hightlightCell = function (svg1, id) {
     let c = svg1.getElementById(id);
-    console.log(c);
     if (c != null) {
         c.setAttribute("class", c.getAttribute("class") + " here");
     }

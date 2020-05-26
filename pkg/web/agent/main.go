@@ -126,102 +126,199 @@ type FrontService struct {
 	locations map[uint64]*region.Vertex
 }
 
-func (f *FrontService) reload(sessionId string, ctx0 context.Context) {
-	cli := region.NewDefinitionsClient(f.cnxRegion)
+func (f *FrontService) loadAllCities(ctx context.Context, cli region.MapClient) (map[uint64]*region.PublicCity, error) {
+	last := uint64(0)
+	tab := make(map[uint64]*region.PublicCity)
+
+	for {
+		args := &region.PaginatedQuery{Marker: last, Max: 1000}
+		l, err := cli.Cities(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		if len(l.Items) <= 0 {
+			return tab, nil
+		}
+		for _, item := range l.Items {
+			if last < item.Id {
+				last = item.Id
+			}
+			tab[item.Id] = item
+		}
+	}
+}
+
+func (f *FrontService) loadAllLocations(ctx context.Context, cli region.MapClient) (map[uint64]*region.Vertex, error) {
+	last := uint64(0)
+	tab := make(map[uint64]*region.Vertex)
+
+	for {
+		args := &region.PaginatedQuery{Marker: last, Max: 10000}
+		l, err := cli.Vertices(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		if len(l.Items) <= 0 {
+			return tab, nil
+		}
+		for _, item := range l.Items {
+			if last < item.Id {
+				last = item.Id
+			}
+			tab[item.Id] = item
+		}
+	}
+}
+
+func (f *FrontService) loadAllRoads(ctx context.Context, cli region.MapClient) ([]*region.Edge, error) {
+	var lastSrc, lastDst uint64
+	tab := make([]*region.Edge, 0)
+
+	for {
+		args := &region.ListEdgesReq{MarkerSrc: lastSrc, MarkerDst: lastDst, Max: 10000}
+		l, err := cli.Edges(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		if len(l.Items) <= 0 {
+			return tab, nil
+		}
+		for _, item := range l.Items {
+			if lastSrc < item.Src {
+				lastSrc = item.Src
+				lastDst = item.Dst
+			} else if lastSrc == item.Src && lastDst < item.Dst {
+				lastDst = item.Dst
+			}
+			tab = append(tab, item)
+		}
+	}
+}
+
+func (f *FrontService) loadAllUnits(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.UnitTypeView, error) {
+	last := uint64(0)
+	tab := make(map[uint64]*region.UnitTypeView)
+
+	for {
+		args := &region.PaginatedQuery{Marker: last, Max: 1000}
+		l, err := cli.ListUnits(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		if len(l.Items) <= 0 {
+			return tab, nil
+		}
+		for _, item := range l.Items {
+			if last < item.Id {
+				last = item.Id
+			}
+			tab[item.Id] = item
+		}
+	}
+}
+
+func (f *FrontService) loadAllBuildings(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.BuildingTypeView, error) {
+	last := uint64(0)
+	tab := make(map[uint64]*region.BuildingTypeView)
+
+	for {
+		args := &region.PaginatedQuery{Marker: last, Max: 1000}
+		l, err := cli.ListBuildings(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		if len(l.Items) <= 0 {
+			return tab, nil
+		}
+		for _, item := range l.Items {
+			if last < item.Id {
+				last = item.Id
+			}
+			tab[item.Id] = item
+		}
+	}
+}
+
+func (f *FrontService) loadAllKnowledges(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.KnowledgeTypeView, error) {
+	last := uint64(0)
+	tab := make(map[uint64]*region.KnowledgeTypeView)
+
+	for {
+		args := &region.PaginatedQuery{Marker: last, Max: 1000}
+		l, err := cli.ListKnowledges(ctx, args)
+		if err != nil {
+			return nil, err
+		}
+		if len(l.Items) <= 0 {
+			return tab, nil
+		}
+		for _, item := range l.Items {
+			if last < item.Id {
+				last = item.Id
+			}
+			tab[item.Id] = item
+		}
+	}
+}
+
+func (f *FrontService) reload(cli region.DefinitionsClient, sessionId string, ctx0 context.Context) {
 	ctx := metadata.AppendToOutgoingContext(ctx0, "session-id", sessionId)
 
-	func() {
-		last := uint64(0)
-		tab := make(map[uint64]*region.UnitTypeView)
+	var uerr, berr, kerr error
+	var utv map[uint64]*region.UnitTypeView
+	var btv map[uint64]*region.BuildingTypeView
+	var ktv map[uint64]*region.KnowledgeTypeView
+	var wg sync.WaitGroup
 
-		for {
-			args := &region.PaginatedQuery{Marker: last, Max: 100}
-			l, err := cli.ListUnits(ctx, args)
-			if err != nil {
-				utils.Logger.Warn().Err(err).Str("step", "units").Msg("Reload error")
-				return
-			}
-			if len(l.Items) <= 0 {
-				break
-			}
-			for _, item := range l.Items {
-				if last < item.Id {
-					last = item.Id
-				}
-				tab[item.Id] = item
-			}
-		}
-		if len(tab) > 0 {
-			f.rw.Lock()
-			f.units = tab
-			f.rw.Unlock()
-		}
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		utv, uerr = f.loadAllUnits(ctx, cli)
+	}()
+	go func() {
+		defer wg.Done()
+		btv, berr = f.loadAllBuildings(ctx, cli)
+	}()
+	go func() {
+		defer wg.Done()
+		ktv, kerr = f.loadAllKnowledges(ctx, cli)
 	}()
 
-	func() {
-		last := uint64(0)
-		tab := make(map[uint64]*region.BuildingTypeView)
-		for {
-			args := &region.PaginatedQuery{Marker: last, Max: 100}
-			l, err := cli.ListBuildings(ctx, args)
-			if err != nil {
-				utils.Logger.Warn().Err(err).Str("step", "buildings").Msg("Reload error")
-				return
-			}
-			if len(l.Items) <= 0 {
-				break
-			}
-			for _, item := range l.Items {
-				if last < item.Id {
-					last = item.Id
-				}
-				tab[item.Id] = item
-			}
-		}
-		if len(tab) > 0 {
-			f.rw.Lock()
-			f.buildings = tab
-			f.rw.Unlock()
-		}
-	}()
+	if uerr != nil {
+		utils.Logger.Warn().Err(uerr).Str("step", "units").Msg("Reload error")
+	}
+	if berr != nil {
+		utils.Logger.Warn().Err(kerr).Str("step", "buildings").Msg("Reload error")
+	}
+	if kerr != nil {
+		utils.Logger.Warn().Err(berr).Str("step", "knowledge").Msg("Reload error")
+	}
 
-	func() {
-		last := uint64(0)
-		tab := make(map[uint64]*region.KnowledgeTypeView)
-		for {
-			args := &region.PaginatedQuery{Marker: last, Max: 100}
-			l, err := cli.ListKnowledges(ctx, args)
-			if err != nil {
-				utils.Logger.Warn().Err(err).Str("step", "knowledges").Msg("Reload error")
-				return
-			}
-			if len(l.Items) <= 0 {
-				break
-			}
-			for _, item := range l.Items {
-				if last < item.Id {
-					last = item.Id
-				}
-				tab[item.Id] = item
-			}
-		}
-		if len(tab) > 0 {
-			f.rw.Lock()
-			f.knowledge = tab
-			f.rw.Unlock()
-		}
-	}()
+	f.rw.Lock()
+	if uerr == nil {
+		f.units = utv
+	}
+	if berr == nil {
+		f.buildings = btv
+	}
+	if kerr == nil {
+		f.knowledge = ktv
+	}
+	f.rw.Unlock()
 }
 
 func (f *FrontService) loopReload(ctx context.Context) {
 	go func() {
 		sessionId := uuid.New().String()
 		for _, v := range []int{2, 4, 8, 16} {
-			f.reload(sessionId, ctx)
+			cli := region.NewDefinitionsClient(f.cnxRegion)
+			f.reload(cli, sessionId, ctx)
 			<-time.After(time.Duration(v) * time.Second)
 		}
 		for {
-			f.reload(sessionId, ctx)
+			cli := region.NewDefinitionsClient(f.cnxRegion)
+			f.reload(cli, sessionId, ctx)
 			<-time.After(61 * time.Second)
 		}
 	}()
@@ -267,6 +364,13 @@ func zeroLogger() macaron.Handler {
 }
 
 func contextMacaronToGrpc(ctx *macaron.Context, s session.Store) context.Context {
-	return metadata.AppendToOutgoingContext(ctx.Req.Context(),
-		"session-id", s.Get("session-id").(string))
+	return contextPatchToGrpc(ctx.Req.Context(), s)
+}
+
+func contextPatchToGrpc(ctx context.Context, s session.Store) context.Context {
+	return contextSessionToGrpc(ctx, s.Get("session-id").(string))
+}
+
+func contextSessionToGrpc(ctx context.Context, sessionId string) context.Context {
+	return metadata.AppendToOutgoingContext(ctx, "session-id", sessionId)
 }

@@ -21,7 +21,7 @@ func (s *srvMap) Vertices(ctx context.Context, req *proto.PaginatedQuery) (*prot
 	defer s.w.RUnlock()
 
 	rep := &proto.ListOfVertices{}
-	for _, x := range s.w.Places.Cells {
+	for _, x := range s.w.Places.Cells.Slice(req.Marker, req.Max) {
 		rep.Items = append(rep.Items, &proto.Vertex{
 			Id: x.Id, X: x.X, Y: x.Y, CityId: x.City})
 	}
@@ -33,7 +33,7 @@ func (s *srvMap) Edges(ctx context.Context, req *proto.ListEdgesReq) (*proto.Lis
 	defer s.w.RUnlock()
 
 	rep := &proto.ListOfEdges{}
-	for _, x := range s.w.Places.Roads {
+	for _, x := range s.w.Places.Roads.Slice(req.MarkerSrc, req.MarkerDst, req.Max) {
 		if !x.Deleted {
 			rep.Items = append(rep.Items, &proto.Edge{Src: x.S, Dst: x.D})
 		}
@@ -46,10 +46,8 @@ func (s *srvMap) Cities(ctx context.Context, req *proto.PaginatedQuery) (*proto.
 	defer s.w.RUnlock()
 
 	rep := &proto.ListOfCities{}
-	for _, x := range s.w.Live.Cities {
-		if !x.Deleted {
-			rep.Items = append(rep.Items, ShowCityPublic(s.w, x, false))
-		}
+	for _, x := range s.w.Live.Cities.Slice(req.Marker, req.Max) {
+		rep.Items = append(rep.Items, ShowCityPublic(s.w, x, false))
 	}
 	return rep, nil
 }

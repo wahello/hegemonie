@@ -60,6 +60,11 @@ func (s {{.SetName}}) Check() error {
 }
 
 func (s {{.SetName}}) Slice(marker uint64, max uint32) []{{.TypeName}} {
+	if max == 0 {
+		max = 1000
+	} else if max > 100000 {
+		max = 100000
+	}
 	start := sort.Search(len(s), func(i int) bool {
 		return s[i]{{.Accessor}} > marker
 	})

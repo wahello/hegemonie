@@ -46,25 +46,26 @@ func serveRegionMap(f *FrontService) NoFlashPage {
 			Cells: make(map[uint64]RawVertex),
 			Roads: make([]RawEdge, 0),
 		}
-		cliReg := region.NewMapClient(f.cnxRegion)
+		cli := region.NewMapClient(f.cnxRegion)
+		ctx0 := contextMacaronToGrpc(ctx, sess)
 
 		// FIXME(jfs): iterate in case of a truncated result
-		vertices, err := cliReg.Vertices(contextMacaronToGrpc(ctx, sess), &region.PaginatedQuery{})
+		vertices, err := f.loadAllLocations(ctx0, cli)
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return
 		}
-		for _, v := range vertices.Items {
+		for _, v := range vertices {
 			m.Cells[v.Id] = RawVertex{Id: v.Id, X: v.X, Y: v.Y, City: v.CityId}
 		}
 
 		// FIXME(jfs): iterate in case of a truncated result
-		edges, err := cliReg.Edges(contextMacaronToGrpc(ctx, sess), &region.ListEdgesReq{})
+		edges, err := f.loadAllRoads(ctx0, cli)
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return
 		}
-		for _, e := range edges.Items {
+		for _, e := range edges {
 			m.Roads = append(m.Roads, RawEdge{Src: e.Src, Dst: e.Dst})
 		}
 
@@ -84,12 +85,12 @@ func serveRegionCities(f *FrontService) NoFlashPage {
 		cli := region.NewMapClient(f.cnxRegion)
 
 		// FIXME(jfs): iterate in case of a truncated result
-		cities, err := cli.Cities(contextMacaronToGrpc(ctx, sess), &region.PaginatedQuery{})
+		cities, err := f.loadAllCities(contextMacaronToGrpc(ctx, sess), cli)
 		if err != nil {
 			ctx.Error(502, err.Error())
 			return
 		}
-		for _, v := range cities.Items {
+		for _, v := range cities {
 			tab = append(tab, RawCity{Id: v.Id, Name: v.Name, Cell: v.Location})
 		}
 

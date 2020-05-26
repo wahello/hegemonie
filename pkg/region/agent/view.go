@@ -158,7 +158,6 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 
 		TickMassacres: c.TicksMassacres,
 		Auto:          c.Auto,
-		Deleted:       c.Deleted,
 
 		Politics: &proto.CityPolitics{
 			Overlord: c.Overlord,

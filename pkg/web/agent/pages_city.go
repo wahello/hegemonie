@@ -12,6 +12,35 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
+func expandCityView(f *FrontService, lView *region.CityView) {
+	f.rw.RLock()
+	defer f.rw.RUnlock()
+
+	for _, item := range lView.Assets.Units {
+		item.Type = f.units[item.IdType]
+	}
+	for _, item := range lView.Assets.Buildings {
+		item.Type = f.buildings[item.IdType]
+	}
+	for _, item := range lView.Assets.Knowledges {
+		item.Type = f.knowledge[item.IdType]
+	}
+	for _, item := range lView.Assets.Armies {
+		for _, u := range item.Units {
+			u.Type = f.units[u.IdType]
+		}
+	}
+}
+
+func expandArmyView(f *FrontService, aView *region.ArmyView) {
+	f.rw.RLock()
+	defer f.rw.RUnlock()
+
+	for _, u := range aView.Units {
+		u.Type = f.units[u.IdType]
+	}
+}
+
 func serveGameCityPage(f *FrontService, template string) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
@@ -31,23 +60,7 @@ func serveGameCityPage(f *FrontService, template string) ActionPage {
 			return
 		}
 
-		// Expand the view
-		f.rw.RLock()
-		for _, item := range lView.Assets.Units {
-			item.Type = f.units[item.IdType]
-		}
-		for _, item := range lView.Assets.Buildings {
-			item.Type = f.buildings[item.IdType]
-		}
-		for _, item := range lView.Assets.Knowledges {
-			item.Type = f.knowledge[item.IdType]
-		}
-		for _, item := range lView.Assets.Armies {
-			for _, u := range item.Units {
-				u.Type = f.units[u.IdType]
-			}
-		}
-		f.rw.RUnlock()
+		expandCityView(f, lView)
 
 		ctx.Data["Title"] = cView.Name + "|" + lView.Name
 		ctx.Data["userid"] = utoa(uView.Id)
@@ -80,9 +93,26 @@ func serveGameCityArmies(f *FrontService) ActionPage {
 	return serveGameCityPage(f, "land_armies")
 }
 
+type ArmyCommandExpanded struct {
+	Order       int
+	CommandId   int
+	Location    uint64
+	CityId      uint64
+	ArmyId      uint64
+	CityName    string
+	ArmyName    string
+	CommandName string
+}
+
 func serveGameArmyDetail(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
+		ctx0 := contextMacaronToGrpc(ctx, sess)
+		cid := atou(ctx.Query("cid"))
+		lid := atou(ctx.Query("lid"))
+		aid := atou(ctx.Query("aid"))
+		url := fmt.Sprintf("/game/army?cid=%d&lid=%d&aid=%d", cid, lid, aid)
+
+		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, cid)
 		if err != nil {
 			flash.Warning("Auth error: " + err.Error())
 			ctx.Redirect("/game/user")
@@ -91,44 +121,56 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 
 		// Load the chosen City
 		cliReg := region.NewCityClient(f.cnxRegion)
-		lView, err := cliReg.Show(contextMacaronToGrpc(ctx, sess),
-			&region.CityId{Character: cView.Id, City: atou(ctx.Query("lid"))})
+		lView, err := cliReg.Show(ctx0, &region.CityId{Character: cView.Id, City: lid})
 		if err != nil {
 			flash.Warning("City error: " + err.Error())
-			ctx.Redirect(fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cView.Id, lView.Id))
+			ctx.Redirect(url)
 			return
 		}
+		expandCityView(f, lView)
 
 		// Load the chosen Army
 		cliArmy := region.NewArmyClient(f.cnxRegion)
-		aView, err := cliArmy.Show(contextMacaronToGrpc(ctx, sess),
-			&region.ArmyId{Character: cView.Id, City: lView.Id, Army: atou(ctx.Query("aid"))})
+		aView, err := cliArmy.Show(ctx0, &region.ArmyId{Character: cView.Id, City: lView.Id, Army: aid})
 		if err != nil {
 			flash.Warning("Army error: " + err.Error())
-			ctx.Redirect(fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cView.Id, lView.Id))
+			ctx.Redirect(url)
 			return
 		}
+		expandArmyView(f, aView)
 
-		// Expand the view
-		f.rw.RLock()
-		for _, item := range lView.Assets.Units {
-			item.Type = f.units[item.IdType]
-		}
-		for _, item := range lView.Assets.Buildings {
-			item.Type = f.buildings[item.IdType]
-		}
-		for _, item := range lView.Assets.Knowledges {
-			item.Type = f.knowledge[item.IdType]
-		}
-		for _, item := range lView.Assets.Armies {
-			for _, u := range item.Units {
-				u.Type = f.units[u.IdType]
+		cmdv := make([]ArmyCommandExpanded, 0)
+		// Build a printable list of commands
+		if len(aView.Commands) > 0 {
+			// Preload the description of the map
+			cliMap := region.NewMapClient(f.cnxRegion)
+			cities, err := f.loadAllCities(ctx0, cliMap)
+			if err != nil {
+				flash.Warning("Map error: " + err.Error())
+				ctx.Redirect(url)
+				return
+			}
+			locations, err := f.loadAllLocations(ctx0, cliMap)
+			if err != nil {
+				flash.Warning("Map error: " + err.Error())
+				ctx.Redirect(url)
+				return
+			}
+			// Generate a list of ad-hoc structures
+			for idx, c := range aView.Commands {
+				loc := locations[c.Target]
+				city := cities[loc.CityId]
+				cmdv = append(cmdv, ArmyCommandExpanded{
+					Order:     idx,
+					Location:  c.Target,
+					ArmyId:    aid,
+					CommandId: int(c.Action),
+					CityId:    city.Id,
+					ArmyName:  aView.Name,
+					CityName:  city.Name,
+				})
 			}
 		}
-		for _, u := range aView.Units {
-			u.Type = f.units[u.IdType]
-		}
-		f.rw.RUnlock()
 
 		ctx.Data["Title"] = cView.Name + "|" + lView.Name
 		ctx.Data["userid"] = utoa(uView.Id)
@@ -139,7 +181,7 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 		ctx.Data["Land"] = lView
 		ctx.Data["aid"] = utoa(aView.Id)
 		ctx.Data["Army"] = aView
-		ctx.Data["Commands"] = aView.Commands
+		ctx.Data["Commands"] = cmdv
 
 		ctx.HTML(200, "army")
 	}

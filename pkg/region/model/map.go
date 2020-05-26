@@ -16,13 +16,16 @@ import (
 func (r SetOfEdges) Len() int      { return len(r) }
 func (r SetOfEdges) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 func (r SetOfEdges) Less(i, j int) bool {
-	s, d := r[i], r[j]
+	return r.edgeLess(i, *r[j])
+}
+
+func (r SetOfEdges) edgeLess(i int, d MapEdge) bool {
+	s := r[i]
 	return s.S < d.S || (s.S == d.S && s.D < d.D)
 }
 
 func (r SetOfEdges) First(at uint64) int {
-	i := sort.Search(len(r), func(i int) bool { return r[i].S >= at })
-	return i
+	return sort.Search(len(r), func(i int) bool { return r[i].S >= at })
 }
 
 func (s *SetOfEdges) Add(e *MapEdge) {
@@ -34,13 +37,35 @@ func (s *SetOfEdges) Add(e *MapEdge) {
 
 func (s SetOfEdges) Get(src, dst uint64) *MapEdge {
 	i := sort.Search(len(s), func(i int) bool {
-		return s[i].S >= src || (s[i].S == src && s[i].D == dst)
+		return s[i].S >= src || (s[i].S == src && s[i].D >= dst)
 	})
 	if i < len(s) && s[i].S == src && s[i].D == dst {
 		return s[i]
 	}
 	return nil
 
+}
+
+func (s SetOfEdges) Slice(markerSrc, markerDst uint64, max uint32) []MapEdge {
+	tab := make([]MapEdge, 0)
+
+	iMax := s.Len()
+	i := s.First(markerSrc)
+	if i < iMax && s[i].S == markerSrc && s[i].D == markerDst {
+		i++
+	}
+
+	needle := MapEdge{S: markerSrc, D: markerDst}
+	for ; i < iMax; i++ {
+		if s[i].Deleted || s.edgeLess(i, needle) {
+			continue
+		}
+		tab = append(tab, *s[i])
+		if uint32(len(tab)) >= max {
+			break
+		}
+	}
+	return tab
 }
 
 func (m *Map) Init() {

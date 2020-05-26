@@ -108,23 +108,23 @@ enum ArmyCommandType {
     // Move to the location. The command expires at the arrival at the position.
     // Useful to let the attitude play and enter attack/defense on local fights
     Move = 0;
-    // Move to the location and join the attack of the city
-    Attack = 1;
-    // Move to the location and join the defense of the local city
-    Defend = 2;
     // Move to the location and hold the position. Like 'Move' but the
     // Useful to let the attitude play and enter attack/defense on local fights
-    Wait = 3;
+    Wait = 1;
+    // Move to the location and join the attack of the city
+    Attack = 2;
+    // Move to the location and join the defense of the local city
+    Defend = 3;
     // Attack the city et the location and become its overlord
     Overlord = 4;
     // Attack the city at the location and break a building, randomly
-    Break = 6;
+    Break = 5;
     // Attack the city at the location and sack it, to lower its revenue
-    Massacre = 7;
+    Massacre = 6;
     // Move to the location and drop the whole freight to the local city, if any
-    Deposit = 8;
+    Deposit = 7;
     // Move to the location, disband the army and transfer the units to the local city, if any
-    Disband = 9;
+    Disband = 8;
 }
 
 message ArmyCommand {
@@ -272,7 +272,6 @@ message CityView {
 
     uint32 tickMassacres = 12;
     bool auto = 13;
-    bool deleted = 14;
 
     CityPolitics politics = 15;
 

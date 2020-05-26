@@ -59,6 +59,14 @@ func (w *World) Check() error {
 		return errors.New("fights unsorted")
 	}
 
+	for _, a := range w.Live.Fights {
+		if !sort.IsSorted(&a.Attack) {
+			return errors.New("fight attack unsorted")
+		}
+		if !sort.IsSorted(&a.Defense) {
+			return errors.New("fight defense unsorted")
+		}
+	}
 	for _, a := range w.Live.Armies {
 		if !sort.IsSorted(&a.Units) {
 			return errors.New("units unsorted")
@@ -73,6 +81,12 @@ func (w *World) Check() error {
 		}
 		if !sort.IsSorted(&a.Units) {
 			return errors.New("unit sequence: unsorted")
+		}
+		if !sort.IsSorted(&a.lieges) {
+			return errors.New("city lieges unsorted")
+		}
+		if !sort.IsSorted(&a.armies) {
+			return errors.New("city armies unsorted")
 		}
 	}
 
@@ -100,6 +114,11 @@ func (w *World) PostLoad() error {
 			c.armies = make(SetOfArmies, 0)
 		} else {
 			sort.Sort(&c.armies)
+		}
+		if c.lieges == nil {
+			c.lieges = make(SetOfCities, 0)
+		} else {
+			sort.Sort(&c.lieges)
 		}
 	}
 

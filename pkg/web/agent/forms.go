@@ -197,12 +197,12 @@ func (f *FrontService) routeForms(m *macaron.Macaron) {
 		switch strings.ToLower(info.Action) {
 		case "move":
 			actionId = region.ArmyCommandType_Move
+		case "wait":
+			actionId = region.ArmyCommandType_Wait
 		case "attack":
 			actionId = region.ArmyCommandType_Attack
 		case "defend":
 			actionId = region.ArmyCommandType_Defend
-		case "wait":
-			actionId = region.ArmyCommandType_Wait
 		case "overlord":
 			actionId = region.ArmyCommandType_Overlord
 		case "break":
