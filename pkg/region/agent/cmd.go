@@ -87,6 +87,8 @@ func (self *regionConfig) execute() error {
 		return e("Inconsistent World from [%s] and [%s]: %s", self.pathDefs, self.pathLive, err.Error())
 	}
 
+	w.Places.Rehash()
+
 	err = w.Check()
 	if err != nil {
 		return e("Inconsistent World: %s", err.Error())
