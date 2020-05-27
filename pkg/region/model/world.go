@@ -66,10 +66,10 @@ func (w *World) CityCheck(id uint64) bool {
 	return w.CityGet(id) != nil
 }
 
-func (w *World) CityCreateModel(loc uint64, model *City) (uint64, error) {
+func (w *World) CityCreateModel(loc uint64, model *City) (*City, error) {
 	cell := w.Places.CellGet(loc)
 	if cell == nil || cell.City != 0 {
-		return 0, errors.New("Location already occupied")
+		return nil, errors.New("Location already occupied")
 	}
 
 	id := w.getNextId()
@@ -77,14 +77,14 @@ func (w *World) CityCreateModel(loc uint64, model *City) (uint64, error) {
 	city.Id = id
 	cell.City = id
 	w.Live.Cities.Add(city)
-	return id, nil
+	return city, nil
 }
 
-func (w *World) CityCreate(loc uint64) (uint64, error) {
+func (w *World) CityCreate(loc uint64) (*City, error) {
 	return w.CityCreateModel(loc, nil)
 }
 
-func (w *World) CityCreateRandom(loc uint64) (uint64, error) {
+func (w *World) CityCreateRandom(loc uint64) (*City, error) {
 	if len(w.Config.CityPatterns) > 0 {
 		i := rand.Intn(len(w.Config.CityPatterns))
 		model := w.Config.CityPatterns[i]

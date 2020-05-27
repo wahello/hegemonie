@@ -246,14 +246,13 @@ func CommandExport() *cobra.Command {
 				cell.X = uint64(site.raw.X)
 				cell.Y = uint64(site.raw.Y)
 				if site.raw.City {
-					cityId, err := w.CityCreateRandom(cell.Id)
+					city, err := w.CityCreateRandom(cell.Id)
 					if err != nil {
 						return err
 					}
-					city := w.CityGet(cityId)
 					city.Name = site.raw.Id
 					city.Cell = cell.Id
-					cell.City = cityId
+					cell.City = city.Id
 				}
 				site2cell[site] = cell
 			}
