@@ -106,7 +106,6 @@ type ArmyCommandExpanded struct {
 
 func serveGameArmyDetail(f *FrontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
-		ctx0 := contextMacaronToGrpc(ctx, sess)
 		cid := atou(ctx.Query("cid"))
 		lid := atou(ctx.Query("lid"))
 		aid := atou(ctx.Query("aid"))
@@ -118,6 +117,8 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 			ctx.Redirect("/game/user")
 			return
 		}
+
+		ctx0 := contextMacaronToGrpc(ctx, sess)
 
 		// Load the chosen City
 		cliReg := region.NewCityClient(f.cnxRegion)
