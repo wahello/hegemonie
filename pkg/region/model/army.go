@@ -7,7 +7,7 @@ package region
 
 import (
 	"errors"
-	"log"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"math/rand"
 	"sort"
 )
@@ -37,7 +37,7 @@ func (a *Army) Move(w *World) {
 
 		nxt, err := w.Places.PathNextStep(src, dst)
 		if err != nil {
-			log.Println("Map error:", err.Error())
+			utils.Logger.Warn().Err(err).Uint64("src", src).Uint64("dst", dst).Send()
 		} else if nxt == 0 {
 			// FIXME(jfs): Notify the City that there is no route
 		} else {
