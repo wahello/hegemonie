@@ -8,6 +8,7 @@ package hegemonie_web_agent
 import (
 	"context"
 	"errors"
+	"github.com/go-macaron/binding"
 	"net/http"
 	"os"
 	"strconv"
@@ -47,8 +48,17 @@ func Command() *cobra.Command {
 			}
 
 			m := macaron.New()
-			m.Use(macaron.Recovery())
 			m.SetDefaultCookieSecret("hegemonie-session-NOT-SET")
+			m.Use(macaron.Recovery())
+			m.Use(macaron.Static(front.dirStatic, macaron.StaticOptions{
+				Prefix:      "static",
+				SkipLogging: true,
+			}))
+			m.Use(session.Sessioner(session.Options{
+				Provider:       "memcache",
+				ProviderConfig: "127.0.0.1:11211",
+			}))
+			m.Use(zeroLogger())
 			m.Use(pongo2.Pongoer(pongo2.Options{
 				Directory:       front.dirTemplates,
 				Extensions:      []string{".tpl", ".html", ".tmpl"},
@@ -57,11 +67,6 @@ func Command() *cobra.Command {
 				IndentJSON:      true,
 				IndentXML:       true,
 			}))
-			m.Use(session.Sessioner(session.Options{
-				Provider:       "memcache",
-				ProviderConfig: "127.0.0.1:11211",
-			}))
-			m.Use(zeroLogger())
 			m.Use(func(ctx *macaron.Context, s session.Store) {
 				auth := func() {
 					uid := s.Get("userid")
@@ -76,12 +81,32 @@ func Command() *cobra.Command {
 					auth()
 				}
 			})
-			front.routePages(m)
-			m.Use(macaron.Static(front.dirStatic, macaron.StaticOptions{
-				Prefix:      "static",
-				SkipLogging: true,
-			}))
-			front.routeForms(m)
+			m.Post("/action/login", binding.Bind(FormLogin{}), doLogin(&front, m))
+			m.Post("/action/logout", doLogout(&front, m))
+			m.Get("/action/logout", doLogout(&front, m))
+			m.Post("/action/move", doMove(&front, m))
+			m.Post("/action/produce", doProduce(&front, m))
+			m.Post("/action/city/study", binding.Bind(FormCityStudy{}), doCityStudy(&front, m))
+			m.Post("/action/city/build", binding.Bind(FormCityBuild{}), doCityBuild(&front, m))
+			m.Post("/action/city/train", binding.Bind(FormCityTrain{}), doCityTrain(&front, m))
+			m.Post("/action/army/cancel", binding.Bind(FormCityArmyDisband{}), doCityCancelArmy(&front, m))
+			m.Post("/action/army/disband", binding.Bind(FormCityArmyDisband{}), doCityDisbandArmy(&front, m))
+			m.Post("/action/army/command", binding.Bind(FormCityArmyCommand{}), doCityCommandArmy(&front, m))
+			m.Post("/action/army/create", binding.Bind(FormCityArmyCreate{}), doCityCreateArmy(&front, m))
+			m.Post("/action/city/unit/transfer", binding.Bind(FormCityUnitTransfer{}), doCityTransferUnit(&front, m))
+			m.Get("/game/admin", serveGameAdmin(&front))
+			m.Get("/game/user", serveGameUser(&front))
+			m.Get("/game/character", serveGameCharacter(&front))
+			m.Get("/game/land/overview", serveGameCityOverview(&front))
+			m.Get("/game/land/budget", serveGameCityBudget(&front))
+			m.Get("/game/land/buildings", serveGameCityBuildings(&front))
+			m.Get("/game/land/armies", serveGameCityArmies(&front))
+			m.Get("/game/land/units", serveGameCityUnits(&front))
+			m.Get("/game/land/knowledges", serveGameCityKnowledges(&front))
+			m.Get("/game/army", serveGameArmyDetail(&front))
+			m.Get("/map/region", serveRegionMap(&front))
+			m.Get("/map/cities", serveRegionCities(&front))
+			m.Get("/", serveRoot)
 
 			var err error
 

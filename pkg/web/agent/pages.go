@@ -18,26 +18,6 @@ type NoFlashPage func(*macaron.Context, session.Store)
 
 type StatelessPage func(*macaron.Context)
 
-func (f *FrontService) routePages(m *macaron.Macaron) {
-	m.Get("/", serveRoot)
-	m.Get("/game/admin", serveGameAdmin(f))
-
-	m.Get("/game/user", serveGameUser(f))
-
-	m.Get("/game/character", serveGameCharacter(f))
-
-	m.Get("/game/land/overview", serveGameCityOverview(f))
-	m.Get("/game/land/budget", serveGameCityBudget(f))
-	m.Get("/game/land/buildings", serveGameCityBuildings(f))
-	m.Get("/game/land/armies", serveGameCityArmies(f))
-	m.Get("/game/land/units", serveGameCityUnits(f))
-	m.Get("/game/land/knowledges", serveGameCityKnowledges(f))
-	m.Get("/game/army", serveGameArmyDetail(f))
-
-	m.Get("/map/region", serveRegionMap(f))
-	m.Get("/map/cities", serveRegionCities(f))
-}
-
 func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 	ctx.Data["Title"] = "Hegemonie"
 	ctx.Data["userid"] = sess.Get("userid")
