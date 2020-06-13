@@ -48,7 +48,7 @@ func Command() *cobra.Command {
 			}
 
 			m := macaron.New()
-			m.SetDefaultCookieSecret("hegemonie-session-NOT-SET")
+			m.SetDefaultCookieSecret("heged-session-NOT-SET")
 			m.Use(macaron.Recovery())
 			m.Use(macaron.Static(front.dirStatic, macaron.StaticOptions{
 				Prefix:      "static",
@@ -290,13 +290,12 @@ func (f *FrontService) reload(cli region.DefinitionsClient, sessionId string, ct
 	ctx := metadata.AppendToOutgoingContext(ctx0, "session-id", sessionId)
 
 	var uerr, berr, kerr error
+	var wg sync.WaitGroup
 	var utv map[uint64]*region.UnitTypeView
 	var btv map[uint64]*region.BuildingTypeView
 	var ktv map[uint64]*region.KnowledgeTypeView
-	var wg sync.WaitGroup
 
 	wg.Add(3)
-
 	go func() {
 		defer wg.Done()
 		utv, uerr = f.loadAllUnits(ctx, cli)
@@ -309,6 +308,7 @@ func (f *FrontService) reload(cli region.DefinitionsClient, sessionId string, ct
 		defer wg.Done()
 		ktv, kerr = f.loadAllKnowledges(ctx, cli)
 	}()
+	wg.Wait()
 
 	if uerr != nil {
 		utils.Logger.Warn().Err(uerr).Str("step", "units").Msg("Reload error")
@@ -334,19 +334,17 @@ func (f *FrontService) reload(cli region.DefinitionsClient, sessionId string, ct
 }
 
 func (f *FrontService) loopReload(ctx context.Context) {
-	go func() {
-		sessionId := uuid.New().String()
-		for _, v := range []int{2, 4, 8, 16} {
-			cli := region.NewDefinitionsClient(f.cnxRegion)
-			f.reload(cli, sessionId, ctx)
-			<-time.After(time.Duration(v) * time.Second)
-		}
-		for {
-			cli := region.NewDefinitionsClient(f.cnxRegion)
-			f.reload(cli, sessionId, ctx)
-			<-time.After(61 * time.Second)
-		}
-	}()
+	sessionId := uuid.New().String()
+	for _, v := range []int{2, 4, 8, 16} {
+		cli := region.NewDefinitionsClient(f.cnxRegion)
+		f.reload(cli, sessionId, ctx)
+		<-time.After(time.Duration(v) * time.Second)
+	}
+	for {
+		cli := region.NewDefinitionsClient(f.cnxRegion)
+		f.reload(cli, sessionId, ctx)
+		<-time.After(61 * time.Second)
+	}
 }
 
 func utoa(u uint64) string {

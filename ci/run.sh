@@ -50,6 +50,7 @@ function finish() {
 }
 
 hegemonie web agent \
+	--id hege,web,1 \
 	--templates $PWD/pkg/web/templates \
 	--static $PWD/pkg/web/static \
 	--endpoint 127.0.0.1:8080 \
@@ -58,6 +59,7 @@ hegemonie web agent \
 	&
 
 hegemonie region agent \
+	--id hege,reg,1 \
 	--defs "${DEFS}" \
 	--live "${LIVE}" \
 	--save "${TMP}/save" \
@@ -65,6 +67,7 @@ hegemonie region agent \
 	&
 
 hegemonie auth agent \
+	--id hege,aaa,1 \
 	--live "${LIVE}" \
 	--save "${TMP}/save" \
 	--endpoint 127.0.0.1:8082 \

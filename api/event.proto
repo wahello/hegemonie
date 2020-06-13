@@ -1,0 +1,68 @@
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+syntax = "proto3";
+
+package hegemonie.rpevent.proto;
+
+service Consumer {
+  // Acknowledge one message given its ID and the in-game Character
+  // it belongs to.
+  rpc Ack1 (Ack1Req) returns (None) {}
+
+  // List a page of event for the given in-game Character, given
+  // a marker that will be strictly greater than the expected page
+  // and a maximum number of elements expected in the page.
+  // 'max' is not garanteed to be honored, this is a hint to the backend.
+  // When an empty list is returned, it means there is no event left that
+  // match the query.
+  rpc List (ListReq) returns (ListRep) {}
+}
+
+service Producer {
+  // Store a single event in the log the the in-game character
+  rpc Push1(Push1Req) returns (None) {}
+}
+
+message ListReq {
+  uint64 charId = 1;
+  // marker regarding the timestamp
+  uint64 marker = 2;
+  uint32 max = 3;
+}
+
+message ListRep {
+  repeated ListItem items = 1;
+}
+
+message ListItem {
+  uint64 charId = 1;
+
+  // Exact naming of the Event
+  uint64 when = 2;
+  string evtId = 3;
+
+  bytes payload = 4;
+}
+
+message Ack1Req {
+  uint64 charId = 1;
+
+  // Exact naming of the Event
+  uint64 when = 2;
+  string evtId = 3;
+}
+
+message Push1Req {
+  uint64 charId = 1;
+
+  // JFS: The timestamp of the message is decided by the service.
+  // Unique ID of the message.
+  string evtId = 2;
+
+  bytes payload = 3;
+}
+
+message None {}

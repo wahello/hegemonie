@@ -8,8 +8,6 @@
 **/*.pb.go
 **/*_auto.go
 
-**/hegemonie
-
 **/CMakeCache.txt
 **/CMakeFiles
 **/Makefile

@@ -39,7 +39,7 @@ func Command() *cobra.Command {
 	agent.Flags().StringVar(&cfg.endpoint,
 		"endpoint", "127.0.0.1:8080", "IP:PORT endpoint for the TCP/IP server")
 	agent.Flags().StringVar(&cfg.pathSave,
-		"save", "/tmp/hegemonie/dump", "Directory for persistent")
+		"save", "/tmp/heged/dump", "Directory for persistent")
 	agent.Flags().StringVar(&cfg.pathDefs,
 		"defs", "/data/defs", "File to be loaded")
 	agent.Flags().StringVar(&cfg.pathLive,

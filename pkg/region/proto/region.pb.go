@@ -304,7 +304,7 @@ func (m *ArmyView) GetCommands() []*ArmyCommand {
 
 type ArmyCommand struct {
 	Target               uint64          `protobuf:"varint,1,opt,name=target,proto3" json:"target,omitempty"`
-	Action               ArmyCommandType `protobuf:"varint,2,opt,name=action,proto3,enum=hegemonie.region.proto.ArmyCommandType" json:"action,omitempty"`
+	Action               ArmyCommandType `protobuf:"varint,2,opt,name=action,proto3,enum=heged.region.proto.ArmyCommandType" json:"action,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -2691,51 +2691,51 @@ func (m *Edge) GetDst() uint64 {
 }
 
 func init() {
-	proto.RegisterEnum("hegemonie.region.proto.ArmyCommandType", ArmyCommandType_name, ArmyCommandType_value)
-	proto.RegisterType((*NamedItem)(nil), "hegemonie.region.proto.NamedItem")
-	proto.RegisterType((*ListOfNamedItems)(nil), "hegemonie.region.proto.ListOfNamedItems")
-	proto.RegisterType((*ArmyId)(nil), "hegemonie.region.proto.ArmyId")
-	proto.RegisterType((*ArmyView)(nil), "hegemonie.region.proto.ArmyView")
-	proto.RegisterType((*ArmyCommand)(nil), "hegemonie.region.proto.ArmyCommand")
-	proto.RegisterType((*ArmyCommandReq)(nil), "hegemonie.region.proto.ArmyCommandReq")
-	proto.RegisterType((*CityId)(nil), "hegemonie.region.proto.CityId")
-	proto.RegisterType((*ResourcesAbs)(nil), "hegemonie.region.proto.ResourcesAbs")
-	proto.RegisterType((*ResourcesPlus)(nil), "hegemonie.region.proto.ResourcesPlus")
-	proto.RegisterType((*ResourcesMult)(nil), "hegemonie.region.proto.ResourcesMult")
-	proto.RegisterType((*ResourcesMod)(nil), "hegemonie.region.proto.ResourcesMod")
-	proto.RegisterType((*UnitTypeView)(nil), "hegemonie.region.proto.UnitTypeView")
-	proto.RegisterType((*BuildingTypeView)(nil), "hegemonie.region.proto.BuildingTypeView")
-	proto.RegisterType((*KnowledgeTypeView)(nil), "hegemonie.region.proto.KnowledgeTypeView")
-	proto.RegisterType((*UnitView)(nil), "hegemonie.region.proto.UnitView")
-	proto.RegisterType((*BuildingView)(nil), "hegemonie.region.proto.BuildingView")
-	proto.RegisterType((*KnowledgeView)(nil), "hegemonie.region.proto.KnowledgeView")
-	proto.RegisterType((*StockView)(nil), "hegemonie.region.proto.StockView")
-	proto.RegisterType((*ProductionView)(nil), "hegemonie.region.proto.ProductionView")
-	proto.RegisterType((*CityEvolution)(nil), "hegemonie.region.proto.CityEvolution")
-	proto.RegisterType((*CityAssets)(nil), "hegemonie.region.proto.CityAssets")
-	proto.RegisterType((*CityPolitics)(nil), "hegemonie.region.proto.CityPolitics")
-	proto.RegisterType((*CityView)(nil), "hegemonie.region.proto.CityView")
-	proto.RegisterType((*StudyReq)(nil), "hegemonie.region.proto.StudyReq")
-	proto.RegisterType((*TrainReq)(nil), "hegemonie.region.proto.TrainReq")
-	proto.RegisterType((*BuildReq)(nil), "hegemonie.region.proto.BuildReq")
-	proto.RegisterType((*CreateTransportReq)(nil), "hegemonie.region.proto.CreateTransportReq")
-	proto.RegisterType((*CreateArmyReq)(nil), "hegemonie.region.proto.CreateArmyReq")
-	proto.RegisterType((*TransferUnitReq)(nil), "hegemonie.region.proto.TransferUnitReq")
-	proto.RegisterType((*TransferResourcesReq)(nil), "hegemonie.region.proto.TransferResourcesReq")
-	proto.RegisterType((*ListReq)(nil), "hegemonie.region.proto.ListReq")
-	proto.RegisterType((*ListSetReq)(nil), "hegemonie.region.proto.ListSetReq")
-	proto.RegisterType((*None)(nil), "hegemonie.region.proto.None")
-	proto.RegisterType((*PaginatedQuery)(nil), "hegemonie.region.proto.PaginatedQuery")
-	proto.RegisterType((*ListOfUnitTypes)(nil), "hegemonie.region.proto.ListOfUnitTypes")
-	proto.RegisterType((*ListOfBuildingTypes)(nil), "hegemonie.region.proto.ListOfBuildingTypes")
-	proto.RegisterType((*ListOfKnowledgeTypes)(nil), "hegemonie.region.proto.ListOfKnowledgeTypes")
-	proto.RegisterType((*ListEdgesReq)(nil), "hegemonie.region.proto.ListEdgesReq")
-	proto.RegisterType((*ListOfVertices)(nil), "hegemonie.region.proto.ListOfVertices")
-	proto.RegisterType((*ListOfEdges)(nil), "hegemonie.region.proto.ListOfEdges")
-	proto.RegisterType((*ListOfCities)(nil), "hegemonie.region.proto.ListOfCities")
-	proto.RegisterType((*PublicCity)(nil), "hegemonie.region.proto.PublicCity")
-	proto.RegisterType((*Vertex)(nil), "hegemonie.region.proto.Vertex")
-	proto.RegisterType((*Edge)(nil), "hegemonie.region.proto.Edge")
+	proto.RegisterEnum("heged.region.proto.ArmyCommandType", ArmyCommandType_name, ArmyCommandType_value)
+	proto.RegisterType((*NamedItem)(nil), "heged.region.proto.NamedItem")
+	proto.RegisterType((*ListOfNamedItems)(nil), "heged.region.proto.ListOfNamedItems")
+	proto.RegisterType((*ArmyId)(nil), "heged.region.proto.ArmyId")
+	proto.RegisterType((*ArmyView)(nil), "heged.region.proto.ArmyView")
+	proto.RegisterType((*ArmyCommand)(nil), "heged.region.proto.ArmyCommand")
+	proto.RegisterType((*ArmyCommandReq)(nil), "heged.region.proto.ArmyCommandReq")
+	proto.RegisterType((*CityId)(nil), "heged.region.proto.CityId")
+	proto.RegisterType((*ResourcesAbs)(nil), "heged.region.proto.ResourcesAbs")
+	proto.RegisterType((*ResourcesPlus)(nil), "heged.region.proto.ResourcesPlus")
+	proto.RegisterType((*ResourcesMult)(nil), "heged.region.proto.ResourcesMult")
+	proto.RegisterType((*ResourcesMod)(nil), "heged.region.proto.ResourcesMod")
+	proto.RegisterType((*UnitTypeView)(nil), "heged.region.proto.UnitTypeView")
+	proto.RegisterType((*BuildingTypeView)(nil), "heged.region.proto.BuildingTypeView")
+	proto.RegisterType((*KnowledgeTypeView)(nil), "heged.region.proto.KnowledgeTypeView")
+	proto.RegisterType((*UnitView)(nil), "heged.region.proto.UnitView")
+	proto.RegisterType((*BuildingView)(nil), "heged.region.proto.BuildingView")
+	proto.RegisterType((*KnowledgeView)(nil), "heged.region.proto.KnowledgeView")
+	proto.RegisterType((*StockView)(nil), "heged.region.proto.StockView")
+	proto.RegisterType((*ProductionView)(nil), "heged.region.proto.ProductionView")
+	proto.RegisterType((*CityEvolution)(nil), "heged.region.proto.CityEvolution")
+	proto.RegisterType((*CityAssets)(nil), "heged.region.proto.CityAssets")
+	proto.RegisterType((*CityPolitics)(nil), "heged.region.proto.CityPolitics")
+	proto.RegisterType((*CityView)(nil), "heged.region.proto.CityView")
+	proto.RegisterType((*StudyReq)(nil), "heged.region.proto.StudyReq")
+	proto.RegisterType((*TrainReq)(nil), "heged.region.proto.TrainReq")
+	proto.RegisterType((*BuildReq)(nil), "heged.region.proto.BuildReq")
+	proto.RegisterType((*CreateTransportReq)(nil), "heged.region.proto.CreateTransportReq")
+	proto.RegisterType((*CreateArmyReq)(nil), "heged.region.proto.CreateArmyReq")
+	proto.RegisterType((*TransferUnitReq)(nil), "heged.region.proto.TransferUnitReq")
+	proto.RegisterType((*TransferResourcesReq)(nil), "heged.region.proto.TransferResourcesReq")
+	proto.RegisterType((*ListReq)(nil), "heged.region.proto.ListReq")
+	proto.RegisterType((*ListSetReq)(nil), "heged.region.proto.ListSetReq")
+	proto.RegisterType((*None)(nil), "heged.region.proto.None")
+	proto.RegisterType((*PaginatedQuery)(nil), "heged.region.proto.PaginatedQuery")
+	proto.RegisterType((*ListOfUnitTypes)(nil), "heged.region.proto.ListOfUnitTypes")
+	proto.RegisterType((*ListOfBuildingTypes)(nil), "heged.region.proto.ListOfBuildingTypes")
+	proto.RegisterType((*ListOfKnowledgeTypes)(nil), "heged.region.proto.ListOfKnowledgeTypes")
+	proto.RegisterType((*ListEdgesReq)(nil), "heged.region.proto.ListEdgesReq")
+	proto.RegisterType((*ListOfVertices)(nil), "heged.region.proto.ListOfVertices")
+	proto.RegisterType((*ListOfEdges)(nil), "heged.region.proto.ListOfEdges")
+	proto.RegisterType((*ListOfCities)(nil), "heged.region.proto.ListOfCities")
+	proto.RegisterType((*PublicCity)(nil), "heged.region.proto.PublicCity")
+	proto.RegisterType((*Vertex)(nil), "heged.region.proto.Vertex")
+	proto.RegisterType((*Edge)(nil), "heged.region.proto.Edge")
 }
 
 func init() { proto.RegisterFile("region.proto", fileDescriptor_6eef30384a8831dd) }
@@ -2901,7 +2901,7 @@ func NewMapClient(cc *grpc.ClientConn) MapClient {
 
 func (c *mapClient) Vertices(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfVertices, error) {
 	out := new(ListOfVertices)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Map/Vertices", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Map/Vertices", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2910,7 +2910,7 @@ func (c *mapClient) Vertices(ctx context.Context, in *PaginatedQuery, opts ...gr
 
 func (c *mapClient) Edges(ctx context.Context, in *ListEdgesReq, opts ...grpc.CallOption) (*ListOfEdges, error) {
 	out := new(ListOfEdges)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Map/Edges", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Map/Edges", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2919,7 +2919,7 @@ func (c *mapClient) Edges(ctx context.Context, in *ListEdgesReq, opts ...grpc.Ca
 
 func (c *mapClient) Cities(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfCities, error) {
 	out := new(ListOfCities)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Map/Cities", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Map/Cities", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2961,7 +2961,7 @@ func _Map_Vertices_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Map/Vertices",
+		FullMethod: "/heged.region.proto.Map/Vertices",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MapServer).Vertices(ctx, req.(*PaginatedQuery))
@@ -2979,7 +2979,7 @@ func _Map_Edges_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Map/Edges",
+		FullMethod: "/heged.region.proto.Map/Edges",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MapServer).Edges(ctx, req.(*ListEdgesReq))
@@ -2997,7 +2997,7 @@ func _Map_Cities_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Map/Cities",
+		FullMethod: "/heged.region.proto.Map/Cities",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MapServer).Cities(ctx, req.(*PaginatedQuery))
@@ -3006,7 +3006,7 @@ func _Map_Cities_Handler(srv interface{}, ctx context.Context, dec func(interfac
 }
 
 var _Map_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "hegemonie.region.proto.Map",
+	ServiceName: "heged.region.proto.Map",
 	HandlerType: (*MapServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -3062,7 +3062,7 @@ func NewCityClient(cc *grpc.ClientConn) CityClient {
 
 func (c *cityClient) List(ctx context.Context, in *ListReq, opts ...grpc.CallOption) (*ListOfCities, error) {
 	out := new(ListOfCities)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/List", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/List", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3071,7 +3071,7 @@ func (c *cityClient) List(ctx context.Context, in *ListReq, opts ...grpc.CallOpt
 
 func (c *cityClient) Show(ctx context.Context, in *CityId, opts ...grpc.CallOption) (*CityView, error) {
 	out := new(CityView)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/Show", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/Show", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3080,7 +3080,7 @@ func (c *cityClient) Show(ctx context.Context, in *CityId, opts ...grpc.CallOpti
 
 func (c *cityClient) Study(ctx context.Context, in *StudyReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/Study", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/Study", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3089,7 +3089,7 @@ func (c *cityClient) Study(ctx context.Context, in *StudyReq, opts ...grpc.CallO
 
 func (c *cityClient) Build(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/Build", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/Build", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3098,7 +3098,7 @@ func (c *cityClient) Build(ctx context.Context, in *BuildReq, opts ...grpc.CallO
 
 func (c *cityClient) Train(ctx context.Context, in *TrainReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/Train", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/Train", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3107,7 +3107,7 @@ func (c *cityClient) Train(ctx context.Context, in *TrainReq, opts ...grpc.CallO
 
 func (c *cityClient) CreateArmy(ctx context.Context, in *CreateArmyReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/CreateArmy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/CreateArmy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3116,7 +3116,7 @@ func (c *cityClient) CreateArmy(ctx context.Context, in *CreateArmyReq, opts ...
 
 func (c *cityClient) CreateTransport(ctx context.Context, in *CreateTransportReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/CreateTransport", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/CreateTransport", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3125,7 +3125,7 @@ func (c *cityClient) CreateTransport(ctx context.Context, in *CreateTransportReq
 
 func (c *cityClient) TransferUnit(ctx context.Context, in *TransferUnitReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/TransferUnit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/TransferUnit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3134,7 +3134,7 @@ func (c *cityClient) TransferUnit(ctx context.Context, in *TransferUnitReq, opts
 
 func (c *cityClient) TransferResources(ctx context.Context, in *TransferResourcesReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/TransferResources", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/TransferResources", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3143,7 +3143,7 @@ func (c *cityClient) TransferResources(ctx context.Context, in *TransferResource
 
 func (c *cityClient) ListArmies(ctx context.Context, in *CityId, opts ...grpc.CallOption) (*ListOfNamedItems, error) {
 	out := new(ListOfNamedItems)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.City/ListArmies", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.City/ListArmies", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3223,7 +3223,7 @@ func _City_List_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/List",
+		FullMethod: "/heged.region.proto.City/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).List(ctx, req.(*ListReq))
@@ -3241,7 +3241,7 @@ func _City_Show_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/Show",
+		FullMethod: "/heged.region.proto.City/Show",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).Show(ctx, req.(*CityId))
@@ -3259,7 +3259,7 @@ func _City_Study_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/Study",
+		FullMethod: "/heged.region.proto.City/Study",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).Study(ctx, req.(*StudyReq))
@@ -3277,7 +3277,7 @@ func _City_Build_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/Build",
+		FullMethod: "/heged.region.proto.City/Build",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).Build(ctx, req.(*BuildReq))
@@ -3295,7 +3295,7 @@ func _City_Train_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/Train",
+		FullMethod: "/heged.region.proto.City/Train",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).Train(ctx, req.(*TrainReq))
@@ -3313,7 +3313,7 @@ func _City_CreateArmy_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/CreateArmy",
+		FullMethod: "/heged.region.proto.City/CreateArmy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).CreateArmy(ctx, req.(*CreateArmyReq))
@@ -3331,7 +3331,7 @@ func _City_CreateTransport_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/CreateTransport",
+		FullMethod: "/heged.region.proto.City/CreateTransport",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).CreateTransport(ctx, req.(*CreateTransportReq))
@@ -3349,7 +3349,7 @@ func _City_TransferUnit_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/TransferUnit",
+		FullMethod: "/heged.region.proto.City/TransferUnit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).TransferUnit(ctx, req.(*TransferUnitReq))
@@ -3367,7 +3367,7 @@ func _City_TransferResources_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/TransferResources",
+		FullMethod: "/heged.region.proto.City/TransferResources",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).TransferResources(ctx, req.(*TransferResourcesReq))
@@ -3385,7 +3385,7 @@ func _City_ListArmies_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.City/ListArmies",
+		FullMethod: "/heged.region.proto.City/ListArmies",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CityServer).ListArmies(ctx, req.(*CityId))
@@ -3394,7 +3394,7 @@ func _City_ListArmies_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 var _City_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "hegemonie.region.proto.City",
+	ServiceName: "heged.region.proto.City",
 	HandlerType: (*CityServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -3461,7 +3461,7 @@ func NewDefinitionsClient(cc *grpc.ClientConn) DefinitionsClient {
 
 func (c *definitionsClient) ListUnits(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfUnitTypes, error) {
 	out := new(ListOfUnitTypes)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Definitions/ListUnits", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Definitions/ListUnits", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3470,7 +3470,7 @@ func (c *definitionsClient) ListUnits(ctx context.Context, in *PaginatedQuery, o
 
 func (c *definitionsClient) ListBuildings(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfBuildingTypes, error) {
 	out := new(ListOfBuildingTypes)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Definitions/ListBuildings", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Definitions/ListBuildings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3479,7 +3479,7 @@ func (c *definitionsClient) ListBuildings(ctx context.Context, in *PaginatedQuer
 
 func (c *definitionsClient) ListKnowledges(ctx context.Context, in *PaginatedQuery, opts ...grpc.CallOption) (*ListOfKnowledgeTypes, error) {
 	out := new(ListOfKnowledgeTypes)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Definitions/ListKnowledges", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Definitions/ListKnowledges", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3521,7 +3521,7 @@ func _Definitions_ListUnits_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Definitions/ListUnits",
+		FullMethod: "/heged.region.proto.Definitions/ListUnits",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DefinitionsServer).ListUnits(ctx, req.(*PaginatedQuery))
@@ -3539,7 +3539,7 @@ func _Definitions_ListBuildings_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Definitions/ListBuildings",
+		FullMethod: "/heged.region.proto.Definitions/ListBuildings",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DefinitionsServer).ListBuildings(ctx, req.(*PaginatedQuery))
@@ -3557,7 +3557,7 @@ func _Definitions_ListKnowledges_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Definitions/ListKnowledges",
+		FullMethod: "/heged.region.proto.Definitions/ListKnowledges",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DefinitionsServer).ListKnowledges(ctx, req.(*PaginatedQuery))
@@ -3566,7 +3566,7 @@ func _Definitions_ListKnowledges_Handler(srv interface{}, ctx context.Context, d
 }
 
 var _Definitions_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "hegemonie.region.proto.Definitions",
+	ServiceName: "heged.region.proto.Definitions",
 	HandlerType: (*DefinitionsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -3607,7 +3607,7 @@ func NewAdminClient(cc *grpc.ClientConn) AdminClient {
 
 func (c *adminClient) Produce(ctx context.Context, in *None, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Admin/Produce", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Admin/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3616,7 +3616,7 @@ func (c *adminClient) Produce(ctx context.Context, in *None, opts ...grpc.CallOp
 
 func (c *adminClient) Move(ctx context.Context, in *None, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Admin/Move", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Admin/Move", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3625,7 +3625,7 @@ func (c *adminClient) Move(ctx context.Context, in *None, opts ...grpc.CallOptio
 
 func (c *adminClient) GetScores(ctx context.Context, in *None, opts ...grpc.CallOption) (*ListOfCities, error) {
 	out := new(ListOfCities)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Admin/GetScores", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Admin/GetScores", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3669,7 +3669,7 @@ func _Admin_Produce_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Admin/Produce",
+		FullMethod: "/heged.region.proto.Admin/Produce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServer).Produce(ctx, req.(*None))
@@ -3687,7 +3687,7 @@ func _Admin_Move_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Admin/Move",
+		FullMethod: "/heged.region.proto.Admin/Move",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServer).Move(ctx, req.(*None))
@@ -3705,7 +3705,7 @@ func _Admin_GetScores_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Admin/GetScores",
+		FullMethod: "/heged.region.proto.Admin/GetScores",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServer).GetScores(ctx, req.(*None))
@@ -3714,7 +3714,7 @@ func _Admin_GetScores_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 var _Admin_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "hegemonie.region.proto.Admin",
+	ServiceName: "heged.region.proto.Admin",
 	HandlerType: (*AdminServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -3758,7 +3758,7 @@ func NewArmyClient(cc *grpc.ClientConn) ArmyClient {
 
 func (c *armyClient) Show(ctx context.Context, in *ArmyId, opts ...grpc.CallOption) (*ArmyView, error) {
 	out := new(ArmyView)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Army/Show", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Army/Show", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3767,7 +3767,7 @@ func (c *armyClient) Show(ctx context.Context, in *ArmyId, opts ...grpc.CallOpti
 
 func (c *armyClient) Flea(ctx context.Context, in *ArmyId, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Army/Flea", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Army/Flea", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3776,7 +3776,7 @@ func (c *armyClient) Flea(ctx context.Context, in *ArmyId, opts ...grpc.CallOpti
 
 func (c *armyClient) Flip(ctx context.Context, in *ArmyId, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Army/Flip", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Army/Flip", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3785,7 +3785,7 @@ func (c *armyClient) Flip(ctx context.Context, in *ArmyId, opts ...grpc.CallOpti
 
 func (c *armyClient) Command(ctx context.Context, in *ArmyCommandReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/hegemonie.region.proto.Army/Command", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/heged.region.proto.Army/Command", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3835,7 +3835,7 @@ func _Army_Show_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Army/Show",
+		FullMethod: "/heged.region.proto.Army/Show",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ArmyServer).Show(ctx, req.(*ArmyId))
@@ -3853,7 +3853,7 @@ func _Army_Flea_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Army/Flea",
+		FullMethod: "/heged.region.proto.Army/Flea",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ArmyServer).Flea(ctx, req.(*ArmyId))
@@ -3871,7 +3871,7 @@ func _Army_Flip_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Army/Flip",
+		FullMethod: "/heged.region.proto.Army/Flip",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ArmyServer).Flip(ctx, req.(*ArmyId))
@@ -3889,7 +3889,7 @@ func _Army_Command_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hegemonie.region.proto.Army/Command",
+		FullMethod: "/heged.region.proto.Army/Command",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ArmyServer).Command(ctx, req.(*ArmyCommandReq))
@@ -3898,7 +3898,7 @@ func _Army_Command_Handler(srv interface{}, ctx context.Context, dec func(interf
 }
 
 var _Army_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "hegemonie.region.proto.Army",
+	ServiceName: "heged.region.proto.Army",
 	HandlerType: (*ArmyServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -2,13 +2,16 @@ BASE=github.com/jfsmig/hegemonie
 GO=go
 PROTOC=protoc
 
-AUTO= pkg/region/model/world_auto.go
+AUTO=  pkg/region/model/world_auto.go
 AUTO+= pkg/auth/proto/auth.pb.go
+AUTO+= pkg/event/proto/event.pb.go
 AUTO+= pkg/region/proto/region.pb.go
 
 all: prepare
-	$(GO) install $(BASE)
+	$(GO) install $(BASE)/cmd/gen-set
 	$(GO) install $(BASE)/cmd/hege-mapper
+	$(GO) install $(BASE)/cmd/heged
+	$(GO) install $(BASE)/cmd/hege
 
 prepare: $(AUTO)
 
@@ -16,11 +19,14 @@ pkg/region/model/world_auto.go: pkg/region/model/world_types.go cmd/gen-set/main
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/region/model
 
-pkg/auth/proto/%.pb.go: pkg/auth/auth.proto
-	$(PROTOC) -I pkg/auth   pkg/auth/auth.proto --go_out=plugins=grpc:pkg/auth/proto
+pkg/auth/proto/%.pb.go: api/auth.proto
+	$(PROTOC) -I api api/auth.proto --go_out=plugins=grpc:pkg/auth/proto
 
-pkg/region/proto/%.pb.go: pkg/region/region.proto
-	$(PROTOC) -I pkg/region pkg/region/region.proto  --go_out=plugins=grpc:pkg/region/proto
+pkg/region/proto/%.pb.go: api/region.proto
+	$(PROTOC) -I api api/region.proto  --go_out=plugins=grpc:pkg/region/proto
+
+pkg/event/proto/%.pb.go: api/event.proto
+	$(PROTOC) -I api api/event.proto  --go_out=plugins=grpc:pkg/event/proto
 
 clean:
 	-rm $(AUTO)

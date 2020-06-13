@@ -206,7 +206,7 @@ func CommandExport() *cobra.Command {
 			var aaa auth.Db
 			aaa.Init()
 			aaa.ReHash()
-			u := aaa.Create("admin@hegemonie.be")
+			u := aaa.Create("admin@heged.be")
 			u.Name = "Super Admin"
 			u.Admin = true
 			u.Password = ":plop"

@@ -8,7 +8,7 @@ ENV GO111MODULE=on \
 
 WORKDIR /dist
 
-#RUN mkdir -p /gopath/src/github.com/jfsmig/hegemonie
+#RUN mkdir -p /gopath/src/github.com/jfsmig/heged
 COPY . /gopath/src/github.com/jfsmig/hegemonie
 
 # Build & Install the code
