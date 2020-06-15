@@ -637,18 +637,18 @@ func (m *CharacterShowReq) GetCharacter() uint64 {
 }
 
 func init() {
-	proto.RegisterType((*None)(nil), "heged.auth.proto.None")
-	proto.RegisterType((*UserCreateReq)(nil), "heged.auth.proto.UserCreateReq")
-	proto.RegisterType((*UserUpdateReq)(nil), "heged.auth.proto.UserUpdateReq")
-	proto.RegisterType((*UserAuthReq)(nil), "heged.auth.proto.UserAuthReq")
-	proto.RegisterType((*UserShowReq)(nil), "heged.auth.proto.UserShowReq")
-	proto.RegisterType((*NamedItem)(nil), "heged.auth.proto.NamedItem")
-	proto.RegisterType((*CharacterView)(nil), "heged.auth.proto.CharacterView")
-	proto.RegisterType((*UserView)(nil), "heged.auth.proto.UserView")
-	proto.RegisterType((*UserSuspendReq)(nil), "heged.auth.proto.UserSuspendReq")
-	proto.RegisterType((*UserListReq)(nil), "heged.auth.proto.UserListReq")
-	proto.RegisterType((*UserListRep)(nil), "heged.auth.proto.UserListRep")
-	proto.RegisterType((*CharacterShowReq)(nil), "heged.auth.proto.CharacterShowReq")
+	proto.RegisterType((*None)(nil), "hegemonie.auth.proto.None")
+	proto.RegisterType((*UserCreateReq)(nil), "hegemonie.auth.proto.UserCreateReq")
+	proto.RegisterType((*UserUpdateReq)(nil), "hegemonie.auth.proto.UserUpdateReq")
+	proto.RegisterType((*UserAuthReq)(nil), "hegemonie.auth.proto.UserAuthReq")
+	proto.RegisterType((*UserShowReq)(nil), "hegemonie.auth.proto.UserShowReq")
+	proto.RegisterType((*NamedItem)(nil), "hegemonie.auth.proto.NamedItem")
+	proto.RegisterType((*CharacterView)(nil), "hegemonie.auth.proto.CharacterView")
+	proto.RegisterType((*UserView)(nil), "hegemonie.auth.proto.UserView")
+	proto.RegisterType((*UserSuspendReq)(nil), "hegemonie.auth.proto.UserSuspendReq")
+	proto.RegisterType((*UserListReq)(nil), "hegemonie.auth.proto.UserListReq")
+	proto.RegisterType((*UserListRep)(nil), "hegemonie.auth.proto.UserListRep")
+	proto.RegisterType((*CharacterShowReq)(nil), "hegemonie.auth.proto.CharacterShowReq")
 }
 
 func init() { proto.RegisterFile("auth.proto", fileDescriptor_8bbd6f3875b0e874) }
@@ -725,7 +725,7 @@ func NewAuthClient(cc *grpc.ClientConn) AuthClient {
 
 func (c *authClient) UserList(ctx context.Context, in *UserListReq, opts ...grpc.CallOption) (*UserListRep, error) {
 	out := new(UserListRep)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/UserList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/UserList", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -734,7 +734,7 @@ func (c *authClient) UserList(ctx context.Context, in *UserListReq, opts ...grpc
 
 func (c *authClient) UserShow(ctx context.Context, in *UserShowReq, opts ...grpc.CallOption) (*UserView, error) {
 	out := new(UserView)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/UserShow", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/UserShow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -743,7 +743,7 @@ func (c *authClient) UserShow(ctx context.Context, in *UserShowReq, opts ...grpc
 
 func (c *authClient) UserCreate(ctx context.Context, in *UserCreateReq, opts ...grpc.CallOption) (*UserView, error) {
 	out := new(UserView)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/UserCreate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/UserCreate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -752,7 +752,7 @@ func (c *authClient) UserCreate(ctx context.Context, in *UserCreateReq, opts ...
 
 func (c *authClient) UserUpdate(ctx context.Context, in *UserUpdateReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/UserUpdate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/UserUpdate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -761,7 +761,7 @@ func (c *authClient) UserUpdate(ctx context.Context, in *UserUpdateReq, opts ...
 
 func (c *authClient) UserSuspend(ctx context.Context, in *UserSuspendReq, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/UserSuspend", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/UserSuspend", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -770,7 +770,7 @@ func (c *authClient) UserSuspend(ctx context.Context, in *UserSuspendReq, opts .
 
 func (c *authClient) UserAuth(ctx context.Context, in *UserAuthReq, opts ...grpc.CallOption) (*UserView, error) {
 	out := new(UserView)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/UserAuth", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/UserAuth", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -779,7 +779,7 @@ func (c *authClient) UserAuth(ctx context.Context, in *UserAuthReq, opts ...grpc
 
 func (c *authClient) CharacterShow(ctx context.Context, in *CharacterShowReq, opts ...grpc.CallOption) (*UserView, error) {
 	out := new(UserView)
-	err := c.cc.Invoke(ctx, "/heged.auth.proto.Auth/CharacterShow", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hegemonie.auth.proto.Auth/CharacterShow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -840,7 +840,7 @@ func _Auth_UserList_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/UserList",
+		FullMethod: "/hegemonie.auth.proto.Auth/UserList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UserList(ctx, req.(*UserListReq))
@@ -858,7 +858,7 @@ func _Auth_UserShow_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/UserShow",
+		FullMethod: "/hegemonie.auth.proto.Auth/UserShow",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UserShow(ctx, req.(*UserShowReq))
@@ -876,7 +876,7 @@ func _Auth_UserCreate_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/UserCreate",
+		FullMethod: "/hegemonie.auth.proto.Auth/UserCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UserCreate(ctx, req.(*UserCreateReq))
@@ -894,7 +894,7 @@ func _Auth_UserUpdate_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/UserUpdate",
+		FullMethod: "/hegemonie.auth.proto.Auth/UserUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UserUpdate(ctx, req.(*UserUpdateReq))
@@ -912,7 +912,7 @@ func _Auth_UserSuspend_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/UserSuspend",
+		FullMethod: "/hegemonie.auth.proto.Auth/UserSuspend",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UserSuspend(ctx, req.(*UserSuspendReq))
@@ -930,7 +930,7 @@ func _Auth_UserAuth_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/UserAuth",
+		FullMethod: "/hegemonie.auth.proto.Auth/UserAuth",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UserAuth(ctx, req.(*UserAuthReq))
@@ -948,7 +948,7 @@ func _Auth_CharacterShow_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/heged.auth.proto.Auth/CharacterShow",
+		FullMethod: "/hegemonie.auth.proto.Auth/CharacterShow",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).CharacterShow(ctx, req.(*CharacterShowReq))
@@ -957,7 +957,7 @@ func _Auth_CharacterShow_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 var _Auth_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "heged.auth.proto.Auth",
+	ServiceName: "hegemonie.auth.proto.Auth",
 	HandlerType: (*AuthServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

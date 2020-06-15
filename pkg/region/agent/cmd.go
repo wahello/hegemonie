@@ -19,10 +19,11 @@ import (
 )
 
 type regionConfig struct {
-	endpoint string
-	pathSave string
-	pathDefs string
-	pathLive string
+	endpoint      string
+	endpointEvent string
+	pathSave      string
+	pathDefs      string
+	pathLive      string
 }
 
 func Command() *cobra.Command {
@@ -37,13 +38,15 @@ func Command() *cobra.Command {
 		},
 	}
 	agent.Flags().StringVar(&cfg.endpoint,
-		"endpoint", "127.0.0.1:8080", "IP:PORT endpoint for the TCP/IP server")
+		"endpoint", utils.DefaultEndpointRegion, "IP:PORT endpoint for the TCP/IP server")
+	agent.Flags().StringVar(&cfg.endpointEvent,
+		"event", utils.DefaultEndpointEvent, "Address of the Event server to connect to.")
 	agent.Flags().StringVar(&cfg.pathSave,
-		"save", "/tmp/heged/dump", "Directory for persistent")
+		"save", "", "Path of the directory where persist the dump of the region.")
 	agent.Flags().StringVar(&cfg.pathDefs,
-		"defs", "/data/defs", "File to be loaded")
+		"defs", "", "Path to the file with the definition of the world.")
 	agent.Flags().StringVar(&cfg.pathLive,
-		"live", "/data/live", "File to be loaded")
+		"live", "", "Path to the file with the state of the region.")
 
 	return agent
 }

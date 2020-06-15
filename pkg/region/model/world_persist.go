@@ -18,6 +18,7 @@ func (w *World) Init() {
 	w.WLock()
 	defer w.WUnlock()
 
+	w.notifier = LogEvent(&noEvt{})
 	w.Places.Init()
 
 	if w.NextId <= 0 {

@@ -7,6 +7,7 @@ package hegemonie_event_client
 
 import (
 	"errors"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -51,7 +52,8 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.endpoint, "endpoint", "127.0.0.1:8081", "IP:PORT endpoint for the TCP/IP server")
+	cmd.Flags().StringVar(&cfg.endpoint,
+		"endpoint", utils.DefaultEndpointEvent, "IP:PORT endpoint for the TCP/IP server")
 	cmd.AddCommand(push, ack, list)
 	return cmd
 }

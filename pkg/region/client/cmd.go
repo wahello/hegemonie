@@ -7,6 +7,7 @@ package hegemonie_region_client
 
 import (
 	"errors"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +27,7 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.endpoint, "endpoint", "127.0.0.1:8080", "IP:PORT endpoint for the TCP/IP server")
+	cmd.Flags().StringVar(&cfg.endpoint,
+		"endpoint", utils.DefaultEndpointRegion, "IP:PORT endpoint for the TCP/IP server")
 	return cmd
 }

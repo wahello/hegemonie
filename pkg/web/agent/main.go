@@ -110,6 +110,11 @@ func Command() *cobra.Command {
 
 			var err error
 
+			front.cnxEvent, err = grpc.Dial(front.endpointEvent, grpc.WithInsecure())
+			if err != nil {
+				return err
+			}
+
 			front.cnxAuth, err = grpc.Dial(front.endpointAuth, grpc.WithInsecure())
 			if err != nil {
 				return err
@@ -125,23 +130,33 @@ func Command() *cobra.Command {
 			return http.ListenAndServe(front.endpointNorth, m)
 		},
 	}
-	agent.Flags().StringVar(&front.endpointNorth, "endpoint", ":8080", "TCP/IP North endpoint")
-	agent.Flags().StringVar(&front.endpointRegion, "region", "", "World Server to be contacted")
-	agent.Flags().StringVar(&front.endpointAuth, "auth", "", "Auth Server to be contacted")
-	agent.Flags().StringVar(&front.dirTemplates, "templates", "/data/templates", "Directory with the HTML templates")
-	agent.Flags().StringVar(&front.dirStatic, "static", "/data/static", "Directory with the static files")
+	agent.Flags().StringVar(&front.endpointNorth,
+		"endpoint", utils.DefaultEndpointWww, "TCP/IP North endpoint")
+	agent.Flags().StringVar(&front.endpointRegion,
+		"region", "", "World Server to connect to")
+	agent.Flags().StringVar(&front.endpointAuth,
+		"auth", "", "Auth Server to connect to")
+	agent.Flags().StringVar(&front.endpointEvent,
+		"event", "", "Event Server to connect to")
+	agent.Flags().StringVar(&front.dirTemplates,
+		"templates", "/data/templates", "Directory with the HTML templates")
+	agent.Flags().StringVar(&front.dirStatic,
+		"static", "/data/static", "Directory with the static files")
 	return agent
 }
 
 type FrontService struct {
-	dirTemplates   string
-	dirStatic      string
+	dirTemplates string
+	dirStatic    string
+
 	endpointNorth  string
 	endpointRegion string
 	endpointAuth   string
+	endpointEvent  string
 
 	cnxRegion *grpc.ClientConn
 	cnxAuth   *grpc.ClientConn
+	cnxEvent  *grpc.ClientConn
 
 	rw        sync.RWMutex
 	units     map[uint64]*region.UnitTypeView

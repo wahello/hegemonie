@@ -1,3 +1,8 @@
+# Copyright (C) 2020 Hegemonie's AUTHORS
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 BASE=github.com/jfsmig/hegemonie
 GO=go
 PROTOC=protoc
@@ -50,7 +55,7 @@ bench: all
 		| sort | uniq | while read D ; do ( set -x ; cd $$D && go -bench=. test ) done
 
 try: all
-	./ci/run.sh $$PWD/ci/bootstrap
+	./ci/run.sh $$PWD/docs/hegeIV/map-calaquyr.json $$PWD/docs/hegeIV/definitions
 
 img_tag:
 	 ( export L='(C) Quentin Minten / CC BY-NC-SA 3.0' ; \

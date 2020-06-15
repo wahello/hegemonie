@@ -41,12 +41,10 @@ func Command() *cobra.Command {
 		},
 	}
 
-	agent.Flags().StringVar(
-		&cfg.endpoint, "endpoint", "127.0.0.1:8081",
-		"IP:PORT endpoint for the gRPC server")
-	agent.Flags().StringVar(
-		&cfg.pathBase, "base", "",
-		"Path of the DB")
+	agent.Flags().StringVar(&cfg.endpoint,
+		"endpoint", utils.DefaultEndpointEvent, "IP:PORT endpoint for the gRPC server")
+	agent.Flags().StringVar(&cfg.pathBase,
+		"base", "", "Path of the DB")
 
 	return agent
 }

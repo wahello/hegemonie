@@ -8,7 +8,7 @@
 #
 # Description:
 #   bootstrap.sh generates a complete configuration enough to run a minimal environment,
-#   made of a single map region.
+#   made of a single region whose map is given as an argument.
 #
 # Usage:
 #   $ bootstrap.sh MAP DEFINITIONS OUTPUT
@@ -17,30 +17,30 @@
 #   DEFINITIONS: the path to the definitions that make the world (knowledge, buildings, troops)
 #   OUTPUT:      the path to the live DB of the world (actual map, users, cities, armies) plus a copy of the expanded description.
 #
+# Example:
+#   ./ci/bootstrap.sh \
+#     ./docs/hegeIV/map-calaquyr.json \
+#     ./docs/hegeIV/definitions \
+#     $(mktemp -d)
 
-set -e
-
-function usage() { echo -e "USAGE:\n  $0  /path/to/map_seed.json  /path/to/definitions  /path/to/live" ; }
-function error() { echo $@ 1>&2 ; exit 2 ; }
-function check_input() { [ -r "$1" ] || ( usage ; error "Missing $1" ); }
-function check_file() { [ -r "$1" ] || ( error "Missing $1" ); }
+set -ex
 
 
 # Sanitize the input
 MAP=$1
-check_input "${MAP}"
+[[ -r "${MAP}" ]]
 shift
 
 DEFS=$1
-[ -d "$DEFS" ] || error "Missing DEFINITIONS folder"
-check_input "${DEFS}/config.json"
-check_input "${DEFS}/units.json"
-check_input "${DEFS}/buildings.json"
-check_input "${DEFS}/knowledge.json"
+[[ -d "$DEFS" ]]
+[[ -r "${DEFS}/config.json" ]]
+[[ -r "${DEFS}/units.json" ]]
+[[ -r "${DEFS}/buildings.json" ]]
+[[ -r "${DEFS}/knowledge.json" ]]
 shift
 
 OUT=$1
-[[ -d "${OUT}" ]] || error "Invalid output path: [$OUT]"
+[[ -d "${OUT}" ]]
 shift
 mkdir -p $OUT/definitions
 mkdir -p $OUT/live
@@ -54,11 +54,11 @@ hege-mapper normalize < "${MAP}" > "${TMP}/map_seed.json"
 hege-mapper export --config "${DEFS}" "${TMP}" < "${TMP}/map_seed.json" > "${TMP}/env"
 . "${TMP}/env"
 
-check_file "${HEGE_LIVE}/cities.json"
-check_file "${HEGE_LIVE}/map.json"
-check_file "${HEGE_LIVE}/armies.json"
-check_file "${HEGE_LIVE}/fights.json"
-check_file "${TMP}/auth.json"
+[[ -r "${HEGE_LIVE}/cities.json" ]]
+[[ -r "${HEGE_LIVE}/map.json" ]]
+[[ -r "${HEGE_LIVE}/armies.json" ]]
+[[ -r "${HEGE_LIVE}/fights.json" ]]
+[[ -r "${TMP}/auth.json" ]]
 
 cp -p \
   "${HEGE_DEFS}/units.json" \
@@ -80,6 +80,7 @@ cp -p \
 	"${OUT}/live/"
 
 rm -rf "${TMP}"
+
 
 echo $OUT
 

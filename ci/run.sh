@@ -5,72 +5,84 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #
-# ./ci/bootstrap.sh \
-#   docs/hegeIV/map-calaquyr.json \
-#   docs/hegeIV/definitions/ \
-#   ci/hegeIV-calaquyr/
+# Description:
+#   run.sh generates a complete configuration enough to run a minimal environment,
+#   and start one daemon of each kind. Each daemon will be bond to its default port
+#   on 127.0.0.1
+#
+# Usage:
+#   $ run.sh MAP DEFINITIONS
+# with:
+#   MAP:         the path to the map seed, a.k.a a JSON file containing an object that coarsely describe the map and the name of the cities
+#   DEFINITIONS: the path to the definitions that make the world (knowledge, buildings, troops)
+#
+# Example:
+#   ./ci/run.sh \
+#     ./docs/hegeIV/map-calaquyr.json \
+#     ./docs/hegeIV/definitions \
 #
 
-set -e
-
-function usage() { echo -e "USAGE:\n  $0  DIR_DEFS  DIR_LIVE [DIR_SAVE}" ; }
-function error() { ( echo $@ ; usage ) 1>&2 ; exit 2 ; }
-function check_file() { [ -r "$1" ] || error "Missing $1"; }
-
+set -ex
 
 # Sanitize the input
-DEFS=$1
-[ -d "$DEFS" ] || error "Missing DEFINITIONS folder"
-check_file "${DEFS}/config.json"
-check_file "${DEFS}/units.json"
-check_file "${DEFS}/buildings.json"
-check_file "${DEFS}/knowledge.json"
+MAP=$1
+[[ -r "${MAP}" ]]
 shift
 
-LIVE=$1
-[ -d "${LIVE}" ] || error "Missing LIVE folder"
-check_file "${LIVE}/auth.json"
-check_file "${LIVE}/armies.json"
-check_file "${LIVE}/cities.json"
-check_file "${LIVE}/map.json"
+DEFS=$1
+[[ -d "$DEFS" ]]
+[[ "${DEFS}/config.json" ]]
+[[ "${DEFS}/units.json" ]]
+[[ "${DEFS}/buildings.json" ]]
+[[ "${DEFS}/knowledge.json" ]]
 shift
 
 # Prepare the working environment
 TMP=$(mktemp -d)
+mkdir $TMP/live
 mkdir $TMP/save
+mkdir $TMP/evt
+
+./ci/bootstrap.sh "${MAP}" "${DEFS}" "${TMP}"
 
 
 # Spawn the core services
 function finish() {
 	set +e
-	kill %3
-	kill %2
-	kill %1
+	kill %4 %3 %2 %1
 	wait
 }
 
-hegemonie web agent \
+heged auth \
+	--id hege,aaa,1 \
+	--live "${TMP}/live" \
+	--save "${TMP}/save" \
+	--endpoint 127.0.0.1:8082 \
+	&
+
+heged evt \
+	--id hege,evt,1 \
+	--base "${TMP}/evt" \
+	--endpoint 127.0.0.1:8083 \
+	&
+
+heged region \
+	--id hege,reg,1 \
+	--defs "${DEFS}" \
+	--live "${TMP}/live" \
+	--save "${TMP}/save" \
+	--endpoint 127.0.0.1:8081 \
+	--event 127.0.0.1:8083 \
+	&
+
+heged web \
 	--id hege,web,1 \
 	--templates $PWD/pkg/web/templates \
 	--static $PWD/pkg/web/static \
 	--endpoint 127.0.0.1:8080 \
 	--region 127.0.0.1:8081 \
 	--auth 127.0.0.1:8082 \
-	&
-
-hegemonie region agent \
-	--id hege,reg,1 \
-	--defs "${DEFS}" \
-	--live "${LIVE}" \
-	--save "${TMP}/save" \
-	--endpoint 127.0.0.1:8081 \
-	&
-
-hegemonie auth agent \
-	--id hege,aaa,1 \
-	--live "${LIVE}" \
-	--save "${TMP}/save" \
-	--endpoint 127.0.0.1:8082 \
+	--event 127.0.0.1:8083 \
 	&
 
 trap finish SIGTERM SIGINT

@@ -44,6 +44,8 @@ type World struct {
 	Live        LiveBase
 	Places      Map
 
+	notifier Notifier
+
 	NextId uint64
 	Salt   string
 	rw     sync.RWMutex

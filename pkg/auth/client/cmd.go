@@ -7,6 +7,7 @@ package hegemonie_auth_client
 
 import (
 	"errors"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +54,8 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.endpoint, "endpoint", "127.0.0.1:8082", "IP:PORT endpoint for the TCP/IP server")
+	cmd.Flags().StringVar(&cfg.endpoint,
+		"endpoint", utils.DefaultEndpointAuth, "IP:PORT endpoint for the TCP/IP server")
 	cmd.AddCommand(create, show, list)
 	return cmd
 }

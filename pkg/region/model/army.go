@@ -35,22 +35,26 @@ func (a *Army) Move(w *World) {
 		src := a.Cell
 		dst := cmd.Cell
 
+		// pSrc := w.Places.CellGet(src)
+		var pOwner, pLocalCity *City
+		pLocal := w.Places.CellGet(a.Cell)
+		if pLocal != nil {
+			pLocalCity = w.CityGet(pLocal.City)
+		}
+
+		pOwner = w.CityGet(a.City)
+
 		nxt, err := w.Places.PathNextStep(src, dst)
 		if err != nil {
 			utils.Logger.Warn().Err(err).Uint64("src", src).Uint64("dst", dst).Send()
 		} else if nxt == 0 {
-			// FIXME(jfs): Notify the City that there is no route
+			w.notifier.Army(pOwner).Item(a).NoRoute(src, dst)
 		} else {
 			a.Cell = nxt
-			// FIXME(jfs): Notify a.City of the movement
-			// FIXME(jfs): Notify the local City of the passage
-		}
-
-		// pSrc := w.Places.CellGet(src)
-		var pLocalCity *City
-		pLocal := w.Places.CellGet(a.Cell)
-		if pLocal != nil {
-			pLocalCity = w.CityGet(pLocal.City)
+			w.notifier.Army(pOwner).Item(a).Move(src, dst)
+			if pLocalCity != nil && pOwner.Id != pLocalCity.Id {
+				w.notifier.Army(pLocalCity).Item(a).Move(src, dst)
+			}
 		}
 
 		if nxt == dst {
