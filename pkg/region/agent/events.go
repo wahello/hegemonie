@@ -23,17 +23,17 @@ type EventArmy struct {
 	store  *EventStore `json:"-"`
 	charId uint64      `json:"-"`
 
-	SourceCityId uint64 `json:"sourceCityId"`
-	SourceCity   string `json:"sourceCity"`
+	SourceCityId uint64 `json:"SourceCityId"`
+	SourceCity   string `json:"SourceCity"`
 
-	ArmyId   uint64 `json:"armyId"`
-	ArmyName string `json:"army"`
+	ArmyId   uint64 `json:"ArmyId"`
+	ArmyName string `json:"Army"`
 
-	ArmyCityId   uint64 `json:"armyCityId"`
-	ArmyCityName string `json:"armyCity"`
+	ArmyCityId   uint64 `json:"ArmyCityId"`
+	ArmyCityName string `json:"ArmyCity"`
 
-	Src uint64 `json:"src"`
-	Dst uint64 `json:"dst"`
+	Src uint64 `json:"Src"`
+	Dst uint64 `json:"Dst"`
 
 	Action string `json:"action"`
 }

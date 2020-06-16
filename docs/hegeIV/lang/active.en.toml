@@ -1,4 +1,4 @@
 [Move]
 description = "Army movement seen by the local city"
-one = "{{.SourceName}}: {{.ArmyName}} passes nearby."
-other = "{{.SourceName}}: {{.ArmyName}} passes nearby."
+one = "{{.SourceCity}}: {{.Army}} passes nearby."
+other = "{{.SourceCity}}: {{.Army}} passes nearby."
