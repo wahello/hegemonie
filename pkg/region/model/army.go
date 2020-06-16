@@ -36,24 +36,22 @@ func (a *Army) Move(w *World) {
 		dst := cmd.Cell
 
 		// pSrc := w.Places.CellGet(src)
-		var pOwner, pLocalCity *City
+		var pLocalCity *City
 		pLocal := w.Places.CellGet(a.Cell)
 		if pLocal != nil {
 			pLocalCity = w.CityGet(pLocal.City)
 		}
 
-		pOwner = w.CityGet(a.City)
-
 		nxt, err := w.Places.PathNextStep(src, dst)
 		if err != nil {
 			utils.Logger.Warn().Err(err).Uint64("src", src).Uint64("dst", dst).Send()
 		} else if nxt == 0 {
-			w.notifier.Army(pOwner).Item(a).NoRoute(src, dst)
+			w.notifier.Army(a.City).Item(a).NoRoute(src, dst).Send()
 		} else {
 			a.Cell = nxt
-			w.notifier.Army(pOwner).Item(a).Move(src, dst)
-			if pLocalCity != nil && pOwner.Id != pLocalCity.Id {
-				w.notifier.Army(pLocalCity).Item(a).Move(src, dst)
+			w.notifier.Army(a.City).Item(a).Move(src, dst).Send()
+			if pLocalCity != nil && a.City.Id != pLocalCity.Id {
+				w.notifier.Army(pLocalCity).Item(a).Move(src, dst).Send()
 			}
 		}
 
@@ -149,13 +147,7 @@ func (a *Army) Conquer(w *World, pCity *City) {
 	if pCity == nil {
 		panic("Impossible action: nil city")
 	}
-
-	pOverlord := w.CityGet(a.City)
-	if pOverlord == nil {
-		panic("Impossible action: nil overlord")
-	}
-
-	pOverlord.ConquerCity(w, pCity)
+	a.City.ConquerCity(w, pCity)
 }
 
 func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
@@ -171,7 +163,6 @@ func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 
 	a.Fight = pCity.Assault.Id
 	pCity.Assault.Defense[a.Id] = a
-	w.Live.Armies.Remove(a)
 
 	return true
 }
@@ -196,7 +187,6 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 
 	a.Fight = pCity.Assault.Id
 	pCity.Assault.Attack[a.Id] = a
-	w.Live.Armies.Remove(a)
 }
 
 // Leave the Fight as a loser

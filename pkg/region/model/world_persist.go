@@ -14,17 +14,20 @@ import (
 	"time"
 )
 
+func (w *World) SetNotifier(n Notifier) {
+	w.notifier = LogEvent(n)
+}
+
 func (w *World) Init() {
 	w.WLock()
 	defer w.WUnlock()
 
-	w.notifier = LogEvent(&noEvt{})
+	w.SetNotifier(&noEvt{})
 	w.Places.Init()
 
 	if w.NextId <= 0 {
 		w.NextId = 1
 	}
-	w.Live.Armies = make(SetOfArmies, 0)
 	w.Live.Cities = make(SetOfCities, 0)
 	w.Live.Fights = make(SetOfFights, 0)
 	w.Definitions.Units = make(SetOfUnitTypes, 0)
@@ -50,9 +53,6 @@ func (w *World) Check() error {
 		return errors.New("unit types unsorted")
 	}
 
-	if !sort.IsSorted(&w.Live.Armies) {
-		return errors.New("armies unsorted")
-	}
 	if !sort.IsSorted(&w.Live.Cities) {
 		return errors.New("cities unsorted")
 	}
@@ -68,11 +68,6 @@ func (w *World) Check() error {
 			return errors.New("fight defense unsorted")
 		}
 	}
-	for _, a := range w.Live.Armies {
-		if !sort.IsSorted(&a.Units) {
-			return errors.New("units unsorted")
-		}
-	}
 	for _, a := range w.Live.Cities {
 		if !sort.IsSorted(&a.Knowledges) {
 			return errors.New("knowledge unsorted")
@@ -86,9 +81,15 @@ func (w *World) Check() error {
 		if !sort.IsSorted(&a.lieges) {
 			return errors.New("city lieges unsorted")
 		}
-		if !sort.IsSorted(&a.armies) {
+		if !sort.IsSorted(&a.Armies) {
 			return errors.New("city armies unsorted")
 		}
+		for _, a := range a.Armies {
+			if !sort.IsSorted(&a.Units) {
+				return errors.New("units unsorted")
+			}
+		}
+
 	}
 
 	return nil
@@ -101,36 +102,27 @@ func (w *World) PostLoad() error {
 	sort.Sort(&w.Definitions.Knowledges)
 	sort.Sort(&w.Definitions.Buildings)
 	sort.Sort(&w.Definitions.Units)
-	sort.Sort(&w.Live.Armies)
 	sort.Sort(&w.Live.Cities)
 	sort.Sort(&w.Live.Fights)
-	for _, a := range w.Live.Armies {
-		sort.Sort(&a.Units)
-	}
 	for _, c := range w.Live.Cities {
 		sort.Sort(&c.Knowledges)
 		sort.Sort(&c.Buildings)
 		sort.Sort(&c.Units)
-		if c.armies == nil {
-			c.armies = make(SetOfArmies, 0)
+		if c.Armies == nil {
+			c.Armies = make(SetOfArmies, 0)
 		} else {
-			sort.Sort(&c.armies)
+			sort.Sort(&c.Armies)
 		}
 		if c.lieges == nil {
 			c.lieges = make(SetOfCities, 0)
 		} else {
 			sort.Sort(&c.lieges)
 		}
-	}
 
-	// Link Armies and Cities
-	for _, a := range w.Live.Armies {
-		if a.City == 0 {
-			return errors.New(fmt.Sprintf("Army %v points to no City", a))
-		} else if c := w.CityGet(a.City); c == nil {
-			return errors.New(fmt.Sprintf("Army %v points to ghost City", a))
-		} else {
-			c.armies.Add(a)
+		for _, a := range c.Armies {
+			// Link Armies to their City
+			a.City = c
+			// FIXME: Link each Army to its Fight
 		}
 	}
 
@@ -151,18 +143,20 @@ func (w *World) PostLoad() error {
 			maxId = u.Id
 		}
 	}
-	for _, u := range w.Live.Armies {
-		if u.Id > maxId {
-			maxId = u.Id
-		}
-	}
-	for _, u := range w.Live.Cities {
-		if u.Id > maxId {
-			maxId = u.Id
-		}
-	}
-
 	for _, c := range w.Live.Cities {
+		if c.Id > maxId {
+			maxId = c.Id
+		}
+		for _, a := range c.Armies {
+			if a.Id > maxId {
+				maxId = a.Id
+			}
+			for _, u := range a.Units {
+				if u.Id > maxId {
+					maxId = u.Id
+				}
+			}
+		}
 		for _, u := range c.Units {
 			if u.Id > maxId {
 				maxId = u.Id
@@ -174,13 +168,6 @@ func (w *World) PostLoad() error {
 			}
 		}
 		for _, u := range c.Buildings {
-			if u.Id > maxId {
-				maxId = u.Id
-			}
-		}
-	}
-	for _, a := range w.Live.Armies {
-		for _, u := range a.Units {
 			if u.Id > maxId {
 				maxId = u.Id
 			}
@@ -212,7 +199,6 @@ func (w *World) SaveLiveToFiles(basePath string) (string, error) {
 	}
 	cfgSections := []cfgSection{
 		{p + "/map.json", &w.Places},
-		{p + "/armies.json", &w.Live.Armies},
 		{p + "/cities.json", &w.Live.Cities},
 		{p + "/fights.json", &w.Live.Fights},
 	}
@@ -244,7 +230,6 @@ func (w *World) LoadLiveFromFiles(basePath string) error {
 	}
 	cfgSections := []cfgSection{
 		{basePath + "/map.json", &w.Places},
-		{basePath + "/armies.json", &w.Live.Armies},
 		{basePath + "/cities.json", &w.Live.Cities},
 		{basePath + "/fights.json", &w.Live.Fights},
 	}

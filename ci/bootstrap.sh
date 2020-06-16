@@ -15,7 +15,7 @@
 # with:
 #   MAP:         the path to the map seed, a.k.a a JSON file containing an object that coarsely describe the map and the name of the cities
 #   DEFINITIONS: the path to the definitions that make the world (knowledge, buildings, troops)
-#   OUTPUT:      the path to the live DB of the world (actual map, users, cities, armies) plus a copy of the expanded description.
+#   OUTPUT:      the path to the live DB of the world (actual map, users, cities) plus a copy of the expanded description.
 #
 # Example:
 #   ./ci/bootstrap.sh \
@@ -39,13 +39,20 @@ DEFS=$1
 [[ -r "${DEFS}/knowledge.json" ]]
 shift
 
+TRANSLATIONS=$1
+[[ -d "$TRANSLATIONS" ]]
+[[ -r "${TRANSLATIONS}/active.en.toml" ]]
+shift
+
 OUT=$1
 [[ -d "${OUT}" ]]
 shift
+
 mkdir -p $OUT/definitions
+mkdir -p $OUT/lang
 mkdir -p $OUT/live
 mkdir -p $OUT/save
-
+mkdir -p $OUT/evt
 TMP=$(mktemp -d)
 
 
@@ -56,7 +63,6 @@ hege-mapper export --config "${DEFS}" "${TMP}" < "${TMP}/map_seed.json" > "${TMP
 
 [[ -r "${HEGE_LIVE}/cities.json" ]]
 [[ -r "${HEGE_LIVE}/map.json" ]]
-[[ -r "${HEGE_LIVE}/armies.json" ]]
 [[ -r "${HEGE_LIVE}/fights.json" ]]
 [[ -r "${TMP}/auth.json" ]]
 
@@ -68,11 +74,14 @@ cp -p \
   "${OUT}/definitions/"
 
 cp -p \
+  "${TRANSLATIONS}/"active.*.toml \
+  "${OUT}/lang"
+
+cp -p \
 	"${TMP}/map_seed.json" \
   "${OUT}/"
 
 cp -p \
-  "${HEGE_LIVE}/armies.json" \
   "${HEGE_LIVE}/fights.json" \
   "${HEGE_LIVE}/cities.json" \
   "${HEGE_LIVE}/map.json" \
@@ -81,6 +90,4 @@ cp -p \
 
 rm -rf "${TMP}"
 
-
 echo $OUT
-

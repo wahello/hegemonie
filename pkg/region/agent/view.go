@@ -132,7 +132,7 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 		})
 	}
 
-	for _, a := range c.Armies() {
+	for _, a := range c.Armies {
 		v.Armies = append(v.Armies, &proto.ArmyView{
 			Id: a.Id, Name: a.Name, Location: a.Cell,
 			Stock: resAbsM2P(a.Stock),

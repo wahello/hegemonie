@@ -7,6 +7,7 @@ package region
 
 import (
 	"errors"
+	"fmt"
 )
 
 func MakeCity() *City {
@@ -16,7 +17,7 @@ func MakeCity() *City {
 		Units:      make(SetOfUnits, 0),
 		Buildings:  make(SetOfBuildings, 0),
 		Knowledges: make(SetOfKnowledges, 0),
-		armies:     make(SetOfArmies, 0),
+		Armies:     make(SetOfArmies, 0),
 		lieges:     make(SetOfCities, 0),
 	}
 }
@@ -46,14 +47,12 @@ func (c *City) Knowledge(id uint64) *Knowledge {
 	return c.Knowledges.Get(id)
 }
 
-func (c *City) Armies() []*Army { return c.armies[:] }
-
 // Return total Popularity of the current City (permanent + transient)
 func (c *City) GetActualPopularity(w *World) int64 {
 	var pop int64 = c.PermanentPopularity
 
 	// Add Transient values for Units in the Armies
-	for _, a := range c.armies {
+	for _, a := range c.Armies {
 		for _, u := range a.Units {
 			ut := w.UnitTypeGet(u.Type)
 			pop += ut.PopBonus
@@ -158,31 +157,32 @@ func (c *City) GetStock(w *World) *CityStock {
 	return p
 }
 
-// Create an Army made of the Units defending the City
-func (c *City) MakeDefence(w *World) *Army {
+// Create an Army made of some Unit of the City
+func (c *City) CreateArmy(w *World, units ...*Unit) *Army {
+	aid := w.getNextId()
 	a := &Army{
-		Id:       w.getNextId(),
-		City:     c.Id,
+		Id:       aid,
+		City:     c,
 		Cell:     c.Cell,
 		Fight:    0,
-		Name:     "Wot?",
+		Name:     fmt.Sprintf("A-%d", aid),
 		Units:    make(SetOfUnits, 0),
 		Postures: []int64{int64(c.Id)},
 		Targets:  make([]Command, 0),
 	}
-	w.Live.Armies.Add(a)
-	c.armies.Add(a)
+	c.Armies.Add(a)
 
-	uid := make([]uint64, 0)
-	for _, pUnit := range c.Units {
-		uid = append(uid, pUnit.Id)
-	}
-	for _, id := range uid {
-		if err := c.TransferOwnUnit(a, id); err != nil {
+	for _, u := range units {
+		if err := c.TransferOwnUnit(a, u.Id); err != nil {
 			panic(err.Error())
 		}
 	}
 	return a
+}
+
+// Create an Army made of all the Units defending the City
+func (c *City) MakeDefence(w *World) *Army {
+	return c.CreateArmy(w, c.Units...)
 }
 
 // Play one round of local production and return the
@@ -340,7 +340,7 @@ func (c *City) SendResourcesTo(w *World, overlord *City, amount Resources) error
 }
 
 func (c *City) TransferOwnResources(a *Army, r Resources) error {
-	if a.City != c.Id {
+	if a.City != c {
 		return errors.New("Army not controlled by the City")
 	}
 	if !c.Stock.GreaterOrEqualTo(r) {
@@ -357,7 +357,7 @@ func (c *City) TransferOwnUnit(a *Army, units ...uint64) error {
 		panic("EINVAL")
 	}
 
-	if a.City != c.Id {
+	if a.City != c {
 		return errors.New("Army not controlled by the City")
 	}
 

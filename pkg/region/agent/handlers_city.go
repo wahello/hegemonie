@@ -29,7 +29,7 @@ func (s *srvCity) ListArmies(ctx context.Context, req *proto.CityId) (*proto.Lis
 	}
 
 	rep := &proto.ListOfNamedItems{}
-	for _, a := range city.Armies() {
+	for _, a := range city.Armies {
 		rep.Items = append(rep.Items, &proto.NamedItem{Id: a.Id, Name: a.Name})
 	}
 	return rep, nil
@@ -115,11 +115,7 @@ func (s *srvCity) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*pr
 		}
 	}
 
-	army, err := s.w.ArmyCreate(city, req.Name)
-	if err != nil {
-		return nil, err
-	}
-
+	army := city.CreateArmy(s.w)
 	for _, uid := range req.Unit {
 		city.TransferOwnUnit(army, uid)
 	}
@@ -135,8 +131,8 @@ func (s *srvCity) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) 
 		return nil, err
 	}
 
-	army := s.w.ArmyGet(req.Army)
-	if err != nil {
+	army := city.Armies.Get(req.Army)
+	if army == nil {
 		return nil, status.Errorf(codes.NotFound, "Army not found (id %v)", req.Army)
 	}
 
@@ -144,7 +140,6 @@ func (s *srvCity) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) 
 	if err != nil {
 		return nil, err
 	}
-
 	return &proto.None{}, nil
 }
 
@@ -161,7 +156,7 @@ func (s *srvCity) CreateTransport(ctx context.Context, req *proto.CreateTranspor
 	if !city.Stock.GreaterOrEqualTo(r) {
 		return nil, status.Errorf(codes.FailedPrecondition, "Insufficient resources")
 	}
-	army, err := s.w.ArmyCreate(city, req.Name)
+	army := city.CreateArmy(s.w)
 	city.Stock.Remove(r)
 	army.Stock.Add(r)
 	return &proto.None{}, nil
@@ -175,8 +170,9 @@ func (s *srvCity) TransferResources(ctx context.Context, req *proto.TransferReso
 	if err != nil {
 		return nil, err
 	}
-	army := s.w.ArmyGet(req.Army)
-	if army != nil {
+
+	army := city.Armies.Get(req.Army)
+	if army == nil {
 		return nil, status.Errorf(codes.NotFound, "City Not found")
 	}
 

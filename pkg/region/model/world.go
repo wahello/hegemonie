@@ -30,8 +30,10 @@ func (w *World) Produce() {
 }
 
 func (w *World) Move() {
-	for _, a := range w.Live.Armies {
-		a.Move(w)
+	for _, c := range w.Live.Cities {
+		for _, a := range c.Armies {
+			a.Move(w)
+		}
 	}
 }
 
@@ -41,21 +43,6 @@ func (w *World) UnitTypeGet(id uint64) *UnitType {
 
 func (w *World) UnitGetFrontier(owned []*Building) []*UnitType {
 	return w.Definitions.Units.Frontier(owned)
-}
-
-func (w *World) ArmyCreate(c *City, name string) (*Army, error) {
-	a := &Army{
-		Id: w.getNextId(), City: c.Id, Cell: c.Cell,
-		Name: name, Units: make(SetOfUnits, 0),
-		Targets: make([]Command, 0),
-	}
-	w.Live.Armies.Add(a)
-	c.armies.Add(a)
-	return a, nil
-}
-
-func (w *World) ArmyGet(id uint64) *Army {
-	return w.Live.Armies.Get(id)
 }
 
 func (w *World) CityGet(id uint64) *City {

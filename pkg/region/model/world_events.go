@@ -22,9 +22,10 @@ type Notifier interface {
 type EventArmy interface {
 	Item(a *Army) EventArmy
 	// Notify the movement
-	Move(src, dst uint64)
+	Move(src, dst uint64) EventArmy
 	// Notify the movement is not possible
-	NoRoute(src, dst uint64)
+	NoRoute(src, dst uint64) EventArmy
+	Send()
 }
 
 type EventKnowledge interface {
@@ -52,9 +53,10 @@ func (n *noEvt) Army(to *City) EventArmy           { return &noEvtArmy{} }
 func (n *noEvt) Knowledge(to *City) EventKnowledge { return &noEvtKnowledge{} }
 func (n *noEvt) Units(to *City) EventUnits         { return &noEvtUnits{} }
 
-func (ctx *noEvtArmy) Item(a *Army) EventArmy  { return ctx }
-func (ctx *noEvtArmy) Move(src, dst uint64)    {}
-func (ctx *noEvtArmy) NoRoute(src, dst uint64) {}
+func (ctx *noEvtArmy) Item(a *Army) EventArmy            { return ctx }
+func (ctx *noEvtArmy) Move(src, dst uint64) EventArmy    { return ctx }
+func (ctx *noEvtArmy) NoRoute(src, dst uint64) EventArmy { return ctx }
+func (ctx *noEvtArmy) Send()                             {}
 
 func (ctx *noEvtKnowledge) Item(c *City, k *KnowledgeType) EventKnowledge { return ctx }
 func (ctx *noEvtKnowledge) Step(current, max uint64) EventKnowledge       { return ctx }
@@ -107,14 +109,21 @@ func (evt *logEvtArmy) Item(a *Army) EventArmy {
 	return evt
 }
 
-func (evt *logEvtArmy) Move(src, dst uint64) {
+func (evt *logEvtArmy) Move(src, dst uint64) EventArmy {
 	evt.sub.Move(src, dst)
-	evt.log.Uint64("src", src).Uint64("dst", dst).Msg("move")
+	evt.log.Uint64("src", src).Uint64("dst", dst)
+	return evt
 }
 
-func (evt *logEvtArmy) NoRoute(src, dst uint64) {
+func (evt *logEvtArmy) NoRoute(src, dst uint64) EventArmy {
 	evt.sub.Move(src, dst)
-	evt.log.Uint64("src", src).Uint64("dst", dst).Msg("no route")
+	evt.log.Uint64("src", src).Uint64("dst", dst)
+	return evt
+}
+
+func (evt *logEvtArmy) Send() {
+	evt.sub.Send()
+	evt.log.Send()
 }
 
 func (evt *logEvtKnowledge) Item(c *City, k *KnowledgeType) EventKnowledge {

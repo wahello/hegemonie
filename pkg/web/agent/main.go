@@ -8,26 +8,52 @@ package hegemonie_web_agent
 import (
 	"context"
 	"errors"
+	"github.com/BurntSushi/toml"
 	"github.com/go-macaron/binding"
+	"github.com/go-macaron/pongo2"
+	"github.com/go-macaron/session"
+	_ "github.com/go-macaron/session/memcache"
+	"github.com/google/uuid"
+	region "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/spf13/cobra"
+	"golang.org/x/text/language"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+	"gopkg.in/macaron.v1"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
-	region "github.com/jfsmig/hegemonie/pkg/region/proto"
-	"github.com/jfsmig/hegemonie/pkg/utils"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
-	"github.com/go-macaron/pongo2"
-	"github.com/go-macaron/session"
-	_ "github.com/go-macaron/session/memcache"
-	"gopkg.in/macaron.v1"
 )
+
+type FrontService struct {
+	dirTemplates string
+	dirStatic    string
+	dirLang      string
+
+	endpointNorth  string
+	endpointRegion string
+	endpointAuth   string
+	endpointEvent  string
+
+	translations *i18n.Bundle
+
+	cnxRegion *grpc.ClientConn
+	cnxAuth   *grpc.ClientConn
+	cnxEvent  *grpc.ClientConn
+
+	rw        sync.RWMutex
+	units     map[uint64]*region.UnitTypeView
+	buildings map[uint64]*region.BuildingTypeView
+	knowledge map[uint64]*region.KnowledgeTypeView
+	cities    map[uint64]*region.PublicCity
+	locations map[uint64]*region.Vertex
+}
 
 func Command() *cobra.Command {
 	front := FrontService{}
@@ -45,6 +71,12 @@ func Command() *cobra.Command {
 			}
 			if fi, err := os.Stat(front.dirStatic); err != nil || !fi.IsDir() {
 				return errors.New("Invalid path for the directory of static files")
+			}
+
+			front.translations = i18n.NewBundle(language.English)
+			front.translations.RegisterUnmarshalFunc("toml", toml.Unmarshal)
+			if err := front.loadTranslations(); err != nil {
+				return err
 			}
 
 			m := macaron.New()
@@ -142,28 +174,40 @@ func Command() *cobra.Command {
 		"templates", "/data/templates", "Directory with the HTML templates")
 	agent.Flags().StringVar(&front.dirStatic,
 		"static", "/data/static", "Directory with the static files")
+	agent.Flags().StringVar(&front.dirLang,
+		"lang", "/data/lang", "Directory with the translation files")
 	return agent
 }
 
-type FrontService struct {
-	dirTemplates string
-	dirStatic    string
-
-	endpointNorth  string
-	endpointRegion string
-	endpointAuth   string
-	endpointEvent  string
-
-	cnxRegion *grpc.ClientConn
-	cnxAuth   *grpc.ClientConn
-	cnxEvent  *grpc.ClientConn
-
-	rw        sync.RWMutex
-	units     map[uint64]*region.UnitTypeView
-	buildings map[uint64]*region.BuildingTypeView
-	knowledge map[uint64]*region.KnowledgeTypeView
-	cities    map[uint64]*region.PublicCity
-	locations map[uint64]*region.Vertex
+func (f *FrontService) loadTranslations() error {
+	if f.dirLang == "" {
+		return errors.New("No directory set with the translations")
+	}
+	return filepath.Walk(f.dirLang, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			utils.Logger.Info().Str("path", path).Err(err).Msg("Skip")
+		} else if filepath.Ext(path) != ".toml" {
+			utils.Logger.Info().Str("path", path).Str("reason", "not TOML").Msg("Skip")
+		} else if _, fn := filepath.Split(path); !strings.HasPrefix(fn, "active.") {
+			utils.Logger.Info().Str("path", path).Str("reason", "no \"active.\" prefix").Msg("Skip")
+		} else {
+			var mf *i18n.MessageFile
+			mf, err = f.translations.LoadMessageFile(path)
+			if err != nil {
+				utils.Logger.Warn().
+					Str("file", path).
+					Err(err).
+					Msg("Loading")
+			} else {
+				utils.Logger.Info().
+					Str("file", path).
+					Str("format", mf.Format).
+					Int("count", len(mf.Messages)).
+					Msg("Loaded")
+			}
+		}
+		return err
+	})
 }
 
 func (f *FrontService) loadAllCities(ctx context.Context, cli region.MapClient) (map[uint64]*region.PublicCity, error) {

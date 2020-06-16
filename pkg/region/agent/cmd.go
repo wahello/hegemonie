@@ -102,6 +102,14 @@ func (self *regionConfig) execute() error {
 		return e("failed to listen: %v", err)
 	}
 
+	var cnxEvent *grpc.ClientConn
+	cnxEvent, err = grpc.Dial(self.endpointEvent, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	defer cnxEvent.Close()
+	w.SetNotifier(&EventStore{cnx: cnxEvent})
+
 	srv := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
 	proto.RegisterMapServer(srv, &srvMap{cfg: self, w: &w})
 	proto.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})

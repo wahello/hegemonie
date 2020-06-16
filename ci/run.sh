@@ -11,40 +11,40 @@
 #   on 127.0.0.1
 #
 # Usage:
-#   $ run.sh MAP DEFINITIONS
+#   $ run.sh MAP DEFINITIONS TRANSLATIONS
 # with:
-#   MAP:         the path to the map seed, a.k.a a JSON file containing an object that coarsely describe the map and the name of the cities
-#   DEFINITIONS: the path to the definitions that make the world (knowledge, buildings, troops)
+#   MAP:          the path to the map seed, a.k.a a JSON file containing an object that coarsely describe the map and the name of the cities
+#   DEFINITIONS:  the path to the definitions that make the world (knowledge, buildings, troops)
+#   TRANSLATIONS: the path to the directory with all the go-i18n TOML files
 #
 # Example:
 #   ./ci/run.sh \
 #     ./docs/hegeIV/map-calaquyr.json \
 #     ./docs/hegeIV/definitions \
+#     ./docs/hegeIV/lang \
 #
 
 set -ex
 
 # Sanitize the input
-MAP=$1
-[[ -r "${MAP}" ]]
+BASE=$1
+[[ -d "$BASE" ]]
+[[ -d "$BASE/definitions" ]]
+[[ -d "$BASE/lang" ]]
+[[ -d "$BASE/live" ]]
+[[ -d "$BASE/save" ]]
+[[ -d "$BASE/evt" ]]
 shift
 
-DEFS=$1
-[[ -d "$DEFS" ]]
-[[ "${DEFS}/config.json" ]]
-[[ "${DEFS}/units.json" ]]
-[[ "${DEFS}/buildings.json" ]]
-[[ "${DEFS}/knowledge.json" ]]
-shift
+DEFS="$BASE/definitions"
+[[ -r "${DEFS}/config.json" ]]
+[[ -r "${DEFS}/units.json" ]]
+[[ -r "${DEFS}/buildings.json" ]]
+[[ -r "${DEFS}/knowledge.json" ]]
 
-# Prepare the working environment
-TMP=$(mktemp -d)
-mkdir $TMP/live
-mkdir $TMP/save
-mkdir $TMP/evt
-
-./ci/bootstrap.sh "${MAP}" "${DEFS}" "${TMP}"
-
+TRANSLATIONS="$BASE/lang"
+[[ -d "$TRANSLATIONS" ]]
+[[ -r "${TRANSLATIONS}/active.en.toml" ]]
 
 # Spawn the core services
 function finish() {
@@ -55,28 +55,29 @@ function finish() {
 
 heged auth \
 	--id hege,aaa,1 \
-	--live "${TMP}/live" \
-	--save "${TMP}/save" \
+	--live "${BASE}/live" \
+	--save "${BASE}/save" \
 	--endpoint 127.0.0.1:8082 \
 	&
 
 heged evt \
 	--id hege,evt,1 \
-	--base "${TMP}/evt" \
+	--base "${BASE}/evt" \
 	--endpoint 127.0.0.1:8083 \
 	&
 
 heged region \
 	--id hege,reg,1 \
-	--defs "${DEFS}" \
-	--live "${TMP}/live" \
-	--save "${TMP}/save" \
+	--defs "${BASE}/definitions" \
+	--live "${BASE}/live" \
+	--save "${BASE}/save" \
 	--endpoint 127.0.0.1:8081 \
 	--event 127.0.0.1:8083 \
 	&
 
 heged web \
 	--id hege,web,1 \
+	--lang "${BASE}/lang" \
 	--templates $PWD/pkg/web/templates \
 	--static $PWD/pkg/web/static \
 	--endpoint 127.0.0.1:8080 \

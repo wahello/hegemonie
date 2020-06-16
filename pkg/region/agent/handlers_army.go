@@ -24,10 +24,8 @@ func (s *srvArmy) getAndCheckArmy(req *proto.ArmyId) (*region.City, *region.Army
 	if err != nil {
 		return nil, nil, err
 	}
-	if army := s.w.ArmyGet(req.Army); army == nil {
+	if army := city.Armies.Get(req.Army); army == nil {
 		return nil, nil, status.Errorf(codes.NotFound, "Army Not found")
-	} else if army.City != city.Id {
-		return nil, nil, status.Errorf(codes.PermissionDenied, "Army not controlled")
 	} else {
 		return city, army, err
 	}

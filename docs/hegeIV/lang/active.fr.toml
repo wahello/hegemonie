@@ -1,0 +1,5 @@
+[Move]
+description = "Army movement seen by the local city"
+hash = "sha1-12e6d93c19b0353cf8dded3a65f6926ba6877a38"
+one = "{{.SourceName}}: {{.ArmyName}} passe à proximité."
+other = "{{.SourceName}}: {{.ArmyName}} passe à proximité."

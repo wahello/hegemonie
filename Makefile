@@ -55,7 +55,7 @@ bench: all
 		| sort | uniq | while read D ; do ( set -x ; cd $$D && go -bench=. test ) done
 
 try: all
-	./ci/run.sh $$PWD/docs/hegeIV/map-calaquyr.json $$PWD/docs/hegeIV/definitions
+	./ci/local.sh
 
 img_tag:
 	 ( export L='(C) Quentin Minten / CC BY-NC-SA 3.0' ; \

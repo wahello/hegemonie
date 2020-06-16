@@ -87,9 +87,6 @@ type DefinitionsBase struct {
 }
 
 type LiveBase struct {
-	// Free armies on the map, not involved in any Fight
-	Armies SetOfArmies
-
 	// All the cities present on the Region
 	Cities SetOfCities
 
@@ -313,7 +310,7 @@ type City struct {
 
 	// PRIVATE
 	// Armies under the responsibility of the current City
-	armies SetOfArmies
+	Armies SetOfArmies
 
 	// PRIVATE
 	// Pointer to the current Overlord of the current City
@@ -405,7 +402,7 @@ type Army struct {
 	Id uint64
 
 	// The ID of the City that controls the current Army
-	City uint64 `json:",omitempty"`
+	City *City `json:"-"`
 
 	// The ID of the Fight this Army is involved in.
 	Fight uint64 `json:",omitempty"`
