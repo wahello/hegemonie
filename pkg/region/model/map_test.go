@@ -44,9 +44,6 @@ func TestMapEinval(t *testing.T) {
 			if err := m.RoadCreate(src, dst, true); err == nil {
 				t.Fatal()
 			}
-			if err := m.RoadDelete(src, dst, true); err == nil {
-				t.Fatal()
-			}
 		}
 	}
 }

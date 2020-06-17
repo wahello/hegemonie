@@ -34,9 +34,7 @@ func (s *srvMap) Edges(ctx context.Context, req *proto.ListEdgesReq) (*proto.Lis
 
 	rep := &proto.ListOfEdges{}
 	for _, x := range s.w.Places.Roads.Slice(req.MarkerSrc, req.MarkerDst, req.Max) {
-		if !x.Deleted {
-			rep.Items = append(rep.Items, &proto.Edge{Src: x.S, Dst: x.D})
-		}
+		rep.Items = append(rep.Items, &proto.Edge{Src: x.S, Dst: x.D})
 	}
 	return rep, nil
 }

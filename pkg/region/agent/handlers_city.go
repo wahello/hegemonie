@@ -19,22 +19,6 @@ type srvCity struct {
 	w   *region.World
 }
 
-func (s *srvCity) ListArmies(ctx context.Context, req *proto.CityId) (*proto.ListOfNamedItems, error) {
-	s.w.RLock()
-	defer s.w.RUnlock()
-
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
-	if err != nil {
-		return nil, err
-	}
-
-	rep := &proto.ListOfNamedItems{}
-	for _, a := range city.Armies {
-		rep.Items = append(rep.Items, &proto.NamedItem{Id: a.Id, Name: a.Name})
-	}
-	return rep, nil
-}
-
 func (s *srvCity) List(ctx context.Context, req *proto.ListReq) (*proto.ListOfCities, error) {
 	s.w.RLock()
 	defer s.w.RUnlock()
@@ -100,6 +84,23 @@ func (s *srvCity) Train(ctx context.Context, req *proto.TrainReq) (*proto.None, 
 	return &proto.None{}, err
 }
 
+func (s *srvCity) ListArmies(ctx context.Context, req *proto.CityId) (*proto.ListOfNamedItems, error) {
+	s.w.RLock()
+	defer s.w.RUnlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
+	}
+
+	rep := &proto.ListOfNamedItems{}
+	for _, a := range city.Armies {
+		rep.Items = append(rep.Items, &proto.NamedItem{Id: a.Id, Name: a.Name})
+	}
+	return rep, nil
+}
+
+// Create an army made of only Units (no Resources carried)
 func (s *srvCity) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*proto.None, error) {
 	s.w.WLock()
 	defer s.w.WUnlock()
@@ -109,17 +110,23 @@ func (s *srvCity) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*pr
 		return nil, err
 	}
 
-	for _, uid := range req.Unit {
-		if city.Unit(uid) == nil {
-			return nil, status.Errorf(codes.NotFound, "Troop not found (id %v)", uid)
-		}
+	_, err = city.CreateArmyFromIds(s.w, req.Unit...)
+	return &proto.None{}, err
+}
+
+// Create an army made of only Resources (no Units)
+func (s *srvCity) CreateTransport(ctx context.Context, req *proto.CreateTransportReq) (*proto.None, error) {
+	s.w.WLock()
+	defer s.w.WUnlock()
+
+	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+	if err != nil {
+		return nil, err
 	}
 
-	army := city.CreateArmy(s.w)
-	for _, uid := range req.Unit {
-		city.TransferOwnUnit(army, uid)
-	}
-	return &proto.None{}, nil
+	r := resAbsP2M(req.Stock)
+	_, err = city.CreateTransport(s.w, r)
+	return &proto.None{}, err
 }
 
 func (s *srvCity) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) (*proto.None, error) {
@@ -137,29 +144,7 @@ func (s *srvCity) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) 
 	}
 
 	err = city.TransferOwnUnit(army, req.Unit...)
-	if err != nil {
-		return nil, err
-	}
-	return &proto.None{}, nil
-}
-
-func (s *srvCity) CreateTransport(ctx context.Context, req *proto.CreateTransportReq) (*proto.None, error) {
-	s.w.WLock()
-	defer s.w.WUnlock()
-
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
-	if err != nil {
-		return nil, err
-	}
-
-	r := resAbsP2M(req.Stock)
-	if !city.Stock.GreaterOrEqualTo(r) {
-		return nil, status.Errorf(codes.FailedPrecondition, "Insufficient resources")
-	}
-	army := city.CreateArmy(s.w)
-	city.Stock.Remove(r)
-	army.Stock.Add(r)
-	return &proto.None{}, nil
+	return &proto.None{}, err
 }
 
 func (s *srvCity) TransferResources(ctx context.Context, req *proto.TransferResourcesReq) (*proto.None, error) {
@@ -177,8 +162,5 @@ func (s *srvCity) TransferResources(ctx context.Context, req *proto.TransferReso
 	}
 
 	err = city.TransferOwnResources(army, resAbsP2M(req.Stock))
-	if err != nil {
-		return nil, err
-	}
-	return &proto.None{}, nil
+	return &proto.None{}, err
 }

@@ -21,9 +21,6 @@ func (a *Army) ApplyAgressivity(w *World) {
 }
 
 func (a *Army) Move(w *World) {
-	if a.Deleted {
-		return
-	}
 	if a.Fight != 0 {
 		return
 	}
@@ -43,9 +40,10 @@ func (a *Army) Move(w *World) {
 		}
 
 		nxt, err := w.Places.PathNextStep(src, dst)
-		if err != nil {
-			utils.Logger.Warn().Err(err).Uint64("src", src).Uint64("dst", dst).Send()
-		} else if nxt == 0 {
+		if err != nil || nxt == 0 {
+			if err != nil {
+				utils.Logger.Warn().Err(err).Uint64("src", src).Uint64("dst", dst).Send()
+			}
 			w.notifier.Army(a.City).Item(a).NoRoute(src, dst).Send()
 		} else {
 			a.Cell = nxt
@@ -75,7 +73,7 @@ func (a *Army) Move(w *World) {
 			case CmdCityDeposit:
 				a.Deposit(w, pLocalCity)
 			case CmdCityDisband:
-				a.Disband(w, pLocalCity)
+				a.Disband(w, pLocalCity, true)
 			}
 			if !preventPopping {
 				a.PopCommand()
@@ -94,7 +92,6 @@ func (a *Army) Deposit(w *World, pCity *City) {
 	a.Stock.Zero()
 
 	// FIXME(jfs): Popularities
-
 	// FIXME(jfs): Notify pLocalCity
 	// FIXME(jfs): Notify a.City
 }
@@ -111,7 +108,7 @@ func (a *Army) Massacre(w *World, pCity *City) {
 	// FIXME(jfs): Notify a.City
 }
 
-func (a *Army) Disband(w *World, pCity *City) {
+func (a *Army) Disband(w *World, pCity *City, shouldNotify bool) {
 	if pCity == nil {
 		panic("Impossible action: nil city")
 	}
@@ -123,10 +120,11 @@ func (a *Army) Disband(w *World, pCity *City) {
 		}
 		sort.Sort(pCity.Units)
 		a.Units = a.Units[:0]
-		a.Deleted = true
 
-		// FIXME(jfs): Notify pCity the arrival of 'nb' units
-		// FIXME(jfs): Notify a.City the transfer of 'nb' units
+		if shouldNotify {
+			// FIXME(jfs): Notify pCity the arrival of 'nb' units
+			// FIXME(jfs): Notify a.City the transfer of 'nb' units
+		}
 	}
 }
 
@@ -136,7 +134,7 @@ func (a *Army) BreakBuilding(w *World, pCity *City) {
 	}
 
 	idx := rand.Intn(len(pCity.Buildings))
-	pCity.Buildings[idx].Deleted = true
+	pCity.Buildings.Remove(pCity.Buildings[idx])
 
 	// FIXME(jfs): Popularities
 	// FIXME(jfs): Notify pLocalCity
@@ -173,9 +171,10 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 			Id: w.getNextId(), Cell: pCity.Cell,
 			Defense: make(SetOfArmies, 0),
 			Attack:  make(SetOfArmies, 0)}
-		def := pCity.MakeDefence(w)
-		def.Fight = pCity.Assault.Id
-		pCity.Assault.Defense[def.Id] = def
+		if def, _ := pCity.CreateArmyDefence(w); def != nil {
+			def.Fight = pCity.Assault.Id
+			pCity.Assault.Defense[def.Id] = def
+		}
 	}
 
 	if pCity.Assault.Cell != a.Cell {

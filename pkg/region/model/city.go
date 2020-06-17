@@ -10,6 +10,11 @@ import (
 	"fmt"
 )
 
+var (
+	ErrNoSuchUnit         = errors.New("No such Unit")
+	ErrNotEnoughResources = errors.New("Not enough resources")
+)
+
 func MakeCity() *City {
 	return &City{
 		Id:         0,
@@ -157,8 +162,7 @@ func (c *City) GetStock(w *World) *CityStock {
 	return p
 }
 
-// Create an Army made of some Unit of the City
-func (c *City) CreateArmy(w *World, units ...*Unit) *Army {
+func (c *City) CreateEmptyArmy(w *World) *Army {
 	aid := w.getNextId()
 	a := &Army{
 		Id:       aid,
@@ -171,18 +175,60 @@ func (c *City) CreateArmy(w *World, units ...*Unit) *Army {
 		Targets:  make([]Command, 0),
 	}
 	c.Armies.Add(a)
-
-	for _, u := range units {
-		if err := c.TransferOwnUnit(a, u.Id); err != nil {
-			panic(err.Error())
-		}
-	}
 	return a
 }
 
+func unitsToId(uv []*Unit) (out []uint64) {
+	for _, u := range uv {
+		out = append(out, u.Id)
+	}
+	return out
+}
+
+func unitsFilterIdle(uv []*Unit) (out []*Unit) {
+	for _, u := range uv {
+		if u.Health > 0 && u.Ticks <= 0 {
+			out = append(out, u)
+		}
+	}
+	return out
+}
+
+// Create an Army made of some Unit of the City
+func (c *City) CreateArmyFromUnit(w *World, units ...*Unit) (*Army, error) {
+	return c.CreateArmyFromIds(w, unitsToId(unitsFilterIdle(units))...)
+}
+
+// Create an Army made of some Unit of the City
+func (c *City) CreateArmyFromIds(w *World, ids ...uint64) (*Army, error) {
+	a := c.CreateEmptyArmy(w)
+	err := c.TransferOwnUnit(a, ids...)
+	if err != nil { // Rollback
+		a.Disband(w, c, false)
+		return nil, err
+	}
+	return a, nil
+}
+
 // Create an Army made of all the Units defending the City
-func (c *City) MakeDefence(w *World) *Army {
-	return c.CreateArmy(w, c.Units...)
+func (c *City) CreateArmyDefence(w *World) (*Army, error) {
+	ids := unitsToId(unitsFilterIdle(c.Units))
+	if len(ids) <= 0 {
+		return nil, ErrNoSuchUnit
+	}
+	return c.CreateArmyFromIds(w, ids...)
+}
+
+// Create an Army carrying resources you own
+func (c *City) CreateTransport(w *World, r Resources) (*Army, error) {
+	if !c.Stock.GreaterOrEqualTo(r) {
+		return nil, ErrNotEnoughResources
+	}
+
+	a := c.CreateEmptyArmy(w)
+	c.Stock.Remove(r)
+	a.Stock.Add(r)
+	return a, nil
 }
 
 // Play one round of local production and return the
@@ -368,6 +414,8 @@ func (c *City) TransferOwnUnit(a *Army, units ...uint64) error {
 		}
 		if u := c.Units.Get(uid); u == nil {
 			return errors.New("Unit not found")
+		} else if u.Ticks > 0 || u.Health <= 0 {
+			continue
 		} else {
 			allUnits[uid] = u
 		}

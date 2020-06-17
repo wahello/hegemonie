@@ -228,9 +228,6 @@ type Building struct {
 
 	// How many construction rounds remain before the building's achievement
 	Ticks uint32 `json:",omitempty"`
-
-	// Has the building been ruined?
-	Deleted bool `json:",omitempty"`
 }
 
 type City struct {
@@ -410,10 +407,6 @@ type Army struct {
 	// The ID of the Cell the Army is on
 	Cell uint64 `json:",omitempty"`
 
-	// Is the current Army still alive?
-	// This flag is used to save array handlings.
-	Deleted bool `json:",omitempty"`
-
 	// A display name for the current City
 	Name string
 
@@ -454,9 +447,6 @@ type MapEdge struct {
 
 	// Unique identifier of the destination Cell
 	D uint64 `json:"dst"`
-
-	// May the road be used by Units
-	Deleted bool `json:",omitempty"`
 }
 
 // A MapVertex is a vertex in the transportation directed graph

@@ -57,7 +57,7 @@ func (s SetOfEdges) Slice(markerSrc, markerDst uint64, max uint32) []MapEdge {
 
 	needle := MapEdge{S: markerSrc, D: markerDst}
 	for ; i < iMax; i++ {
-		if s[i].Deleted || s.edgeLess(i, needle) {
+		if s.edgeLess(i, needle) {
 			continue
 		}
 		tab = append(tab, *s[i])
@@ -99,7 +99,7 @@ func (m *Map) RoadCreateRaw(src, dst uint64) *MapEdge {
 		panic("Invalid Edge parameters")
 	}
 
-	e := &MapEdge{src, dst, false}
+	e := &MapEdge{src, dst}
 	m.Roads = append(m.Roads, e)
 	return e
 }
@@ -117,39 +117,10 @@ func (m *Map) RoadCreate(src, dst uint64, check bool) error {
 	}
 
 	if r := m.Roads.Get(src, dst); r != nil {
-		if r.Deleted {
-			r.Deleted = false
-			return nil
-		} else {
-			return errors.New("MapEdge exists")
-		}
+		return errors.New("MapEdge exists")
 	} else {
-		m.Roads.Add(&MapEdge{src, dst, false})
+		m.Roads.Add(&MapEdge{src, dst})
 		return nil
-	}
-}
-
-func (m *Map) RoadDelete(src, dst uint64, check bool) error {
-	if src == dst || src == 0 || dst == 0 {
-		return errors.New("EINVAL")
-	}
-
-	if check && !m.CellHas(src) {
-		return errors.New("Source not found")
-	}
-	if check && !m.CellHas(dst) {
-		return errors.New("Destination not found")
-	}
-
-	if r := m.Roads.Get(src, dst); r != nil {
-		if r.Deleted {
-			return errors.New("MapEdge closed")
-		} else {
-			r.Deleted = true
-			return nil
-		}
-	} else {
-		return errors.New("MapEdge not found")
 	}
 }
 
