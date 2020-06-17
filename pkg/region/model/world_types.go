@@ -262,6 +262,18 @@ type City struct {
 	// The total value is the permanent value plus several "transient" bonus
 	PermanentPopularity int64
 
+	// Permanent Health of the current City. In other words, how it resists
+	// to diseases, propagates pandemies, etc.
+	// Higher is better.
+	// The total value is the permanent value plus several "transient" bonus
+	PermanentHealth int64
+
+	// Permanent Intelligence of the current City. In other words, how to is
+	// able to spy other and resist to their intelligence assaults.
+	// Higher is better.
+	// The total value is the permanent value plus several "transient" bonus
+	PermanentIntelligence int64
+
 	// From Lawful (<0) to Chaotic (>0) (0 for neutral)
 	Chaotic int32
 
