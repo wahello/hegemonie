@@ -205,14 +205,14 @@ func (w *World) SaveLiveToFiles(basePath string) (string, error) {
 	for _, section := range cfgSections {
 		out, err := os.Create(section.path)
 		if err != nil {
-			return "", errors.New(fmt.Sprintf("Failed to save the World in [%s]: %s", section.path, err.Error()))
+			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
 		}
 		encoder := json.NewEncoder(out)
 		encoder.SetIndent("", " ")
 		err = encoder.Encode(section.obj)
 		_ = out.Close()
 		if err != nil {
-			return "", errors.New(fmt.Sprintf("Failed to save the World in [%s]: %s", section.path, err.Error()))
+			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
 		}
 	}
 
@@ -236,12 +236,12 @@ func (w *World) LoadLiveFromFiles(basePath string) error {
 	for _, section := range cfgSections {
 		in, err := os.Open(section.path)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to load the World from [%s]: %s", section.path, err.Error()))
+			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
 		}
 		err = json.NewDecoder(in).Decode(section.obj)
 		in.Close()
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to load the World from [%s]: %s", section.path, err.Error()))
+			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
 		}
 	}
 
@@ -271,14 +271,14 @@ func (w *World) SaveDefinitionsToFiles(basePath string) (string, error) {
 	for _, section := range cfgSections {
 		out, err := os.Create(section.path)
 		if err != nil {
-			return "", errors.New(fmt.Sprintf("Failed to save the World in [%s]: %s", section.path, err.Error()))
+			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
 		}
 		encoder := json.NewEncoder(out)
 		encoder.SetIndent("", " ")
 		err = encoder.Encode(section.obj)
 		_ = out.Close()
 		if err != nil {
-			return "", errors.New(fmt.Sprintf("Failed to save the World in [%s]: %s", section.path, err.Error()))
+			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
 		}
 	}
 
@@ -303,12 +303,12 @@ func (w *World) LoadDefinitionsFromFiles(basePath string) error {
 	for _, section := range cfgSections {
 		in, err := os.Open(section.path)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to load the World from [%s]: %s", section.path, err.Error()))
+			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
 		}
 		err = json.NewDecoder(in).Decode(section.obj)
 		in.Close()
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to load the World from [%s]: %s", section.path, err.Error()))
+			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
 		}
 	}
 

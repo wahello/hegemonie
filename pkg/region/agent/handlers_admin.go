@@ -49,7 +49,6 @@ func (s *srvAdmin) Save(ctx context.Context, req *proto.None) (*proto.None, erro
 
 	if _, err := s.w.SaveLiveToFiles(s.cfg.pathSave); err != nil {
 		return nil, err
-	} else {
-		return &proto.None{}, nil
 	}
+	return &proto.None{}, nil
 }

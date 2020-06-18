@@ -17,82 +17,78 @@ import (
 	"os"
 )
 
-func doShow(cmd *cobra.Command, args []string, cfg *authConfig) error {
+func connectAndDo(cfg *authConfig, action func(proto.AuthClient) error) error {
 	cnx, err := grpc.Dial(cfg.endpoint, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return err
 	}
 	defer cnx.Close()
 	client := proto.NewAuthClient(cnx)
+	return action(client)
+}
 
-	for _, a := range args {
-		view, err := client.UserShow(context.Background(),
-			&proto.UserShowReq{Mail: a})
-		if err != nil {
-			log.Printf("%v : %v", a, err)
-		} else {
-			enc := json.NewEncoder(os.Stdout)
-			enc.SetIndent("", " ")
-			enc.Encode(view)
+func doShow(cmd *cobra.Command, args []string, cfg *authConfig) error {
+	return connectAndDo(cfg, func(client proto.AuthClient) error {
+		for _, a := range args {
+			view, err := client.UserShow(context.Background(),
+				&proto.UserShowReq{Mail: a})
+			if err != nil {
+				log.Printf("%v : %v", a, err)
+			} else {
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", " ")
+				enc.Encode(view)
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func doCreate(cmd *cobra.Command, args []string, cfg *authConfig) error {
-	cnx, err := grpc.Dial(cfg.endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	client := proto.NewAuthClient(cnx)
-
-	if len(args) <= 0 {
-		return errors.New("Missing argument, at least 1 email address is expected")
-	}
-	for _, a := range args {
-		addr, err := mail.ParseAddress(a)
-		if err != nil {
-			log.Printf("Invalid e-mail address (%s): %s", a, err.Error())
-			continue
+	return connectAndDo(cfg, func(client proto.AuthClient) error {
+		if len(args) <= 0 {
+			return errors.New("Missing argument, at least 1 email address is expected")
 		}
-		u, err := client.UserCreate(context.Background(),
-			&proto.UserCreateReq{Mail: addr.Address})
-		if err != nil {
-			log.Println("ERR", a, err)
-		} else {
-			enc := json.NewEncoder(os.Stdout)
-			enc.SetIndent("", " ")
-			enc.Encode(u)
+		for _, a := range args {
+			addr, err := mail.ParseAddress(a)
+			if err != nil {
+				log.Printf("Invalid e-mail address (%s): %s", a, err.Error())
+				continue
+			}
+			u, err := client.UserCreate(context.Background(),
+				&proto.UserCreateReq{Mail: addr.Address})
+			if err != nil {
+				log.Println("ERR", a, err)
+			} else {
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", " ")
+				enc.Encode(u)
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func doList(cmd *cobra.Command, args []string, cfg *authConfig) error {
-	cnx, err := grpc.Dial(cfg.endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	client := proto.NewAuthClient(cnx)
-	var last uint64
-	for {
-		rep, err := client.UserList(context.Background(),
-			&proto.UserListReq{Marker: last, Limit: 100})
-		if err != nil {
-			return err
-		}
-		if len(rep.Items) <= 0 {
-			break
-		}
-		for _, u := range rep.Items {
-			if u.Id > last {
-				last = u.Id
+	return connectAndDo(cfg, func(client proto.AuthClient) error {
+		var last uint64
+		for {
+			rep, err := client.UserList(context.Background(),
+				&proto.UserListReq{Marker: last, Limit: 100})
+			if err != nil {
+				return err
 			}
-			enc := json.NewEncoder(os.Stdout)
-			enc.Encode(u)
+			if len(rep.Items) <= 0 {
+				break
+			}
+			for _, u := range rep.Items {
+				if u.Id > last {
+					last = u.Id
+				}
+				enc := json.NewEncoder(os.Stdout)
+				enc.Encode(u)
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }

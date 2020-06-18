@@ -30,7 +30,7 @@ func serveRoot(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 	ctx.HTML(200, "index")
 }
 
-func serveGameUser(f *FrontService) ActionPage {
+func serveGameUser(f *frontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, err := f.authenticateUserFromSession(ctx, sess)
 		if err != nil {
@@ -58,7 +58,7 @@ func serveGameUser(f *FrontService) ActionPage {
 	}
 }
 
-func serveGameCharacter(f *FrontService) ActionPage {
+func serveGameCharacter(f *frontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
 		if err != nil {

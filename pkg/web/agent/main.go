@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-type FrontService struct {
+type frontService struct {
 	dirTemplates string
 	dirStatic    string
 	dirLang      string
@@ -56,7 +56,7 @@ type FrontService struct {
 }
 
 func Command() *cobra.Command {
-	front := FrontService{}
+	front := frontService{}
 	agent := &cobra.Command{
 		Use:     "agent",
 		Aliases: []string{"srv", "server", "service", "worker"},
@@ -179,7 +179,7 @@ func Command() *cobra.Command {
 	return agent
 }
 
-func (f *FrontService) loadTranslations() error {
+func (f *frontService) loadTranslations() error {
 	if f.dirLang == "" {
 		return errors.New("No directory set with the translations")
 	}
@@ -210,7 +210,7 @@ func (f *FrontService) loadTranslations() error {
 	})
 }
 
-func (f *FrontService) loadAllCities(ctx context.Context, cli region.MapClient) (map[uint64]*region.PublicCity, error) {
+func (f *frontService) loadAllCities(ctx context.Context, cli region.MapClient) (map[uint64]*region.PublicCity, error) {
 	last := uint64(0)
 	tab := make(map[uint64]*region.PublicCity)
 
@@ -232,7 +232,7 @@ func (f *FrontService) loadAllCities(ctx context.Context, cli region.MapClient) 
 	}
 }
 
-func (f *FrontService) loadAllLocations(ctx context.Context, cli region.MapClient) (map[uint64]*region.Vertex, error) {
+func (f *frontService) loadAllLocations(ctx context.Context, cli region.MapClient) (map[uint64]*region.Vertex, error) {
 	last := uint64(0)
 	tab := make(map[uint64]*region.Vertex)
 
@@ -254,7 +254,7 @@ func (f *FrontService) loadAllLocations(ctx context.Context, cli region.MapClien
 	}
 }
 
-func (f *FrontService) loadAllRoads(ctx context.Context, cli region.MapClient) ([]*region.Edge, error) {
+func (f *frontService) loadAllRoads(ctx context.Context, cli region.MapClient) ([]*region.Edge, error) {
 	var lastSrc, lastDst uint64
 	tab := make([]*region.Edge, 0)
 
@@ -279,7 +279,7 @@ func (f *FrontService) loadAllRoads(ctx context.Context, cli region.MapClient) (
 	}
 }
 
-func (f *FrontService) loadAllUnits(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.UnitTypeView, error) {
+func (f *frontService) loadAllUnits(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.UnitTypeView, error) {
 	last := uint64(0)
 	tab := make(map[uint64]*region.UnitTypeView)
 
@@ -301,7 +301,7 @@ func (f *FrontService) loadAllUnits(ctx context.Context, cli region.DefinitionsC
 	}
 }
 
-func (f *FrontService) loadAllBuildings(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.BuildingTypeView, error) {
+func (f *frontService) loadAllBuildings(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.BuildingTypeView, error) {
 	last := uint64(0)
 	tab := make(map[uint64]*region.BuildingTypeView)
 
@@ -323,7 +323,7 @@ func (f *FrontService) loadAllBuildings(ctx context.Context, cli region.Definiti
 	}
 }
 
-func (f *FrontService) loadAllKnowledges(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.KnowledgeTypeView, error) {
+func (f *frontService) loadAllKnowledges(ctx context.Context, cli region.DefinitionsClient) (map[uint64]*region.KnowledgeTypeView, error) {
 	last := uint64(0)
 	tab := make(map[uint64]*region.KnowledgeTypeView)
 
@@ -345,8 +345,8 @@ func (f *FrontService) loadAllKnowledges(ctx context.Context, cli region.Definit
 	}
 }
 
-func (f *FrontService) reload(cli region.DefinitionsClient, sessionId string, ctx0 context.Context) {
-	ctx := metadata.AppendToOutgoingContext(ctx0, "session-id", sessionId)
+func (f *frontService) reload(cli region.DefinitionsClient, sessionID string, ctx0 context.Context) {
+	ctx := metadata.AppendToOutgoingContext(ctx0, "session-id", sessionID)
 
 	var uerr, berr, kerr error
 	var wg sync.WaitGroup
@@ -392,16 +392,16 @@ func (f *FrontService) reload(cli region.DefinitionsClient, sessionId string, ct
 	f.rw.Unlock()
 }
 
-func (f *FrontService) loopReload(ctx context.Context) {
-	sessionId := uuid.New().String()
+func (f *frontService) loopReload(ctx context.Context) {
+	sessionID := uuid.New().String()
 	for _, v := range []int{2, 4, 8, 16} {
 		cli := region.NewDefinitionsClient(f.cnxRegion)
-		f.reload(cli, sessionId, ctx)
+		f.reload(cli, sessionID, ctx)
 		<-time.After(time.Duration(v) * time.Second)
 	}
 	for {
 		cli := region.NewDefinitionsClient(f.cnxRegion)
-		f.reload(cli, sessionId, ctx)
+		f.reload(cli, sessionID, ctx)
 		<-time.After(61 * time.Second)
 	}
 }
@@ -438,8 +438,8 @@ func zeroLogger() macaron.Handler {
 			Str("uri", ctx.Req.RequestURI).
 			Int("rc", rw.Status()).
 			TimeDiff("t", time.Now(), start)
-		if sessionId := s.Get("session-id"); sessionId != nil {
-			z.Str("session", sessionId.(string))
+		if sessionID := s.Get("session-id"); sessionID != nil {
+			z.Str("session", sessionID.(string))
 		}
 		z.Send()
 	}
@@ -453,6 +453,6 @@ func contextPatchToGrpc(ctx context.Context, s session.Store) context.Context {
 	return contextSessionToGrpc(ctx, s.Get("session-id").(string))
 }
 
-func contextSessionToGrpc(ctx context.Context, sessionId string) context.Context {
-	return metadata.AppendToOutgoingContext(ctx, "session-id", sessionId)
+func contextSessionToGrpc(ctx context.Context, sessionID string) context.Context {
+	return metadata.AppendToOutgoingContext(ctx, "session-id", sessionID)
 }

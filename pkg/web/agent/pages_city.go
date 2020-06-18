@@ -12,7 +12,7 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
-func expandCityView(f *FrontService, lView *region.CityView) {
+func expandCityView(f *frontService, lView *region.CityView) {
 	f.rw.RLock()
 	defer f.rw.RUnlock()
 
@@ -32,7 +32,7 @@ func expandCityView(f *FrontService, lView *region.CityView) {
 	}
 }
 
-func expandArmyView(f *FrontService, aView *region.ArmyView) {
+func expandArmyView(f *frontService, aView *region.ArmyView) {
 	f.rw.RLock()
 	defer f.rw.RUnlock()
 
@@ -41,7 +41,7 @@ func expandArmyView(f *FrontService, aView *region.ArmyView) {
 	}
 }
 
-func serveGameCityPage(f *FrontService, template string) ActionPage {
+func serveGameCityPage(f *frontService, template string) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, atou(ctx.Query("cid")))
 		if err != nil {
@@ -73,38 +73,38 @@ func serveGameCityPage(f *FrontService, template string) ActionPage {
 	}
 }
 
-func serveGameCityOverview(f *FrontService) ActionPage {
+func serveGameCityOverview(f *frontService) ActionPage {
 	return serveGameCityPage(f, "land_overview")
 }
 
-func serveGameCityBuildings(f *FrontService) ActionPage {
+func serveGameCityBuildings(f *frontService) ActionPage {
 	return serveGameCityPage(f, "land_buildings")
 }
 
-func serveGameCityKnowledges(f *FrontService) ActionPage {
+func serveGameCityKnowledges(f *frontService) ActionPage {
 	return serveGameCityPage(f, "land_knowledges")
 }
 
-func serveGameCityUnits(f *FrontService) ActionPage {
+func serveGameCityUnits(f *frontService) ActionPage {
 	return serveGameCityPage(f, "land_units")
 }
 
-func serveGameCityArmies(f *FrontService) ActionPage {
+func serveGameCityArmies(f *frontService) ActionPage {
 	return serveGameCityPage(f, "land_armies")
 }
 
 type ArmyCommandExpanded struct {
 	Order       int
-	CommandId   int
+	CommandID   int
 	Location    uint64
-	CityId      uint64
-	ArmyId      uint64
+	CityID      uint64
+	ArmyID      uint64
 	CityName    string
 	ArmyName    string
 	CommandName string
 }
 
-func serveGameArmyDetail(f *FrontService) ActionPage {
+func serveGameArmyDetail(f *frontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		cid := atou(ctx.Query("cid"))
 		lid := atou(ctx.Query("lid"))
@@ -164,9 +164,9 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 				cmdv = append(cmdv, ArmyCommandExpanded{
 					Order:     idx,
 					Location:  c.Target,
-					ArmyId:    aid,
-					CommandId: int(c.Action),
-					CityId:    city.Id,
+					ArmyID:    aid,
+					CommandID: int(c.Action),
+					CityID:    city.Id,
 					ArmyName:  aView.Name,
 					CityName:  city.Name,
 				})
@@ -188,6 +188,6 @@ func serveGameArmyDetail(f *FrontService) ActionPage {
 	}
 }
 
-func serveGameCityBudget(f *FrontService) ActionPage {
+func serveGameCityBudget(f *frontService) ActionPage {
 	return serveGameCityPage(f, "land_budget")
 }

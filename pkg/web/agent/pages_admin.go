@@ -12,7 +12,7 @@ import (
 	"sort"
 )
 
-func serveGameAdmin(f *FrontService) ActionPage {
+func serveGameAdmin(f *frontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, err := f.authenticateAdminFromSession(ctx, sess)
 		if err != nil {

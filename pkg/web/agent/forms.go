@@ -13,7 +13,7 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
-func (f *FrontService) authenticateUserFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
+func (f *frontService) authenticateUserFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
 	// Validate the session data
 	userid := ptou(sess.Get("userid"))
 	if userid == 0 {
@@ -26,7 +26,7 @@ func (f *FrontService) authenticateUserFromSession(ctx *macaron.Context, sess se
 		&auth.UserShowReq{Id: userid})
 }
 
-func (f *FrontService) authenticateAdminFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
+func (f *frontService) authenticateAdminFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
 	uView, err := f.authenticateUserFromSession(ctx, sess)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (f *FrontService) authenticateAdminFromSession(ctx *macaron.Context, sess s
 	return uView, nil
 }
 
-func (f *FrontService) authenticateCharacterFromSession(ctx *macaron.Context, sess session.Store, idChar uint64) (*auth.UserView, *auth.CharacterView, error) {
+func (f *frontService) authenticateCharacterFromSession(ctx *macaron.Context, sess session.Store, idChar uint64) (*auth.UserView, *auth.CharacterView, error) {
 	// Validate the session data
 	userid := ptou(sess.Get("userid"))
 	if userid == 0 || idChar == 0 {
@@ -60,7 +60,7 @@ type FormLogin struct {
 	UserPass string `form:"password" binding:"Required"`
 }
 
-func doLogin(f *FrontService, m *macaron.Macaron) macaron.Handler {
+func doLogin(f *frontService, m *macaron.Macaron) macaron.Handler {
 	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormLogin) {
 		// Cleanup a previous session
 		sess.Flush()
@@ -85,7 +85,7 @@ func doLogin(f *FrontService, m *macaron.Macaron) macaron.Handler {
 	}
 }
 
-func doLogout(f *FrontService, m *macaron.Macaron) macaron.Handler {
+func doLogout(f *frontService, m *macaron.Macaron) macaron.Handler {
 	return func(ctx *macaron.Context, s session.Store) {
 		ctx.SetSecureCookie("session", "")
 		s.Flush()

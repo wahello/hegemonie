@@ -12,7 +12,7 @@ import (
 )
 
 type RawVertex struct {
-	Id   uint64 `json:"id"`
+	ID   uint64 `json:"id"`
 	X    uint64 `json:"x"`
 	Y    uint64 `json:"y"`
 	City uint64 `json:"city"`
@@ -24,7 +24,7 @@ type RawEdge struct {
 }
 
 type RawCity struct {
-	Id   uint64 `json:"id"`
+	ID   uint64 `json:"id"`
 	Name string `json:"name"`
 	Cell uint64 `json:"cell"`
 }
@@ -34,7 +34,7 @@ type RawMap struct {
 	Roads []RawEdge            `json:"roads"`
 }
 
-func serveRegionMap(f *FrontService) NoFlashPage {
+func serveRegionMap(f *frontService) NoFlashPage {
 	return func(ctx *macaron.Context, sess session.Store) {
 		id := ctx.Query("id")
 		if id != "calaquyr" {
@@ -56,7 +56,7 @@ func serveRegionMap(f *FrontService) NoFlashPage {
 			return
 		}
 		for _, v := range vertices {
-			m.Cells[v.Id] = RawVertex{Id: v.Id, X: v.X, Y: v.Y, City: v.CityId}
+			m.Cells[v.Id] = RawVertex{ID: v.Id, X: v.X, Y: v.Y, City: v.CityId}
 		}
 
 		// FIXME(jfs): iterate in case of a truncated result
@@ -73,7 +73,7 @@ func serveRegionMap(f *FrontService) NoFlashPage {
 	}
 }
 
-func serveRegionCities(f *FrontService) NoFlashPage {
+func serveRegionCities(f *frontService) NoFlashPage {
 	return func(ctx *macaron.Context, sess session.Store) {
 		id := ctx.Query("id")
 		if id != "calaquyr" {
@@ -91,7 +91,7 @@ func serveRegionCities(f *FrontService) NoFlashPage {
 			return
 		}
 		for _, v := range cities {
-			tab = append(tab, RawCity{Id: v.Id, Name: v.Name, Cell: v.Location})
+			tab = append(tab, RawCity{ID: v.Id, Name: v.Name, Cell: v.Location})
 		}
 
 		ctx.JSON(200, tab)

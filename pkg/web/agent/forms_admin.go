@@ -11,7 +11,7 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
-func doMove(f *FrontService, m *macaron.Macaron) macaron.Handler {
+func doMove(f *frontService, m *macaron.Macaron) macaron.Handler {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		_, err := f.authenticateAdminFromSession(ctx, sess)
 		if err != nil {
@@ -29,7 +29,7 @@ func doMove(f *FrontService, m *macaron.Macaron) macaron.Handler {
 	}
 }
 
-func doProduce(f *FrontService, m *macaron.Macaron) macaron.Handler {
+func doProduce(f *frontService, m *macaron.Macaron) macaron.Handler {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		_, err := f.authenticateAdminFromSession(ctx, sess)
 		if err != nil {
