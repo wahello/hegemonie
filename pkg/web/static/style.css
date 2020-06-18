@@ -186,7 +186,6 @@ div h2 {
     main {
       grid-column: 2;
       grid-row: 2 / 4;
-
       display: grid;
       grid-template-columns: 50% 50%;
     }

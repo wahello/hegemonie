@@ -23,7 +23,6 @@ The Hegemonie platform consist in a set of microservices.
   * **api server** exposes an authenticated API that agregates and consolidates all the
     other API. The users are authenticated and the usage authorized with OAuth2. 
 
-
 ![Hegemonie Architecture](https://raw.githubusercontent.com/jfsmig/hegemonie/master/docs/system-architecture.png)
 
 Everything is controlled by a single CLI tool, ``hegemonie``. That single CLI carries 
@@ -47,7 +46,6 @@ the 5 servers and their respective 5 clients.
     [Discord](https://discord.io/), [Slack](https://slack.com),
     [RocketChat](https://rocket.chat), [Riot](https://riot.im) or whatever.
 
-
 ## Scalability
 
 This is not the topic yet. However there are already a few opportunities to let
@@ -70,11 +68,9 @@ Whatever the solution in place, only the ``web server`` will require an external
 balancing, at the ingress. It is likely that hegemonie will soon rely on a service mesh
 to route the grpc messages to the appropriate targets.
 
-
 ## Reliability
 
 This is not a topic yet.
-
 
 ## Performance
 
@@ -84,7 +80,6 @@ the performance is not a topic yet.
 We roughly target a system that can manage a game instance for a small community of less than
 50 players, that would be lightweight enough to run on a ARM-based single board computer (e.g.
 a RaspberryPi v3).
-
 
 ## Deploy with Docker
 
@@ -111,7 +106,6 @@ HEGE region server --endpoint 127.0.0.1:8081
 
 TODO
 
-
 ## Try it from scratch
 
 Starting from the sources, if you have the go environment and the ``make`` installed,
@@ -131,3 +125,4 @@ It will expose a couple of services, bond to ``localhost`` and, respectively, th
 for the front and ``8081`` for the only region. Then try the [sandbox](http://127.0.0.1:8080).
 
 As a hint, try to log-in with the user ``admin@hegemonie.be`` and the password ``plop`` ;)
+

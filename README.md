@@ -12,12 +12,11 @@ between 1999 and 2003. It is under heavily inactive construction.
 The game engine is a [4X](https://en.wikipedia.org/wiki/4X) technical basis
 for larger RPG games. The description of the game will sound familiar to RPG
 players:
-  * Each **user** manages characters, each **character** manages cities
-  * Each **city** produces **resources**, grows a **knowledge** tree, evolves
-    with **building** and trains **troops**.
-  * **Armies** can be setup to gather some troops and execute orders across
-    the map.
-
+ * Each **user** manages characters, each **character** manages cities
+ * Each **city** produces **resources**, grows a **knowledge** tree, evolves
+   with **building** and trains **troops**.
+ * **Armies** can be setup to gather some troops and execute orders across
+   the map.
 
 ## Getting Started
 
@@ -34,7 +33,6 @@ go install "${BASE}"
 
 For more information, please refer to the page with the [technical elements](./TECH.md).
 
-
 ## How To Contribute
 
 Contributions are what make the open source community such an amazing place.
@@ -45,7 +43,6 @@ Any contributions you make are greatly appreciated.
  3. Commit your Changes (git commit -m 'Add some AmazingFeature')
  4. Push to the Branch (git push origin feature/AmazingFeature)
  5. Open a Pull Request
-
 
 ## License
 
