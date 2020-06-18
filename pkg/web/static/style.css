@@ -47,6 +47,30 @@ svg > .city:hover {
   fill: green;
 }
 
+h2 {
+  font-size: 20px;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+p,
+li,
+div,
+td {
+  font-size: 14px;
+}
+
+a {
+  color: seagreen;
+}
+
+em {
+  color: black;
+  font-weight: bold;
+}
+
 main h1 {
   font-size: 36px;
 }
@@ -61,37 +85,13 @@ header h2 {
   color: darkorange;
 }
 
-h2 {
-  font-size: 20px;
-}
-
-h3 {
-  font-size: 16px;
-}
-
-p, li, div, td {
-  font-size: 14px;
-}
-
-a {
-  color: seagreen;
-}
-
-em {
-  color: black;
-  font-weight: bold;
-}
-
 table.budget > td {
-  padding: 0px 5px 0px 5px;
+  padding: 0 5px 0 5px;
   text-align: left;
 }
 
 table.budget thead td {
   border-bottom: 1px solid black;
-}
-
-table.budget thead td {
   font-weight: bold;
 }
 
@@ -101,7 +101,7 @@ table.budget tfoot td {
 }
 
 td.title {
-  padding: 0px 20px 0px 5px;
+  padding: 0 20px 0 5px;
 }
 
 footer p {
@@ -132,10 +132,9 @@ div {
 div h2 {
   /*line-height: 20px;*/
   padding: 5px;
-  margin: 0px;
+  margin: 0;
   color: darkslategray;
 }
-
 
 @media screen {
   @media (orientation: landscape) and (min-width: 1300px) {
@@ -153,11 +152,12 @@ div h2 {
       margin-bottom: 30px;
     }
 
-    header h1, header h2 {
-      padding-top: 0px;
-      padding-bottom: 0px;
-      margin-top: 0px;
-      margin-bottom: 0px;
+    header h1,
+    header h2 {
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-top: 0;
+      margin-bottom: 0;
     }
 
     nav {
@@ -216,11 +216,12 @@ div h2 {
       margin-bottom: 30px;
     }
 
-    header h1, header h2 {
-      padding-top: 0px;
-      padding-bottom: 0px;
-      margin-top: 0px;
-      margin-bottom: 0px;
+    header h1,
+    header h2 {
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-top: 0;
+      margin-bottom: 0;
     }
 
     nav {
@@ -259,11 +260,12 @@ div h2 {
 
   }
   @media (orientation: portrait) or (max-width: 800px) {
-    header h1, header h2 {
-      padding-top: 0px;
-      padding-bottom: 0px;
-      margin-top: 0px;
-      margin-bottom: 0px;
+    header h1,
+    header h2 {
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-top: 0;
+      margin-bottom: 0;
     }
 
     nav a {
@@ -299,6 +301,5 @@ div h2 {
       margin: 5px;
       padding: 10px;
     }
-
   }
 }
