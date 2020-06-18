@@ -61,7 +61,7 @@ func (w *World) CityCreateModel(loc uint64, model *City) (*City, error) {
 
 	id := w.getNextId()
 	city := CopyCity(model)
-	city.Id = id
+	city.ID = id
 	cell.City = id
 	w.Live.Cities.Add(city)
 	return city, nil

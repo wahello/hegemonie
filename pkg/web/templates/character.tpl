@@ -9,7 +9,7 @@
 </div>
 
 <div>
-    {% for msg in Log %}<p>{{msg}}</p>
+    {% for msg in Log %}{{msg}}<br/>
     {% endfor %}
 </div>
 

@@ -4,10 +4,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 const installAction = function (obj, cls, action) {
-    let elements = obj.getElementsByClassName('clickable')
+    let elements = obj.getElementsByClassName("clickable")
     for (i = 0; i < elements.length; i++) {
         let element = elements[i];
-        element.onclick = action
+        element.onclick = action;
     }
 };
 
@@ -39,12 +39,12 @@ const drawLine = function (svg1, src, dst) {
 
 const drawMap = function (svg1, map, onClickPosition) {
     map.roads.forEach(function (road, idx, tab) {
-        let src = map.cells[road.src]
-        let dst = map.cells[road.dst]
+        let src = map.cells[road.src];
+        let dst = map.cells[road.dst];
         let r = drawLine(svg1, src, dst);
     });
     Object.keys(map.cells).forEach(function (key, idx, tab) {
-        let cell = map.cells[key]
+        let cell = map.cells[key];
         let c = drawCircle(svg1, cell);
         if (onClickPosition != null) {
             c.onclick = function (e) {
@@ -79,7 +79,7 @@ const patchWithArmies = function (svg1, map, armies, onClickArmy) {
 };
 
 const patchWithCities = function (svg1, name, map, onClickCity, onClickArmy) {
-    return fetch('/map/cities?id=' + name)
+    return fetch("/map/cities?id=" + name)
         .then(response => {
             return response.json();
         })
@@ -101,7 +101,7 @@ const patchWithCities = function (svg1, name, map, onClickCity, onClickArmy) {
 const drawMapWithCities = function (svg1, name, onClickPosition, onClickCity) {
     // Step 1: draw the map itself, define the graph with nodes (a.k.a cells) and
     // vertices (a.k.a. roads).
-    return fetch('/map/region?id=' + name)
+    return fetch("/map/region?id=" + name)
         .then(response => {
             return response.json();
         })

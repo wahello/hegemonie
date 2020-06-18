@@ -23,15 +23,6 @@ func (r Resources) GreaterOrEqualTo(o Resources) bool {
 	return true
 }
 
-func (r Resources) GreaterThan(o Resources) bool {
-	for i := 0; i < ResourceMax; i++ {
-		if r[i] <= o[i] {
-			return false
-		}
-	}
-	return true
-}
-
 func (r Resources) IsZero() bool {
 	for i := 0; i < ResourceMax; i++ {
 		if r[i] != 0 {
@@ -75,9 +66,7 @@ func (r *Resources) Remove(o Resources) {
 
 func (r *Resources) TrimTo(limit Resources) {
 	for i := 0; i < ResourceMax; i++ {
-		if r[i] < limit[i] {
-			r[i] = r[i]
-		} else {
+		if r[i] > limit[i] {
 			r[i] = limit[i]
 		}
 	}

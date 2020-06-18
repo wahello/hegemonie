@@ -204,19 +204,16 @@ func CommandExport() *cobra.Command {
 			}
 
 			var aaa auth.Db
+			var u *auth.User
 			aaa.Init()
 			aaa.ReHash()
-			u := aaa.Create("admin@hegemonie.be")
-			u.Name = "Super Admin"
-			u.Admin = true
-			u.Password = ":plop"
-			u.Characters = append(u.Characters, auth.Character{
-				Id:     aaa.NextId,
-				Name:   "Waku",
-				Region: "Calaquyr",
-			})
-			aaa.ReHash()
-			if err = aaa.Check(); err != nil {
+			u, err = aaa.CreateUser("admin@hegemonie.be")
+			if err != nil {
+				return err
+			}
+			u.Rename("Super Admin").SetRawPassword(":plop").Promote()
+			_, err = aaa.CreateCharacter(u.ID, "Waku", "Calaquyr")
+			if err != nil {
 				return err
 			}
 
@@ -246,23 +243,23 @@ func CommandExport() *cobra.Command {
 				cell.X = uint64(site.raw.X)
 				cell.Y = uint64(site.raw.Y)
 				if site.raw.City {
-					city, err := w.CityCreateRandom(cell.Id)
+					city, err := w.CityCreateRandom(cell.ID)
 					if err != nil {
 						return err
 					}
 					city.Name = site.raw.Id
-					city.Cell = cell.Id
-					cell.City = city.Id
+					city.Cell = cell.ID
+					cell.City = city.ID
 				}
 				site2cell[site] = cell
 			}
 			for road := range m.UniqueRoads() {
 				src := site2cell[road.Src]
 				dst := site2cell[road.Dst]
-				if err = w.Places.RoadCreate(src.Id, dst.Id, true); err != nil {
+				if err = w.Places.RoadCreate(src.ID, dst.ID, true); err != nil {
 					return err
 				}
-				if err = w.Places.RoadCreate(dst.Id, src.Id, true); err != nil {
+				if err = w.Places.RoadCreate(dst.ID, src.ID, true); err != nil {
 					return err
 				}
 			}
@@ -288,7 +285,7 @@ func CommandExport() *cobra.Command {
 
 			// Populate the cities with a set of minimal troops / units
 			for _, pCity := range w.Live.Cities {
-				pCity.Owner = u.Characters[0].Id
+				pCity.Owner = u.Characters[0].ID
 				// Create one Army per City
 				_ = pCity.UnitCreate(&w, w.Definitions.Units[0])
 				_, _ = pCity.CreateArmyDefence(&w)
@@ -317,7 +314,7 @@ func CommandExport() *cobra.Command {
 			} else {
 				encoder := json.NewEncoder(f)
 				encoder.SetIndent("", " ")
-				err = encoder.Encode(aaa.UsersById)
+				err = encoder.Encode(aaa.UsersByID)
 				_ = f.Close()
 			}
 			return nil

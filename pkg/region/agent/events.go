@@ -20,8 +20,8 @@ type EventStore struct {
 }
 
 type EventArmy struct {
-	store  *EventStore `json:"-"`
-	charId uint64      `json:"-"`
+	store  *EventStore
+	charId uint64
 
 	SourceCityId uint64 `json:"SourceCityId"`
 	SourceCity   string `json:"SourceCity"`
@@ -51,7 +51,7 @@ func (es *EventStore) Army(log *region.City) region.EventArmy {
 		store:        es,
 		charId:       log.Owner,
 		SourceCity:   log.Name,
-		SourceCityId: log.Id,
+		SourceCityId: log.ID,
 	}
 }
 
@@ -64,9 +64,9 @@ func (es *EventStore) Units(log *region.City) region.EventUnits {
 }
 
 func (evt *EventArmy) Item(a *region.Army) region.EventArmy {
-	evt.ArmyId = a.Id
+	evt.ArmyId = a.ID
 	evt.ArmyName = a.Name
-	evt.ArmyCityId = a.City.Id
+	evt.ArmyCityId = a.City.ID
 	evt.ArmyCityName = a.City.Name
 	return evt
 }

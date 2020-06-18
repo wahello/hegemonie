@@ -12,7 +12,7 @@ import (
 func (s SetOfFights) Len() int      { return len(s) }
 func (s SetOfFights) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s SetOfFights) Less(i, j int) bool {
-	return s[i].Cell < s[j].Cell || (s[i].Cell == s[j].Cell && s[i].Id < s[j].Id)
+	return s[i].Cell < s[j].Cell || (s[i].Cell == s[j].Cell && s[i].ID < s[j].ID)
 }
 
 func (s SetOfFights) First(cell uint64) int {

@@ -1,5 +1,7 @@
 # Jetbrain's IDE context
 .idea
+coverage.txt
+profile.out
 
 # Vim temporary files
 **/.*.sw?

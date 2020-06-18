@@ -23,13 +23,13 @@ func TestMapInit(t *testing.T) {
 	}
 
 	cell := m.CellCreate()
-	if cell.Id != 2 {
+	if cell.ID != 2 {
 		t.Fatal()
 	}
 	if m.getNextId() != 3 {
 		t.Fatal()
 	}
-	if !m.CellHas(cell.Id) {
+	if !m.CellHas(cell.ID) {
 		t.Fatal()
 	}
 }
@@ -54,19 +54,19 @@ func TestMapMultiConnect(t *testing.T) {
 	m.Init()
 	l0 := m.CellCreate()
 	l1 := m.CellCreate()
-	if err = m.RoadCreate(l0.Id, l1.Id, true); err != nil {
+	if err = m.RoadCreate(l0.ID, l1.ID, true); err != nil {
 		t.Fatal()
 	}
-	if err = m.RoadCreate(l1.Id, l0.Id, true); err != nil {
+	if err = m.RoadCreate(l1.ID, l0.ID, true); err != nil {
 		t.Fatal()
 	}
 	for i := 0; i < 5; i++ {
-		if err = m.RoadCreate(l0.Id, l1.Id, true); err == nil {
+		if err = m.RoadCreate(l0.ID, l1.ID, true); err == nil {
 			t.Logf("Cells %v", m.Cells)
 			t.Logf("Roads %v", m.Roads)
 			t.Fatal()
 		}
-		if err = m.RoadCreate(l1.Id, l0.Id, true); err == nil {
+		if err = m.RoadCreate(l1.ID, l0.ID, true); err == nil {
 			t.Logf("Cells %v", m.Cells)
 			t.Logf("Roads %v", m.Roads)
 			t.Fatal()
@@ -82,31 +82,31 @@ func TestMapPathOneWay(t *testing.T) {
 	l1 := m.CellCreate()
 	l2 := m.CellCreate()
 	l3 := m.CellCreate()
-	m.RoadCreate(l0.Id, l1.Id, true)
-	m.RoadCreate(l1.Id, l2.Id, true)
-	m.RoadCreate(l2.Id, l3.Id, true)
+	m.RoadCreate(l0.ID, l1.ID, true)
+	m.RoadCreate(l1.ID, l2.ID, true)
+	m.RoadCreate(l2.ID, l3.ID, true)
 
 	m.Rehash()
 
-	if step, err := m.PathNextStep(l0.Id, l3.Id); err != nil {
+	if step, err := m.PathNextStep(l0.ID, l3.ID); err != nil {
 		t.Fatal()
-	} else if step != l1.Id {
-		t.Fatal()
-	}
-
-	if step, err := m.PathNextStep(l1.Id, l3.Id); err != nil {
-		t.Fatal()
-	} else if step != l2.Id {
+	} else if step != l1.ID {
 		t.Fatal()
 	}
 
-	if step, err := m.PathNextStep(l2.Id, l3.Id); err != nil {
+	if step, err := m.PathNextStep(l1.ID, l3.ID); err != nil {
 		t.Fatal()
-	} else if step != l3.Id {
+	} else if step != l2.ID {
 		t.Fatal()
 	}
 
-	if step, err := m.PathNextStep(l1.Id, l0.Id); err == nil {
+	if step, err := m.PathNextStep(l2.ID, l3.ID); err != nil {
+		t.Fatal()
+	} else if step != l3.ID {
+		t.Fatal()
+	}
+
+	if step, err := m.PathNextStep(l1.ID, l0.ID); err == nil {
 		t.Fatal()
 	} else if step != 0 {
 		t.Fatal()
@@ -127,27 +127,27 @@ func TestMapPathTwoWay(t *testing.T) {
 	l2 := m.CellCreate()
 	l3 := m.CellCreate()
 
-	biconnect(l0.Id, l1.Id)
-	biconnect(l1.Id, l2.Id)
-	biconnect(l2.Id, l3.Id)
+	biconnect(l0.ID, l1.ID)
+	biconnect(l1.ID, l2.ID)
+	biconnect(l2.ID, l3.ID)
 
 	m.Rehash()
 
-	if step, err := m.PathNextStep(l3.Id, l0.Id); err != nil {
+	if step, err := m.PathNextStep(l3.ID, l0.ID); err != nil {
 		t.Fatal()
-	} else if step != l2.Id {
-		t.Fatal()
-	}
-
-	if step, err := m.PathNextStep(l1.Id, l3.Id); err != nil {
-		t.Fatal()
-	} else if step != l2.Id {
+	} else if step != l2.ID {
 		t.Fatal()
 	}
 
-	if step, err := m.PathNextStep(l2.Id, l3.Id); err != nil {
+	if step, err := m.PathNextStep(l1.ID, l3.ID); err != nil {
 		t.Fatal()
-	} else if step != l3.Id {
+	} else if step != l2.ID {
+		t.Fatal()
+	}
+
+	if step, err := m.PathNextStep(l2.ID, l3.ID); err != nil {
+		t.Fatal()
+	} else if step != l3.ID {
 		t.Fatal()
 	}
 }
@@ -187,7 +187,7 @@ func TestMapGrid(t *testing.T) {
 	for i := 0; i < x; i++ {
 		for j := 0; j < y; j++ {
 			v := m.CellCreate()
-			grid.set(i, j, v.Id)
+			grid.set(i, j, v.ID)
 		}
 	}
 

@@ -10,31 +10,79 @@ import (
 )
 
 func TestResources(t *testing.T) {
-	zero := Resources{}
-	r0 := Resources{}
-	r1 := Resources{}
-	t.Log(r0)
-	t.Log(r1)
-	if !zero.IsZero() || !r0.IsZero() || !r1.IsZero() {
+	var zero, one, r0 Resources
+	if !zero.IsZero() || !r0.IsZero() || !one.IsZero() {
 		t.Fatal()
 	}
 	if !r0.GreaterOrEqualTo(r0) {
 		t.Fatal()
 	}
-	r1[1] = 1
-	if !r1.GreaterOrEqualTo(r1) {
+	one[1] = 1
+	if !one.GreaterOrEqualTo(one) {
 		t.Fatal()
 	}
-	if !r1.GreaterOrEqualTo(r0) || r0.GreaterOrEqualTo(r1) {
+	if one.IsZero() {
+		t.Fatal()
+	}
+	if !one.GreaterOrEqualTo(r0) || r0.GreaterOrEqualTo(one) {
 		t.Fatal()
 	}
 
-	r0.Add(r1)
-	if !r0.Equals(r1) {
+	r0.Add(one)
+	if !r0.Equals(one) {
+		t.Fatal()
+	}
+	r0.Add(one)
+	if r0.Equals(one) {
 		t.Fatal()
 	}
 	r0.TrimTo(zero)
 	if !r0.IsZero() {
 		t.Fatal()
+	}
+	if !r0.Equals(zero) {
+		t.Fatal()
+	}
+
+	one.Remove(one)
+	if !one.IsZero() {
+		t.Fatal()
+	}
+
+	one[1] = 1
+	one.Zero()
+	if !one.IsZero() {
+		t.Fatal()
+	}
+
+	allOneAbs := ResourcesUniform(1)
+	for i := 0; i < ResourceMax; i++ {
+		if allOneAbs[i] != 1 {
+			t.Fatal()
+		}
+	}
+}
+
+func TestModifiers(t *testing.T) {
+	inc := IncrementUniform(1)
+	for i := 0; i < ResourceMax; i++ {
+		if inc[i] != 1 {
+			t.Fatal()
+		}
+	}
+
+	mult := MultiplierUniform(2.5)
+	for i := 0; i < ResourceMax; i++ {
+		if mult[i] != 2.5 {
+			t.Fatal()
+		}
+	}
+
+	abs := ResourcesUniform(2)
+	abs.Multiply(mult)
+	for i := 0; i < ResourceMax; i++ {
+		if abs[i] != 5 {
+			t.Fatal()
+		}
 	}
 }

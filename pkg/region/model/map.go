@@ -87,7 +87,7 @@ func (m *Map) CellHas(id uint64) bool {
 
 func (m *Map) CellCreate() *MapVertex {
 	id := m.getNextId()
-	c := &MapVertex{Id: id}
+	c := &MapVertex{ID: id}
 	m.Cells.Add(c)
 	return c
 }
@@ -155,7 +155,7 @@ func (m *Map) Dot() string {
 	var sb strings.Builder
 	sb.WriteString("digraph g {")
 	for _, c := range m.Cells {
-		sb.WriteString("n" + strconv.FormatUint(c.Id, 10))
+		sb.WriteString("n" + strconv.FormatUint(c.ID, 10))
 		sb.WriteRune(';')
 		sb.WriteRune('\n')
 	}
@@ -195,7 +195,7 @@ func (m *Map) Rehash() {
 		q := newQueue()
 
 		// Bootstrap the DFS with adjacent nodes
-		for _, next := range m.CellAdjacency(cell.Id) {
+		for _, next := range m.CellAdjacency(cell.ID) {
 			q.push(next, next)
 			already[next] = true
 			// No need to add this in the known routes, we already did it
@@ -213,7 +213,7 @@ func (m *Map) Rehash() {
 					// Tell to contine at that neighbor
 					q.push(next, first)
 					// We already learned the shortest path to that neighbor
-					add(cell.Id, next, first)
+					add(cell.ID, next, first)
 				}
 			}
 		}

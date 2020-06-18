@@ -18,7 +18,7 @@ func (s SetOfKnowledgeTypes) Frontier(owned []*Knowledge) []*KnowledgeType {
 	}
 
 	valid := func(kt *KnowledgeType) bool {
-		if finished[kt.Id] || pending[kt.Id] {
+		if finished[kt.ID] || pending[kt.ID] {
 			return false
 		}
 		for _, c := range kt.Conflicts {

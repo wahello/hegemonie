@@ -24,6 +24,10 @@ service Auth {
     // an abstract of the Character information. The user information is also
     // returned to save calls from the main service.
     rpc CharacterShow (CharacterShowReq) returns (UserView) {}
+
+    rpc CharacterUpdate (CharacterUpdateReq) returns (None) {}
+
+    rpc CharacterMigrate (CharacterMigrationReq) returns (None) {}
 }
 
 message None {}
@@ -89,4 +93,18 @@ message UserListRep {
 message CharacterShowReq {
     uint64 user = 1;
     uint64 character = 2;
+}
+
+message CharacterUpdateReq {
+    uint64 user = 1;
+    uint64 character = 2;
+    string name = 3;
+    bool off = 4;
+    bool deleted = 5;
+}
+
+message CharacterMigrationReq {
+    uint64 user = 1;
+    uint64 character = 2;
+    string region = 3;
 }

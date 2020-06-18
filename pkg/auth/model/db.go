@@ -13,7 +13,7 @@ import (
 )
 
 func (db *Db) Init() {
-	db.UsersById = make([]*User, 0)
+	db.UsersByID = make([]*User, 0)
 	db.ReHash()
 }
 
@@ -23,21 +23,21 @@ func (db *Db) Check() error {
 
 func (db *Db) ReHash() error {
 	db.UsersByMail = make(map[string]*User, 0)
-	db.NextId = 0
+	db.NextID = 0
 	// FIXME(jfs): Sort the array
-	for _, u := range db.UsersById {
+	for _, u := range db.UsersByID {
 		db.UsersByMail[u.Email] = u
-		if u.Id > db.NextId {
-			db.NextId = u.Id
+		if u.ID > db.NextID {
+			db.NextID = u.ID
 		}
 	}
-	db.NextId++
+	db.NextID++
 	return nil
 }
 
 func (db *Db) UserGet(id uint64) *User {
-	for _, u := range db.UsersById {
-		if u.Id == id {
+	for _, u := range db.UsersByID {
+		if u.ID == id {
 			return u
 		}
 	}
@@ -45,25 +45,34 @@ func (db *Db) UserGet(id uint64) *User {
 }
 
 func (db *Db) UserLookup(mail string) *User {
-	if u, ok := db.UsersByMail[mail]; !ok {
-		return nil
-	} else {
+	if u, ok := db.UsersByMail[mail]; ok {
 		return u
 	}
+	return nil
 }
 
-func (db *Db) Create(email string) *User {
-	id := atomic.AddUint64(&db.NextId, 1)
+func (db *Db) CreateUser(email string) (*User, error) {
+	// FIXME(jfs): Verify the format of the email
+	id := atomic.AddUint64(&db.NextID, 1)
 	u := &User{
-		Id:         id,
+		ID:         id,
 		Name:       "NOT-SET",
 		Email:      email,
 		Password:   "",
-		Characters: make([]Character, 0),
+		Characters: make([]*Character, 0),
 	}
-	db.UsersById = append(db.UsersById, u)
+	db.UsersByID = append(db.UsersByID, u)
 	db.UsersByMail[u.Email] = u
-	return u
+	return u, nil
+}
+
+func (db *Db) CreateCharacter(idUser uint64, name, region string) (*Character, error) {
+	idChar := atomic.AddUint64(&db.NextID, 1)
+	u := db.UserGet(idUser)
+	if u == nil {
+		return nil, errors.New("No such User")
+	}
+	return u.CreateCharacter(idChar, name, region)
 }
 
 func (db *Db) SetPassword(u *User, pass string) {
@@ -92,6 +101,44 @@ func (db *Db) AuthBasic(u *User, pass string) error {
 
 func (u *User) Valid() bool {
 	return u != nil && !u.Suspended && !u.Deleted
+}
+
+func (u *User) Rename(n string) *User {
+	// FIXME(jfs): validate the name
+	u.Name = n
+	return u
+}
+
+func (u *User) Promote() *User {
+	u.Admin = true
+	return u
+}
+
+func (u *User) Demote() *User {
+	u.Admin = false
+	return u
+}
+
+func (u *User) SetRawPassword(p string) *User {
+	// FIXME(jfs): validate the password
+	u.Password = p
+	return u
+}
+
+func (u *User) CreateCharacter(id uint64, name, region string) (*Character, error) {
+	// FIXME(jfs): Verify the format of the name
+	c := &Character{ID: id, Name: name, Region: region}
+	u.Characters = append(u.Characters, c)
+	return c, nil
+}
+
+func (u *User) GetCharacter(idChar uint64) *Character {
+	for _, c := range u.Characters {
+		if c.ID == idChar {
+			return c
+		}
+	}
+	return nil
 }
 
 func hashPassword(pass, salt string) string {

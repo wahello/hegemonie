@@ -99,6 +99,9 @@ func serveGameCharacter(f *FrontService) ActionPage {
 					msg, err := localizer.Localize(&i18n.LocalizeConfig{
 						MessageID: t, TemplateData: params, PluralCount: 2,
 					})
+
+					// The rendering of the message failed, we dispaly the raw Json
+					// instead of the expected rendered
 					if err != nil {
 						utils.Logger.Warn().Err(err).Msg("localizing-1")
 						sb.Reset()
@@ -116,6 +119,7 @@ func serveGameCharacter(f *FrontService) ActionPage {
 							}
 						}
 					}
+
 					if msg != "" {
 						charLog = append(charLog, msg)
 					}

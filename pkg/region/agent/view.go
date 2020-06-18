@@ -15,17 +15,17 @@ func ShowEvolution(w *region.World, c *region.City) *proto.CityEvolution {
 
 	for _, kt := range c.KnowledgeFrontier(w) {
 		cv.KFrontier = append(cv.KFrontier, &proto.KnowledgeTypeView{
-			Id: kt.Id, Name: kt.Name,
+			Id: kt.ID, Name: kt.Name,
 		})
 	}
 	for _, bt := range c.BuildingFrontier(w) {
 		cv.BFrontier = append(cv.BFrontier, &proto.BuildingTypeView{
-			Id: bt.Id, Name: bt.Name,
+			Id: bt.ID, Name: bt.Name,
 		})
 	}
 	for _, ut := range c.UnitFrontier(w) {
 		cv.UFrontier = append(cv.UFrontier, &proto.UnitTypeView{
-			Id: ut.Id, Name: ut.Name,
+			Id: ut.ID, Name: ut.Name,
 		})
 	}
 
@@ -118,23 +118,23 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 
 	for _, k := range c.Knowledges {
 		v.Knowledges = append(v.Knowledges, &proto.KnowledgeView{
-			Id: k.Id, IdType: k.Type, Ticks: uint32(k.Ticks),
+			Id: k.ID, IdType: k.Type, Ticks: uint32(k.Ticks),
 		})
 	}
 	for _, b := range c.Buildings {
 		v.Buildings = append(v.Buildings, &proto.BuildingView{
-			Id: b.Id, IdType: b.Type, Ticks: uint32(b.Ticks),
+			Id: b.ID, IdType: b.Type, Ticks: uint32(b.Ticks),
 		})
 	}
 	for _, u := range c.Units {
 		v.Units = append(v.Units, &proto.UnitView{
-			Id: u.Id, IdType: u.Type, Ticks: uint32(u.Ticks), Health: u.Health,
+			Id: u.ID, IdType: u.Type, Ticks: uint32(u.Ticks), Health: u.Health,
 		})
 	}
 
 	for _, a := range c.Armies {
 		v.Armies = append(v.Armies, &proto.ArmyView{
-			Id: a.Id, Name: a.Name, Location: a.Cell,
+			Id: a.ID, Name: a.Name, Location: a.Cell,
 			Stock: resAbsM2P(a.Stock),
 		})
 	}
@@ -144,7 +144,7 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 
 func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	cv := &proto.CityView{
-		Id:       c.Id,
+		Id:       c.ID,
 		Name:     c.Name,
 		Owner:    c.Owner,
 		Deputy:   c.Deputy,
@@ -166,7 +166,7 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	}
 
 	for _, c := range c.Lieges() {
-		cv.Politics.Lieges = append(cv.Politics.Lieges, c.Id)
+		cv.Politics.Lieges = append(cv.Politics.Lieges, c.ID)
 	}
 
 	cv.Evol = ShowEvolution(w, c)
@@ -203,7 +203,7 @@ func ShowArmyCommand(c *region.Command) *proto.ArmyCommand {
 
 func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
 	view := &proto.ArmyView{
-		Id:       a.Id,
+		Id:       a.ID,
 		Name:     a.Name,
 		Location: a.Cell,
 		Stock:    resAbsM2P(a.Stock),
@@ -219,7 +219,7 @@ func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
 
 func ShowUnit(w *region.World, u *region.Unit) *proto.UnitView {
 	return &proto.UnitView{
-		Id:     u.Id,
+		Id:     u.ID,
 		IdType: u.Type,
 		Name:   "",
 		Ticks:  u.Ticks,
@@ -233,7 +233,7 @@ func ShowCityPublic(w *region.World, c *region.City, scored bool) *proto.PublicC
 		score = c.GetActualPopularity(w)
 	}
 	return &proto.PublicCity{
-		Id:        c.Id,
+		Id:        c.ID,
 		Name:      c.Name,
 		Score:     score,
 		Location:  c.Cell,

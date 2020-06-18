@@ -59,7 +59,7 @@ func doCreate(cmd *cobra.Command, args []string, cfg *authConfig) error {
 		u, err := client.UserCreate(context.Background(),
 			&proto.UserCreateReq{Mail: addr.Address})
 		if err != nil {
-			log.Printf("ERR", a, err)
+			log.Println("ERR", a, err)
 		} else {
 			enc := json.NewEncoder(os.Stdout)
 			enc.SetIndent("", " ")

@@ -32,7 +32,7 @@ MAP=$1
 shift
 
 DEFS=$1
-[[ -d "$DEFS" ]]
+[[ -d "${DEFS}" ]]
 [[ -r "${DEFS}/config.json" ]]
 [[ -r "${DEFS}/units.json" ]]
 [[ -r "${DEFS}/buildings.json" ]]
@@ -40,7 +40,7 @@ DEFS=$1
 shift
 
 TRANSLATIONS=$1
-[[ -d "$TRANSLATIONS" ]]
+[[ -d "${TRANSLATIONS}" ]]
 [[ -r "${TRANSLATIONS}/active.en.toml" ]]
 shift
 
@@ -48,11 +48,11 @@ OUT=$1
 [[ -d "${OUT}" ]]
 shift
 
-mkdir -p $OUT/definitions
-mkdir -p $OUT/lang
-mkdir -p $OUT/live
-mkdir -p $OUT/save
-mkdir -p $OUT/evt
+mkdir -p "${OUT}/definitions"
+mkdir -p "${OUT}/lang"
+mkdir -p "${OUT}/live"
+mkdir -p "${OUT}/save"
+mkdir -p "${OUT}/evt"
 TMP=$(mktemp -d)
 
 
@@ -90,4 +90,4 @@ cp -p \
 
 rm -rf "${TMP}"
 
-echo $OUT
+echo "${OUT}"

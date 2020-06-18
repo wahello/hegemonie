@@ -24,7 +24,7 @@ func (s *srvDefinitions) ListUnits(ctx context.Context, req *proto.PaginatedQuer
 	rep := &proto.ListOfUnitTypes{}
 	for _, i := range v {
 		rep.Items = append(rep.Items, &proto.UnitTypeView{
-			Id: i.Id, Name: i.Name, Ticks: i.Ticks, Health: i.Health})
+			Id: i.ID, Name: i.Name, Ticks: i.Ticks, Health: i.Health})
 	}
 	return rep, nil
 }
@@ -37,7 +37,7 @@ func (s *srvDefinitions) ListBuildings(ctx context.Context, req *proto.Paginated
 	rep := &proto.ListOfBuildingTypes{}
 	for _, i := range v {
 		rep.Items = append(rep.Items, &proto.BuildingTypeView{
-			Id: i.Id, Name: i.Name, Ticks: i.Ticks})
+			Id: i.ID, Name: i.Name, Ticks: i.Ticks})
 	}
 	return rep, nil
 }
@@ -50,7 +50,7 @@ func (s *srvDefinitions) ListKnowledges(ctx context.Context, req *proto.Paginate
 	rep := &proto.ListOfKnowledgeTypes{}
 	for _, i := range v {
 		rep.Items = append(rep.Items, &proto.KnowledgeTypeView{
-			Id: i.Id, Name: i.Name, Ticks: i.Ticks})
+			Id: i.ID, Name: i.Name, Ticks: i.Ticks})
 	}
 	return rep, nil
 }

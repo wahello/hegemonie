@@ -95,7 +95,7 @@ func (s *srvCity) ListArmies(ctx context.Context, req *proto.CityId) (*proto.Lis
 
 	rep := &proto.ListOfNamedItems{}
 	for _, a := range city.Armies {
-		rep.Items = append(rep.Items, &proto.NamedItem{Id: a.Id, Name: a.Name})
+		rep.Items = append(rep.Items, &proto.NamedItem{Id: a.ID, Name: a.Name})
 	}
 	return rep, nil
 }

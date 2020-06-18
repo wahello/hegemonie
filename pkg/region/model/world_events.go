@@ -88,7 +88,7 @@ type logEvtUnits struct {
 func logger(to *City) *zerolog.Event {
 	return utils.Logger.Info().
 		Uint64("logChar", to.Owner).
-		Uint64("logCity", to.Id)
+		Uint64("logCity", to.ID)
 }
 
 func (n *eventLogger) Army(to *City) EventArmy {
@@ -105,7 +105,7 @@ func (n *eventLogger) Units(to *City) EventUnits {
 
 func (evt *logEvtArmy) Item(a *Army) EventArmy {
 	evt.sub.Item(a)
-	evt.log.Uint64("army", a.Id)
+	evt.log.Uint64("army", a.ID)
 	return evt
 }
 
@@ -128,7 +128,7 @@ func (evt *logEvtArmy) Send() {
 
 func (evt *logEvtKnowledge) Item(c *City, k *KnowledgeType) EventKnowledge {
 	evt.sub.Item(c, k)
-	evt.log.Uint64("city", c.Id).Uint64("id", k.Id)
+	evt.log.Uint64("city", c.ID).Uint64("id", k.ID)
 	return evt
 }
 
@@ -145,7 +145,7 @@ func (evt *logEvtKnowledge) Send() {
 
 func (evt *logEvtUnits) Item(c *City, u *UnitType) EventUnits {
 	evt.sub.Item(c, u)
-	evt.log.Uint64("city", c.Id).Uint64("id", u.Id)
+	evt.log.Uint64("city", c.ID).Uint64("id", u.ID)
 	return evt
 }
 

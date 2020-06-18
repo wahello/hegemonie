@@ -52,7 +52,7 @@ func Command() *cobra.Command {
 }
 
 func e(format string, args ...interface{}) error {
-	return errors.New(fmt.Sprintf(format, args))
+	return errors.New(fmt.Sprintf(format, args...))
 }
 
 func (self *regionConfig) execute() error {

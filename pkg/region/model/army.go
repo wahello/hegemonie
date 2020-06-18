@@ -48,7 +48,7 @@ func (a *Army) Move(w *World) {
 		} else {
 			a.Cell = nxt
 			w.notifier.Army(a.City).Item(a).Move(src, dst).Send()
-			if pLocalCity != nil && a.City.Id != pLocalCity.Id {
+			if pLocalCity != nil && a.City.ID != pLocalCity.ID {
 				w.notifier.Army(pLocalCity).Item(a).Move(src, dst).Send()
 			}
 		}
@@ -159,8 +159,8 @@ func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 		panic("inconsistency")
 	}
 
-	a.Fight = pCity.Assault.Id
-	pCity.Assault.Defense[a.Id] = a
+	a.Fight = pCity.Assault.ID
+	pCity.Assault.Defense[a.ID] = a
 
 	return true
 }
@@ -168,12 +168,12 @@ func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 func (a *Army) JoinCityAttack(w *World, pCity *City) {
 	if pCity.Assault == nil {
 		pCity.Assault = &Fight{
-			Id: w.getNextId(), Cell: pCity.Cell,
+			ID: w.getNextId(), Cell: pCity.Cell,
 			Defense: make(SetOfArmies, 0),
 			Attack:  make(SetOfArmies, 0)}
 		if def, _ := pCity.CreateArmyDefence(w); def != nil {
-			def.Fight = pCity.Assault.Id
-			pCity.Assault.Defense[def.Id] = def
+			def.Fight = pCity.Assault.ID
+			pCity.Assault.Defense[def.ID] = def
 		}
 	}
 
@@ -184,8 +184,8 @@ func (a *Army) JoinCityAttack(w *World, pCity *City) {
 		panic("inconsistency")
 	}
 
-	a.Fight = pCity.Assault.Id
-	pCity.Assault.Attack[a.Id] = a
+	a.Fight = pCity.Assault.ID
+	pCity.Assault.Attack[a.ID] = a
 }
 
 // Leave the Fight as a loser
@@ -201,46 +201,46 @@ func (a *Army) Flip(w *World) error {
 }
 
 func (a *Army) DeferAttack(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityAttack, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityAttack, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferDefend(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityDefend, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityDefend, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferBreak(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityBreak, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityBreak, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferDeposit(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityDeposit, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityDeposit, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferDisband(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityDisband, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityDisband, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferMassacre(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityMassacre, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityMassacre, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferOverlord(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityOverlord, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdCityOverlord, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferMove(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdMove, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdMove, Cell: t.ID})
 	return nil
 }
 
 func (a *Army) DeferWait(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdWait, Cell: t.Id})
+	a.Targets = append(a.Targets, Command{Action: CmdWait, Cell: t.ID})
 	return nil
 }

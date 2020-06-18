@@ -24,7 +24,7 @@ func (s SetOfBuildingTypes) Frontier(pop int64, built []*Building, owned []*Know
 		if bt.PopRequired > pop {
 			return false
 		}
-		if !bt.MultipleAllowed && bmap[bt.Id] {
+		if !bt.MultipleAllowed && bmap[bt.ID] {
 			return false
 		}
 		for _, c := range bt.Conflicts {

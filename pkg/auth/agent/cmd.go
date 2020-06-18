@@ -25,8 +25,6 @@ type authConfig struct {
 }
 
 type authService struct {
-	proto.AuthServer
-
 	db  auth.Db
 	cfg *authConfig
 }
@@ -73,7 +71,7 @@ func (service *authService) execute() error {
 	if in, err := os.Open(p); err != nil {
 		return e("Failed to open the DB from [%s]: %s", p, err.Error())
 	} else {
-		err = json.NewDecoder(in).Decode(&service.db.UsersById)
+		err = json.NewDecoder(in).Decode(&service.db.UsersByID)
 		_ = in.Close()
 		if err != nil {
 			return e("Failed to load the DB from [%s]: %s", p, err.Error())

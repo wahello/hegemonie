@@ -125,8 +125,8 @@ type CityStock struct {
 }
 
 type KnowledgeType struct {
-	Id    uint64
-	Name  string
+	ID    uint64 `json:"Id"`
+	Name  string `json:"Name"`
 	Ticks uint32 `json:",omitempty"`
 
 	// Transient bonus of Popularity, when the Knowledge is present
@@ -162,14 +162,14 @@ type KnowledgeType struct {
 }
 
 type Knowledge struct {
-	Id    uint64
+	ID    uint64 `json:"Id"`
 	Type  uint64
 	Ticks uint32 `json:",omitempty"`
 }
 
 type BuildingType struct {
 	// Unique ID of the BuildingType
-	Id uint64
+	ID uint64 `json:"Id"`
 
 	// Display name of the current BuildingType
 	Name string
@@ -221,7 +221,7 @@ type BuildingType struct {
 
 type Building struct {
 	// The unique ID of the current Building
-	Id uint64
+	ID uint64 `json:"Id"`
 
 	// The unique ID of the BuildingType associated to the current Building
 	Type uint64
@@ -232,7 +232,7 @@ type Building struct {
 
 type City struct {
 	// The unique ID of the current City
-	Id uint64
+	ID uint64 `json:"Id"`
 
 	// The unique ID of the main Character in charge of the City.
 	// The Manager may name a Deputy manager in the City.
@@ -331,8 +331,8 @@ type City struct {
 }
 
 type UnitType struct {
-	// Unique Id of the Unit Type
-	Id uint64
+	// Unique ID of the Unit Type
+	ID uint64 `json:"Id"`
 
 	// The number of health point for that type of unit.
 	// A health equal to 0 means the death of the unit.
@@ -385,8 +385,8 @@ type UnitType struct {
 
 // Both Cell and City must not be 0, and have a non-0 value
 type Unit struct {
-	// Unique Id of the Unit
-	Id uint64
+	// Unique ID of the Unit
+	ID uint64 `json:"Id"`
 
 	// A copy of the definition for the current Unit.
 	Type uint64
@@ -408,7 +408,7 @@ type Command struct {
 
 type Army struct {
 	// The unique ID of the current Army
-	Id uint64
+	ID uint64 `json:"Id"`
 
 	// The ID of the City that controls the current Army
 	City *City `json:"-"`
@@ -438,16 +438,16 @@ type Army struct {
 
 type Fight struct {
 	// The unique ID of the
-	Id uint64
+	ID uint64 `json:"Id"`
 
 	// The unique ID of the MapVertex the current Fight is happening on.
 	Cell uint64
 
-	// The set of Id of armies involved in the current Fight on the "attack" side
+	// The set of ID of armies involved in the current Fight on the "attack" side
 	// (the side that initiated the fight)
 	Attack SetOfArmies
 
-	/// The set of Id of armies involved in the current Fight on the "defence" side
+	/// The set of ID of armies involved in the current Fight on the "defence" side
 	// the (side that has been pforce-pulled).
 	Defense SetOfArmies
 }
@@ -464,7 +464,7 @@ type MapEdge struct {
 // A MapVertex is a vertex in the transportation directed graph
 type MapVertex struct {
 	// The unique identifier of the current cell.
-	Id uint64 `json:"id"`
+	ID uint64 `json:"id"`
 
 	// // Biome in which the cell is
 	// Biome uint64
@@ -491,13 +491,13 @@ type SetOfFights []*Fight
 
 type SetOfEdges []*MapEdge
 
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Army          SetOfArmies
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Building      SetOfBuildings
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *BuildingType  SetOfBuildingTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *City          SetOfCities
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Army          SetOfArmies
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Building      SetOfBuildings
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *BuildingType  SetOfBuildingTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *City          SetOfCities
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set          region ./world_auto.go uint64         SetOfId
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Knowledge     SetOfKnowledges
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *KnowledgeType SetOfKnowledgeTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *Unit          SetOfUnits
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *UnitType      SetOfUnitTypes
-//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .Id region ./world_auto.go *MapVertex     SetOfVertices
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Knowledge     SetOfKnowledges
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *KnowledgeType SetOfKnowledgeTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Unit          SetOfUnits
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *UnitType      SetOfUnitTypes
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *MapVertex     SetOfVertices

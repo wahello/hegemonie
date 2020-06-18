@@ -8,7 +8,7 @@ package auth
 import "time"
 
 type Character struct {
-	Id      uint64
+	ID      uint64 `json:"Id"`
 	Region  string
 	Name    string
 	Off     bool `json:",omitempty"`
@@ -16,25 +16,28 @@ type Character struct {
 }
 
 type User struct {
-	Id         uint64
+	ID         uint64 `json:"Id"`
 	Name       string
 	Email      string
 	Password   string
-	Characters []Character
+	Characters []*Character
 	Admin      bool `json:",omitempty"`
 	Inactive   bool `json:",omitempty"`
 	Suspended  bool `json:",omitempty"`
 	Deleted    bool `json:",omitempty"`
 
+	// Time of the creation of the User
 	CTime time.Time
+	// Time of the last update of the User
 	MTime time.Time
-	ATime time.Time
+	// Time of the last Inactive update
+	ITime time.Time
 }
 
 type Db struct {
-	UsersById   []*User
+	UsersByID   []*User
 	UsersByMail map[string]*User
 
-	NextId uint64
+	NextID uint64
 	Salt   string
 }

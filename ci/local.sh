@@ -12,8 +12,9 @@ nice ionice ./ci/bootstrap.sh \
   docs/hegeIV/map-calaquyr.json \
   docs/hegeIV/definitions \
   docs/hegeIV/lang \
-  $DST
+  "${DST}"
 
 find "$DST" -type f
 
-nice ionice ./ci/run.sh $DST
+nice ionice ./ci/run.sh "${DST}"
+

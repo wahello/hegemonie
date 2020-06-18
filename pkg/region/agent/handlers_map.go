@@ -23,7 +23,7 @@ func (s *srvMap) Vertices(ctx context.Context, req *proto.PaginatedQuery) (*prot
 	rep := &proto.ListOfVertices{}
 	for _, x := range s.w.Places.Cells.Slice(req.Marker, req.Max) {
 		rep.Items = append(rep.Items, &proto.Vertex{
-			Id: x.Id, X: x.X, Y: x.Y, CityId: x.City})
+			Id: x.ID, X: x.X, Y: x.Y, CityId: x.City})
 	}
 	return rep, nil
 }

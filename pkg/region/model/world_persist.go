@@ -129,47 +129,47 @@ func (w *World) PostLoad() error {
 	// Compute the highest unique ID
 	maxId := w.NextId
 	for _, u := range w.Definitions.Units {
-		if u.Id > maxId {
-			maxId = u.Id
+		if u.ID > maxId {
+			maxId = u.ID
 		}
 	}
 	for _, u := range w.Definitions.Buildings {
-		if u.Id > maxId {
-			maxId = u.Id
+		if u.ID > maxId {
+			maxId = u.ID
 		}
 	}
 	for _, u := range w.Definitions.Knowledges {
-		if u.Id > maxId {
-			maxId = u.Id
+		if u.ID > maxId {
+			maxId = u.ID
 		}
 	}
 	for _, c := range w.Live.Cities {
-		if c.Id > maxId {
-			maxId = c.Id
+		if c.ID > maxId {
+			maxId = c.ID
 		}
 		for _, a := range c.Armies {
-			if a.Id > maxId {
-				maxId = a.Id
+			if a.ID > maxId {
+				maxId = a.ID
 			}
 			for _, u := range a.Units {
-				if u.Id > maxId {
-					maxId = u.Id
+				if u.ID > maxId {
+					maxId = u.ID
 				}
 			}
 		}
 		for _, u := range c.Units {
-			if u.Id > maxId {
-				maxId = u.Id
+			if u.ID > maxId {
+				maxId = u.ID
 			}
 		}
 		for _, u := range c.Knowledges {
-			if u.Id > maxId {
-				maxId = u.Id
+			if u.ID > maxId {
+				maxId = u.ID
 			}
 		}
 		for _, u := range c.Buildings {
-			if u.Id > maxId {
-				maxId = u.Id
+			if u.ID > maxId {
+				maxId = u.ID
 			}
 		}
 	}

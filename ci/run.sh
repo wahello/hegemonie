@@ -28,22 +28,22 @@ set -ex
 
 # Sanitize the input
 BASE=$1
-[[ -d "$BASE" ]]
-[[ -d "$BASE/definitions" ]]
-[[ -d "$BASE/lang" ]]
-[[ -d "$BASE/live" ]]
-[[ -d "$BASE/save" ]]
-[[ -d "$BASE/evt" ]]
+[[ -d "${BASE}" ]]
+[[ -d "${BASE}/definitions" ]]
+[[ -d "${BASE}/lang" ]]
+[[ -d "${BASE}/live" ]]
+[[ -d "${BASE}/save" ]]
+[[ -d "${BASE}/evt" ]]
 shift
 
-DEFS="$BASE/definitions"
+DEFS="${BASE}/definitions"
 [[ -r "${DEFS}/config.json" ]]
 [[ -r "${DEFS}/units.json" ]]
 [[ -r "${DEFS}/buildings.json" ]]
 [[ -r "${DEFS}/knowledge.json" ]]
 
-TRANSLATIONS="$BASE/lang"
-[[ -d "$TRANSLATIONS" ]]
+TRANSLATIONS="${BASE}/lang"
+[[ -d "${TRANSLATIONS}" ]]
 [[ -r "${TRANSLATIONS}/active.en.toml" ]]
 
 # Spawn the core services
@@ -78,8 +78,8 @@ heged region \
 heged web \
 	--id hege,web,1 \
 	--lang "${BASE}/lang" \
-	--templates $PWD/pkg/web/templates \
-	--static $PWD/pkg/web/static \
+	--templates "${PWD}/pkg/web/templates" \
+	--static "${PWD}/pkg/web/static" \
 	--endpoint 127.0.0.1:8080 \
 	--region 127.0.0.1:8081 \
 	--auth 127.0.0.1:8082 \

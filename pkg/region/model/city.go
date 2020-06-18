@@ -17,7 +17,7 @@ var (
 
 func MakeCity() *City {
 	return &City{
-		Id:         0,
+		ID:         0,
 		Cell:       0,
 		Units:      make(SetOfUnits, 0),
 		Buildings:  make(SetOfBuildings, 0),
@@ -165,13 +165,13 @@ func (c *City) GetStock(w *World) *CityStock {
 func (c *City) CreateEmptyArmy(w *World) *Army {
 	aid := w.getNextId()
 	a := &Army{
-		Id:       aid,
+		ID:       aid,
 		City:     c,
 		Cell:     c.Cell,
 		Fight:    0,
 		Name:     fmt.Sprintf("A-%d", aid),
 		Units:    make(SetOfUnits, 0),
-		Postures: []int64{int64(c.Id)},
+		Postures: []int64{int64(c.ID)},
 		Targets:  make([]Command, 0),
 	}
 	c.Armies.Add(a)
@@ -180,7 +180,7 @@ func (c *City) CreateEmptyArmy(w *World) *Army {
 
 func unitsToId(uv []*Unit) (out []uint64) {
 	for _, u := range uv {
-		out = append(out, u.Id)
+		out = append(out, u.ID)
 	}
 	return out
 }
@@ -298,7 +298,7 @@ func (c *City) Produce(w *World) {
 
 	for _, b := range c.Buildings {
 		if b.Ticks > 0 {
-			bt := w.BuildingTypeGet(b.Id)
+			bt := w.BuildingTypeGet(b.ID)
 			if c.Stock.GreaterOrEqualTo(bt.Cost) {
 				c.Stock.Remove(bt.Cost)
 				b.Ticks--
@@ -311,7 +311,7 @@ func (c *City) Produce(w *World) {
 
 	for _, k := range c.Knowledges {
 		if k.Ticks > 0 {
-			bt := w.KnowledgeTypeGet(k.Id)
+			bt := w.KnowledgeTypeGet(k.ID)
 			if c.Stock.GreaterOrEqualTo(bt.Cost) {
 				c.Stock.Remove(bt.Cost)
 				k.Ticks--
@@ -327,10 +327,12 @@ func (c *City) Produce(w *World) {
 	c.Stock.TrimTo(stock.Actual)
 }
 
+// Set a tax rate on the current City, with the same ratio on every Resource.
 func (c *City) SetUniformTaxRate(nb float64) {
 	c.TaxRate = MultiplierUniform(nb)
 }
 
+// Set the given tax rate to the current City.
 func (c *City) SetTaxRate(m ResourcesMultiplier) {
 	c.TaxRate = m
 }
@@ -372,7 +374,7 @@ func (c *City) ConquerCity(w *World, other *City) {
 
 	//pre := other.pOverlord
 	other.pOverlord = c
-	other.Overlord = c.Id
+	other.Overlord = c.ID
 	other.TaxRate = MultiplierUniform(w.Config.RateOverlord)
 
 	// FIXME(jfs): Notify 'pre'
@@ -461,7 +463,7 @@ func (c *City) UnitAllowed(pType *UnitType) bool {
 // No check is performed to verify the City has all the requirements.
 func (c *City) UnitCreate(w *World, pType *UnitType) *Unit {
 	id := w.getNextId()
-	u := &Unit{Id: id, Type: pType.Id, Ticks: pType.Ticks, Health: pType.Health}
+	u := &Unit{ID: id, Type: pType.ID, Ticks: pType.Ticks, Health: pType.Health}
 	c.Units.Add(u)
 	return u
 }
@@ -478,7 +480,7 @@ func (c *City) Train(w *World, idType uint64) (uint64, error) {
 	}
 
 	u := c.UnitCreate(w, pType)
-	return u.Id, nil
+	return u.ID, nil
 }
 
 func (c *City) Study(w *World, kId uint64) (uint64, error) {
@@ -505,7 +507,7 @@ func (c *City) Study(w *World, kId uint64) (uint64, error) {
 	}
 
 	id := w.getNextId()
-	c.Knowledges.Add(&Knowledge{Id: id, Type: kId, Ticks: pType.Ticks})
+	c.Knowledges.Add(&Knowledge{ID: id, Type: kId, Ticks: pType.Ticks})
 	return id, nil
 }
 
@@ -543,7 +545,7 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 	}
 
 	id := w.getNextId()
-	c.Buildings.Add(&Building{Id: id, Type: bId, Ticks: pType.Ticks})
+	c.Buildings.Add(&Building{ID: id, Type: bId, Ticks: pType.Ticks})
 	return id, nil
 }
 
