@@ -1,9 +1,9 @@
 # Hegemonie
 
-[![circleci](https://circleci.com/gh/jfsmig/hegemonie.svg?style=svg)](https://app.circleci.com/pipelines/github/jfsmig/hegemonie)
-[![codecov](https://codecov.io/gh/jfsmig/hegemonie/branch/master/graph/badge.svg)](https://codecov.io/gh/jfsmig/hegemonie)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bf7c2872c60445c99f914d31d7b213ae)](https://www.codacy.com/manual/jfsmig/hegemonie?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jfsmig/hegemonie&amp;utm_campaign=Badge_Grade)
-[![License: MPL-2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![CircleCi](https://circleci.com/gh/jfsmig/hegemonie.svg?style=svg)](https://app.circleci.com/pipelines/github/jfsmig/hegemonie)
+[![Codecov](https://codecov.io/gh/jfsmig/hegemonie/branch/master/graph/badge.svg)](https://codecov.io/gh/jfsmig/hegemonie)
+[![Codacy](https://app.codacy.com/project/badge/Grade/bf7c2872c60445c99f914d31d7b213ae)](https://www.codacy.com/manual/jfsmig/hegemonie?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jfsmig/hegemonie&amp;utm_campaign=Badge_Grade)
+[![MPL-2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 
 Hegemonie is an online management, strategy and diplomacy RPG. The current
 repository is a reboot of what [Hegemonie](http://www.hegemonie.be) was
