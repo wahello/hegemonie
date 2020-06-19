@@ -20,18 +20,18 @@ func (srv *eventService) List(ctx context.Context, req *proto.ListReq) (*proto.L
 	items, err := srv.backend.List(req.CharId, req.Marker, req.Max)
 	if err != nil {
 		return nil, err
-	} else {
-		rep := proto.ListRep{}
-		for _, x := range items {
-			rep.Items = append(rep.Items, &proto.ListItem{
-				CharId:  x.CharId,
-				When:    math.MaxUint64 - x.When,
-				EvtId:   x.Id,
-				Payload: x.Payload,
-			})
-		}
-		return &rep, nil
 	}
+
+	rep := proto.ListRep{}
+	for _, x := range items {
+		rep.Items = append(rep.Items, &proto.ListItem{
+			CharId:  x.CharID,
+			When:    math.MaxUint64 - x.When,
+			EvtId:   x.ID,
+			Payload: x.Payload,
+		})
+	}
+	return &rep, nil
 }
 
 func (srv *eventService) Push1(ctx context.Context, req *proto.Push1Req) (*proto.None, error) {

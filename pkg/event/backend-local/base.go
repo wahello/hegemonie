@@ -21,9 +21,9 @@ type Backend struct {
 }
 
 type Item struct {
-	CharId  uint64
+	CharID  uint64
 	When    uint64
-	Id      string
+	ID      string
 	Payload []byte
 }
 
@@ -39,29 +39,29 @@ func Open(path string) (*Backend, error) {
 	return &Backend{db: db}, nil
 }
 
-func (b *Backend) Push1(charId uint64, id string, payload []byte) error {
+func (b *Backend) Push1(charID uint64, id string, payload []byte) error {
 	opts := gorocksdb.NewDefaultWriteOptions()
 	opts.SetSync(false)
 	defer opts.Destroy()
 
 	when := math.MaxUint64 - uint64(time.Now().UnixNano())
-	k := fmt.Sprintf("%d/%16X/%s", charId, when, id)
+	k := fmt.Sprintf("%d/%16X/%s", charID, when, id)
 	utils.Logger.Warn().Bytes("key", []byte(k)).Msg("PUSH")
 	return b.db.Put(opts, []byte(k), payload)
 }
 
-func (b *Backend) Ack1(charId, when uint64, id string) error {
+func (b *Backend) Ack1(charID, when uint64, id string) error {
 	opts := gorocksdb.NewDefaultWriteOptions()
 	opts.SetSync(false)
 	defer opts.Destroy()
 
 	w := math.MaxUint64 - when
-	k := fmt.Sprintf("%d/%16X/%s", charId, w, id)
+	k := fmt.Sprintf("%d/%16X/%s", charID, w, id)
 	utils.Logger.Warn().Bytes("key", []byte(k)).Msg("DEL")
 	return b.db.Delete(opts, []byte(k))
 }
 
-func (b *Backend) List(charId, when uint64, max uint32) ([]Item, error) {
+func (b *Backend) List(charID, when uint64, max uint32) ([]Item, error) {
 	if max <= 0 {
 		max = 100
 	} else if max > 1000 {
@@ -75,8 +75,8 @@ func (b *Backend) List(charId, when uint64, max uint32) ([]Item, error) {
 		w = math.MaxUint64 - when
 	}
 
-	prefix := []byte(fmt.Sprintf("%d/", charId))
-	needle := []byte(fmt.Sprintf("%d/%016X/", charId, w))
+	prefix := []byte(fmt.Sprintf("%d/", charID))
+	needle := []byte(fmt.Sprintf("%d/%016X/", charID, w))
 
 	opts := gorocksdb.NewDefaultReadOptions()
 	defer opts.Destroy()
@@ -95,16 +95,15 @@ func (b *Backend) List(charId, when uint64, max uint32) ([]Item, error) {
 		tokens := strings.SplitN(string(k), "/", 3)
 		when, err = strconv.ParseUint(tokens[1], 16, 64)
 		out = append(out, Item{
-			CharId:  charId,
+			CharID:  charID,
 			When:    when,
-			Id:      tokens[2],
+			ID:      tokens[2],
 			Payload: iterator.Value().Data(),
 		})
 	}
 
 	if err != nil {
 		return nil, err
-	} else {
-		return out, nil
 	}
+	return out, nil
 }

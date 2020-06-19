@@ -13,54 +13,54 @@ import (
 	"sync/atomic"
 )
 
-func (r SetOfEdges) Len() int      { return len(r) }
-func (r SetOfEdges) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
-func (r SetOfEdges) Less(i, j int) bool {
-	return r.edgeLess(i, *r[j])
+func (ev SetOfEdges) Len() int      { return len(ev) }
+func (ev SetOfEdges) Swap(i, j int) { ev[i], ev[j] = ev[j], ev[i] }
+func (ev SetOfEdges) Less(i, j int) bool {
+	return ev.edgeLess(i, *ev[j])
 }
 
-func (r SetOfEdges) edgeLess(i int, d MapEdge) bool {
-	s := r[i]
+func (ev SetOfEdges) edgeLess(i int, d MapEdge) bool {
+	s := ev[i]
 	return s.S < d.S || (s.S == d.S && s.D < d.D)
 }
 
-func (r SetOfEdges) First(at uint64) int {
-	return sort.Search(len(r), func(i int) bool { return r[i].S >= at })
+func (ev SetOfEdges) First(at uint64) int {
+	return sort.Search(len(ev), func(i int) bool { return ev[i].S >= at })
 }
 
-func (s *SetOfEdges) Add(e *MapEdge) {
-	*s = append(*s, e)
-	if nb := len(*s); nb > 2 && !sort.IsSorted((*s)[nb-2:]) {
-		sort.Sort(*s)
+func (ev *SetOfEdges) Add(e *MapEdge) {
+	*ev = append(*ev, e)
+	if nb := len(*ev); nb > 2 && !sort.IsSorted((*ev)[nb-2:]) {
+		sort.Sort(*ev)
 	}
 }
 
-func (s SetOfEdges) Get(src, dst uint64) *MapEdge {
-	i := sort.Search(len(s), func(i int) bool {
-		return s[i].S >= src || (s[i].S == src && s[i].D >= dst)
+func (ev SetOfEdges) Get(src, dst uint64) *MapEdge {
+	i := sort.Search(len(ev), func(i int) bool {
+		return ev[i].S >= src || (ev[i].S == src && ev[i].D >= dst)
 	})
-	if i < len(s) && s[i].S == src && s[i].D == dst {
-		return s[i]
+	if i < len(ev) && ev[i].S == src && ev[i].D == dst {
+		return ev[i]
 	}
 	return nil
 
 }
 
-func (s SetOfEdges) Slice(markerSrc, markerDst uint64, max uint32) []MapEdge {
+func (ev SetOfEdges) Slice(markerSrc, markerDst uint64, max uint32) []MapEdge {
 	tab := make([]MapEdge, 0)
 
-	iMax := s.Len()
-	i := s.First(markerSrc)
-	if i < iMax && s[i].S == markerSrc && s[i].D == markerDst {
+	iMax := ev.Len()
+	i := ev.First(markerSrc)
+	if i < iMax && ev[i].S == markerSrc && ev[i].D == markerDst {
 		i++
 	}
 
 	needle := MapEdge{S: markerSrc, D: markerDst}
 	for ; i < iMax; i++ {
-		if s.edgeLess(i, needle) {
+		if ev.edgeLess(i, needle) {
 			continue
 		}
-		tab = append(tab, *s[i])
+		tab = append(tab, *ev[i])
 		if uint32(len(tab)) >= max {
 			break
 		}
@@ -73,7 +73,7 @@ func (m *Map) Init() {
 	m.Roads = make(SetOfEdges, 0)
 }
 
-func (m *Map) getNextId() uint64 {
+func (m *Map) getNextID() uint64 {
 	return atomic.AddUint64(&m.NextId, 1)
 }
 
@@ -86,7 +86,7 @@ func (m *Map) CellHas(id uint64) bool {
 }
 
 func (m *Map) CellCreate() *MapVertex {
-	id := m.getNextId()
+	id := m.getNextID()
 	c := &MapVertex{ID: id}
 	m.Cells.Add(c)
 	return c
@@ -118,10 +118,9 @@ func (m *Map) RoadCreate(src, dst uint64, check bool) error {
 
 	if r := m.Roads.Get(src, dst); r != nil {
 		return errors.New("MapEdge exists")
-	} else {
-		m.Roads.Add(&MapEdge{src, dst})
-		return nil
 	}
+	m.Roads.Add(&MapEdge{src, dst})
+	return nil
 }
 
 func (m *Map) PathNextStep(src, dst uint64) (uint64, error) {
@@ -132,9 +131,8 @@ func (m *Map) PathNextStep(src, dst uint64) (uint64, error) {
 	next, ok := m.steps[vector{src, dst}]
 	if ok {
 		return next, nil
-	} else {
-		return 0, errors.New("No route")
 	}
+	return 0, errors.New("No route")
 }
 
 func (m *Map) CellAdjacency(id uint64) []uint64 {

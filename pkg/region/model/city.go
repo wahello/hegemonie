@@ -470,8 +470,8 @@ func (c *City) UnitCreate(w *World, pType *UnitType) *Unit {
 
 // Start the training of a Unit of the given UnitType (id).
 // The whole chain of requirements will be checked.
-func (c *City) Train(w *World, idType uint64) (uint64, error) {
-	pType := w.UnitTypeGet(idType)
+func (c *City) Train(w *World, typeID uint64) (uint64, error) {
+	pType := w.UnitTypeGet(typeID)
 	if pType == nil {
 		return 0, errors.New("Unit Type not found")
 	}
@@ -483,14 +483,14 @@ func (c *City) Train(w *World, idType uint64) (uint64, error) {
 	return u.ID, nil
 }
 
-func (c *City) Study(w *World, kId uint64) (uint64, error) {
-	pType := w.KnowledgeTypeGet(kId)
+func (c *City) Study(w *World, typeID uint64) (uint64, error) {
+	pType := w.KnowledgeTypeGet(typeID)
 	if pType == nil {
 		return 0, errors.New("Knowledge Type not found")
 	}
 	owned := make(map[uint64]bool)
 	for _, k := range c.Knowledges {
-		if kId == k.Type {
+		if typeID == k.Type {
 			return 0, errors.New("Already started")
 		}
 		owned[k.Type] = true
@@ -507,18 +507,18 @@ func (c *City) Study(w *World, kId uint64) (uint64, error) {
 	}
 
 	id := w.getNextId()
-	c.Knowledges.Add(&Knowledge{ID: id, Type: kId, Ticks: pType.Ticks})
+	c.Knowledges.Add(&Knowledge{ID: id, Type: typeID, Ticks: pType.Ticks})
 	return id, nil
 }
 
-func (c *City) Build(w *World, bId uint64) (uint64, error) {
-	pType := w.BuildingTypeGet(bId)
+func (c *City) Build(w *World, bID uint64) (uint64, error) {
+	pType := w.BuildingTypeGet(bID)
 	if pType == nil {
 		return 0, errors.New("Building Type not found")
 	}
 	if !pType.MultipleAllowed {
 		for _, b := range c.Buildings {
-			if b.Type == bId {
+			if b.Type == bID {
 				return 0, errors.New("Building already present")
 			}
 		}
@@ -545,7 +545,7 @@ func (c *City) Build(w *World, bId uint64) (uint64, error) {
 	}
 
 	id := w.getNextId()
-	c.Buildings.Add(&Building{ID: id, Type: bId, Ticks: pType.Ticks})
+	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: pType.Ticks})
 	return id, nil
 }
 

@@ -55,39 +55,39 @@ func e(format string, args ...interface{}) error {
 	return errors.New(fmt.Sprintf(format, args...))
 }
 
-func (self *regionConfig) execute() error {
+func (cfg *regionConfig) execute() error {
 	var err error
 
 	w := region.World{}
 	w.Init()
 
-	if self.pathSave != "" {
-		err = os.MkdirAll(self.pathSave, 0755)
+	if cfg.pathSave != "" {
+		err = os.MkdirAll(cfg.pathSave, 0755)
 		if err != nil {
-			return e("Failed to create [%s]: %s", self.pathSave, err.Error())
+			return e("Failed to create [%s]: %s", cfg.pathSave, err.Error())
 		}
 	}
 
-	if self.pathLive == "" {
+	if cfg.pathLive == "" {
 		return e("Missing path for live data")
 	}
-	if self.pathDefs == "" {
+	if cfg.pathDefs == "" {
 		return e("Missing path for definitions data")
 	}
 
-	err = w.LoadDefinitionsFromFiles(self.pathDefs)
+	err = w.LoadDefinitionsFromFiles(cfg.pathDefs)
 	if err != nil {
 		return err
 	}
 
-	err = w.LoadLiveFromFiles(self.pathLive)
+	err = w.LoadLiveFromFiles(cfg.pathLive)
 	if err != nil {
 		return err
 	}
 
 	err = w.PostLoad()
 	if err != nil {
-		return e("Inconsistent World from [%s] and [%s]: %s", self.pathDefs, self.pathLive, err.Error())
+		return e("Inconsistent World from [%s] and [%s]: %s", cfg.pathDefs, cfg.pathLive, err.Error())
 	}
 
 	w.Places.Rehash()
@@ -97,13 +97,13 @@ func (self *regionConfig) execute() error {
 		return e("Inconsistent World: %s", err.Error())
 	}
 
-	lis, err := net.Listen("tcp", self.endpoint)
+	lis, err := net.Listen("tcp", cfg.endpoint)
 	if err != nil {
 		return e("failed to listen: %v", err)
 	}
 
 	var cnxEvent *grpc.ClientConn
-	cnxEvent, err = grpc.Dial(self.endpointEvent, grpc.WithInsecure())
+	cnxEvent, err = grpc.Dial(cfg.endpointEvent, grpc.WithInsecure())
 	if err != nil {
 		return err
 	}
@@ -111,21 +111,21 @@ func (self *regionConfig) execute() error {
 	w.SetNotifier(&EventStore{cnx: cnxEvent})
 
 	srv := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
-	proto.RegisterMapServer(srv, &srvMap{cfg: self, w: &w})
-	proto.RegisterCityServer(srv, &srvCity{cfg: self, w: &w})
-	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: self, w: &w})
-	proto.RegisterAdminServer(srv, &srvAdmin{cfg: self, w: &w})
-	proto.RegisterArmyServer(srv, &srvArmy{cfg: self, w: &w})
+	proto.RegisterMapServer(srv, &srvMap{cfg: cfg, w: &w})
+	proto.RegisterCityServer(srv, &srvCity{cfg: cfg, w: &w})
+	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: cfg, w: &w})
+	proto.RegisterAdminServer(srv, &srvAdmin{cfg: cfg, w: &w})
+	proto.RegisterArmyServer(srv, &srvArmy{cfg: cfg, w: &w})
 	if err := srv.Serve(lis); err != nil {
 		return e("failed to serve: %v", err)
 	}
 
-	if self.pathSave != "" {
-		if p, err := w.SaveLiveToFiles(self.pathSave); err != nil {
+	if cfg.pathSave != "" {
+		p, err := w.SaveLiveToFiles(cfg.pathSave)
+		if err != nil {
 			return e("Failed to save the World at exit: %s", err.Error())
-		} else {
-			log.Fatalf("World saved at [%s]", p)
 		}
+		log.Fatalf("World saved at [%s]", p)
 	}
 
 	return nil

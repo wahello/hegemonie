@@ -173,7 +173,7 @@ func CommandSvg() *cobra.Command {
 					stroke = 1
 				}
 				fmt.Printf(`<circle id="%s" class="clickable" cx="%d" cy="%d" r="%d" stroke="black" stroke-width="%d" fill="%s"/>
-`, s.raw.Id, int64(s.raw.X), int64(s.raw.Y), radius, stroke, color)
+`, s.raw.ID, int64(s.raw.X), int64(s.raw.Y), radius, stroke, color)
 			}
 			fmt.Println(`</g>`)
 			fmt.Println(`</svg>`)
@@ -247,7 +247,7 @@ func CommandExport() *cobra.Command {
 					if err != nil {
 						return err
 					}
-					city.Name = site.raw.Id
+					city.Name = site.raw.ID
 					city.Cell = cell.ID
 					cell.City = city.ID
 				}
@@ -296,27 +296,28 @@ func CommandExport() *cobra.Command {
 			}
 
 			// Dump the LIVE base of the world concerned by the current script
-			if p, err := w.SaveLiveToFiles(dirOut); err != nil {
+			p, err := w.SaveLiveToFiles(dirOut)
+			if err != nil {
 				return err
-			} else {
-				fmt.Println("HEGE_LIVE=" + p)
 			}
+			fmt.Println("HEGE_LIVE=" + p)
 
 			// Dump the configuration
-			if p, err := w.SaveDefinitionsToFiles(dirOut + "/definitions"); err != nil {
+			p, err = w.SaveDefinitionsToFiles(dirOut + "/definitions")
+			if err != nil {
 				return err
-			} else {
-				fmt.Println("HEGE_DEFS=" + p)
+			}
+			fmt.Println("HEGE_DEFS=" + p)
+
+			f, err := os.Create(dirOut + "/auth.json")
+			if err != nil {
+				return err
 			}
 
-			if f, err := os.Create(dirOut + "/auth.json"); err != nil {
-				return err
-			} else {
-				encoder := json.NewEncoder(f)
-				encoder.SetIndent("", " ")
-				err = encoder.Encode(aaa.UsersByID)
-				_ = f.Close()
-			}
+			encoder := json.NewEncoder(f)
+			encoder.SetIndent("", " ")
+			err = encoder.Encode(aaa.UsersByID)
+			_ = f.Close()
 			return nil
 		},
 	}

@@ -76,9 +76,8 @@ func (w *World) CityCreateRandom(loc uint64) (*City, error) {
 		i := rand.Intn(len(w.Config.CityPatterns))
 		model := w.Config.CityPatterns[i]
 		return w.CityCreateModel(loc, &model)
-	} else {
-		return w.CityCreateModel(loc, nil)
 	}
+	return w.CityCreateModel(loc, nil)
 }
 
 func (w *World) CityGetAndCheck(characterId, cityId uint64) (*City, error) {

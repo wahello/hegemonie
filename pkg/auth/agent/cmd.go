@@ -14,6 +14,7 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"io"
 	"net"
 	"os"
 )
@@ -55,52 +56,51 @@ func Command() *cobra.Command {
 	return agent
 }
 
-func e(format string, args ...interface{}) error {
-	return errors.New(fmt.Sprintf(format, args...))
-}
+func (srv *authService) execute() error {
+	srv.db.Init()
 
-func (service *authService) execute() error {
-	service.db.Init()
-
-	if service.cfg.pathLive == "" {
+	if srv.cfg.pathLive == "" {
 		return errors.New("Missing: path to the live data directory")
 	}
 
 	var p string
-	p = service.cfg.pathLive + "/auth.json"
-	if in, err := os.Open(p); err != nil {
-		return e("Failed to open the DB from [%s]: %s", p, err.Error())
-	} else {
-		err = json.NewDecoder(in).Decode(&service.db.UsersByID)
-		_ = in.Close()
-		if err != nil {
-			return e("Failed to load the DB from [%s]: %s", p, err.Error())
-		}
+	var err error
+	var in io.ReadCloser
+
+	p = srv.cfg.pathLive + "/auth.json"
+	in, err = os.Open(p)
+	if err != nil {
+		return fmt.Errorf("Failed to open the DB from [%s]: %s", p, err.Error())
 	}
 
-	if err := service.postLoad(); err != nil {
-		return e("Inconsistent DB in [%s]: %s", service.cfg.pathLive, err.Error())
+	err = json.NewDecoder(in).Decode(&srv.db.UsersByID)
+	_ = in.Close()
+	if err != nil {
+		return fmt.Errorf("Failed to load the DB from [%s]: %s", p, err.Error())
 	}
 
-	if err := service.db.Check(); err != nil {
-		return e("Inconsistent DB: %s", err.Error())
+	if err := srv.postLoad(); err != nil {
+		return fmt.Errorf("Inconsistent DB in [%s]: %s", srv.cfg.pathLive, err.Error())
+	}
+
+	if err := srv.db.Check(); err != nil {
+		return fmt.Errorf("Inconsistent DB: %s", err.Error())
 	}
 
 	var lis net.Listener
-	var err error
-	if lis, err = net.Listen("tcp", service.cfg.endpoint); err != nil {
-		return e("failed to listen: %v", err)
+	if lis, err = net.Listen("tcp", srv.cfg.endpoint); err != nil {
+		return fmt.Errorf("failed to listen: %v", err)
 	}
 
 	server := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
-	proto.RegisterAuthServer(server, service)
+	proto.RegisterAuthServer(server, srv)
 	if err := server.Serve(lis); err != nil {
-		return e("failed to serve: %v", err)
+		return fmt.Errorf("failed to serve: %v", err)
 	}
 
-	if service.cfg.pathSave != "" {
-		if err = service.save(); err != nil {
-			return e("Failed to save the DB at exit: %s", err.Error())
+	if srv.cfg.pathSave != "" {
+		if err = srv.save(); err != nil {
+			return fmt.Errorf("Failed to save the DB at exit: %s", err.Error())
 		}
 	}
 	return nil
@@ -111,5 +111,5 @@ func (srv *authService) postLoad() error {
 }
 
 func (srv *authService) save() error {
-	return e("NYI")
+	return errors.New("NYI")
 }

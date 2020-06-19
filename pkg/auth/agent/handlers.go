@@ -44,9 +44,8 @@ func (srv *authService) UserShow(ctx context.Context, req *proto.UserShowReq) (*
 
 	if u == nil || u.Deleted {
 		return nil, status.Error(codes.NotFound, "No such User")
-	} else {
-		return userViewFull(u), nil
 	}
+	return userViewFull(u), nil
 }
 
 func (srv *authService) UserList(ctx context.Context, req *proto.UserListReq) (*proto.UserListRep, error) {

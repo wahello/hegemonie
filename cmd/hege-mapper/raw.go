@@ -11,7 +11,7 @@ import (
 )
 
 type SiteRaw struct {
-	Id   string
+	ID   string `json:"Id"`
 	X, Y float64
 	City bool
 }
@@ -37,7 +37,7 @@ func (mr *MapRaw) Finalize() (Map, error) {
 	m := makeMap()
 
 	for _, s := range mr.Sites {
-		m.sites[s.Id] = &Site{
+		m.sites[s.ID] = &Site{
 			raw:   s,
 			peers: make(map[*Site]bool),
 		}

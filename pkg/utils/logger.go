@@ -18,7 +18,7 @@ var (
 			With().Timestamp()
 	Logger = LoggerContext.Logger()
 
-	ServiceId   = "hege"
+	ServiceID   = "hege"
 	flagVerbose = 0
 	flagQuiet   = false
 	flagSyslog  = false
@@ -28,10 +28,10 @@ func PatchCommandLogs(cmd *cobra.Command) {
 	cmd.PersistentFlags().CountVarP(&flagVerbose, "verbose", "v", "Increase the verbosity level")
 	cmd.PersistentFlags().BoolVarP(&flagQuiet, "quiet", "q", flagQuiet, "Shut the logs")
 	cmd.PersistentFlags().BoolVarP(&flagQuiet, "syslog", "s", flagQuiet, "Log in syslog")
-	cmd.PersistentFlags().StringVar(&ServiceId, "id", ServiceId, "Use that service ID in the logs")
+	cmd.PersistentFlags().StringVar(&ServiceID, "id", ServiceID, "Use that service ID in the logs")
 
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		Logger = LoggerContext.Str("id", ServiceId).Logger()
+		Logger = LoggerContext.Str("id", ServiceID).Logger()
 
 		if flagQuiet {
 			zerolog.SetGlobalLevel(zerolog.Disabled)

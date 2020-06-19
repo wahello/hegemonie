@@ -24,11 +24,11 @@ func (s *srvArmy) getAndCheckArmy(req *proto.ArmyId) (*region.City, *region.Army
 	if err != nil {
 		return nil, nil, err
 	}
-	if army := city.Armies.Get(req.Army); army == nil {
+	army := city.Armies.Get(req.Army)
+	if army == nil {
 		return nil, nil, status.Errorf(codes.NotFound, "Army Not found")
-	} else {
-		return city, army, err
 	}
+	return city, army, err
 }
 
 func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView, error) {

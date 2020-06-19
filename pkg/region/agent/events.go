@@ -21,15 +21,15 @@ type EventStore struct {
 
 type EventArmy struct {
 	store  *EventStore
-	charId uint64
+	charID uint64
 
-	SourceCityId uint64 `json:"SourceCityId"`
+	SourceCityID uint64 `json:"SourceCityId"`
 	SourceCity   string `json:"SourceCity"`
 
-	ArmyId   uint64 `json:"ArmyId"`
+	ArmyID   uint64 `json:"ArmyId"`
 	ArmyName string `json:"Army"`
 
-	ArmyCityId   uint64 `json:"ArmyCityId"`
+	ArmyCityID   uint64 `json:"ArmyCityId"`
 	ArmyCityName string `json:"ArmyCity"`
 
 	Src uint64 `json:"Src"`
@@ -49,9 +49,9 @@ type EventUnits struct {
 func (es *EventStore) Army(log *region.City) region.EventArmy {
 	return &EventArmy{
 		store:        es,
-		charId:       log.Owner,
+		charID:       log.Owner,
 		SourceCity:   log.Name,
-		SourceCityId: log.ID,
+		SourceCityID: log.ID,
 	}
 }
 
@@ -64,9 +64,9 @@ func (es *EventStore) Units(log *region.City) region.EventUnits {
 }
 
 func (evt *EventArmy) Item(a *region.Army) region.EventArmy {
-	evt.ArmyId = a.ID
+	evt.ArmyID = a.ID
 	evt.ArmyName = a.Name
-	evt.ArmyCityId = a.City.ID
+	evt.ArmyCityID = a.City.ID
 	evt.ArmyCityName = a.City.Name
 	return evt
 }
@@ -91,7 +91,7 @@ func (evt *EventArmy) Send() {
 
 	client := hegemonie_rpevent_proto.NewProducerClient(evt.store.cnx)
 	client.Push1(context.Background(), &hegemonie_rpevent_proto.Push1Req{
-		CharId:  evt.charId,
+		CharId:  evt.charID,
 		EvtId:   uuid.New().String(),
 		Payload: buffer.Bytes(),
 	})

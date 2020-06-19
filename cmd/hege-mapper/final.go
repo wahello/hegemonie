@@ -41,14 +41,13 @@ func makeSite(raw SiteRaw) *Site {
 
 func (s *Site) DotName() string {
 	if s.raw.City {
-		return s.raw.Id
-	} else {
-		return "r" + s.raw.Id
+		return s.raw.ID
 	}
+	return "r" + s.raw.ID
 }
 
 func (r *Road) Raw() RoadRaw {
-	return RoadRaw{Src: r.Src.raw.Id, Dst: r.Dst.raw.Id}
+	return RoadRaw{Src: r.Src.raw.ID, Dst: r.Dst.raw.ID}
 }
 
 func (m *Map) Debug() {
@@ -66,8 +65,8 @@ func (m *Map) UniqueRoads() <-chan Road {
 		seen := make(map[RoadRaw]bool)
 		for _, s := range m.sites {
 			for peer, _ := range s.peers {
-				r0 := RoadRaw{Src: s.raw.Id, Dst: peer.raw.Id}
-				r1 := RoadRaw{Src: peer.raw.Id, Dst: s.raw.Id}
+				r0 := RoadRaw{Src: s.raw.ID, Dst: peer.raw.ID}
+				r1 := RoadRaw{Src: peer.raw.ID, Dst: s.raw.ID}
 				if !seen[r0] && !seen[r1] {
 					seen[r0] = true
 					seen[r1] = true
@@ -110,20 +109,20 @@ func (m *Map) Raw() MapRaw {
 	return rm
 }
 
-func (m0 *Map) DeepCopy() Map {
-	m := makeMap()
-	for id, site := range m0.sites {
-		m.sites[id] = makeSite(site.raw)
+func (m *Map) DeepCopy() Map {
+	mFinal := makeMap()
+	for id, site := range m.sites {
+		mFinal.sites[id] = makeSite(site.raw)
 	}
-	for _, s := range m0.sites {
-		src := m.sites[s.raw.Id]
+	for _, s := range m.sites {
+		src := mFinal.sites[s.raw.ID]
 		for d, _ := range s.peers {
-			dst := m.sites[d.raw.Id]
+			dst := mFinal.sites[d.raw.ID]
 			src.peers[dst] = true
 			dst.peers[src] = true
 		}
 	}
-	return m
+	return mFinal
 }
 
 func (m *Map) ComputeBox() (xmin, xmax, ymin, ymax float64) {
@@ -213,13 +212,13 @@ func (m *Map) splitOneRoad(src, dst *Site, nbSegments uint) {
 		y := math.Round(last.raw.Y + yinc)
 		id := "x-" + strconv.FormatInt(int64(x), 10) + "-" + strconv.FormatInt(int64(y), 10)
 		raw := SiteRaw{
-			Id:   id,
+			ID:   id,
 			City: false,
 			X:    x,
 			Y:    y,
 		}
 		middle := makeSite(raw)
-		m.sites[middle.raw.Id] = middle
+		m.sites[middle.raw.ID] = middle
 		segments = append(segments, middle)
 	}
 	segments = append(segments, dst)
@@ -232,18 +231,18 @@ func (m *Map) splitOneRoad(src, dst *Site, nbSegments uint) {
 	}
 }
 
-func (m0 *Map) SplitLongRoads(max float64) Map {
+func (m *Map) SplitLongRoads(max float64) Map {
 	// Work on a deep copy to iterate on the original map while we alter the copy
-	m := m0.DeepCopy()
-	for r := range m0.UniqueRoads() {
-		src := m.sites[r.Src.raw.Id]
-		dst := m.sites[r.Dst.raw.Id]
+	mCopy := m.DeepCopy()
+	for r := range m.UniqueRoads() {
+		src := mCopy.sites[r.Src.raw.ID]
+		dst := mCopy.sites[r.Dst.raw.ID]
 		dist := distance(src, dst)
 		if max < dist {
-			m.splitOneRoad(src, dst, uint(math.Ceil(dist/max)))
+			mCopy.splitOneRoad(src, dst, uint(math.Ceil(dist/max)))
 		}
 	}
-	return m
+	return mCopy
 }
 
 func (m *Map) Noise(xjitter, yjitter float64) {

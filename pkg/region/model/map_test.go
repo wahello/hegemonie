@@ -18,7 +18,7 @@ func TestMapInit(t *testing.T) {
 	if m.CellHas(1) {
 		t.Fatal()
 	}
-	if m.getNextId() != 1 {
+	if m.getNextID() != 1 {
 		t.Fatal()
 	}
 
@@ -26,7 +26,7 @@ func TestMapInit(t *testing.T) {
 	if cell.ID != 2 {
 		t.Fatal()
 	}
-	if m.getNextId() != 3 {
+	if m.getNextID() != 3 {
 		t.Fatal()
 	}
 	if !m.CellHas(cell.ID) {

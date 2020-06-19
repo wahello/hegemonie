@@ -15,15 +15,15 @@ import (
 
 func (f *frontService) authenticateUserFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
 	// Validate the session data
-	userid := ptou(sess.Get("userid"))
-	if userid == 0 {
+	userID := ptou(sess.Get("userid"))
+	if userID == 0 {
 		return nil, errors.New("Not authenticated")
 	}
 
 	// Authorize the character with the user
 	cliAuth := auth.NewAuthClient(f.cnxAuth)
 	return cliAuth.UserShow(contextMacaronToGrpc(ctx, sess),
-		&auth.UserShowReq{Id: userid})
+		&auth.UserShowReq{Id: userID})
 }
 
 func (f *frontService) authenticateAdminFromSession(ctx *macaron.Context, sess session.Store) (*auth.UserView, error) {
@@ -39,15 +39,15 @@ func (f *frontService) authenticateAdminFromSession(ctx *macaron.Context, sess s
 
 func (f *frontService) authenticateCharacterFromSession(ctx *macaron.Context, sess session.Store, idChar uint64) (*auth.UserView, *auth.CharacterView, error) {
 	// Validate the session data
-	userid := ptou(sess.Get("userid"))
-	if userid == 0 || idChar == 0 {
+	userID := ptou(sess.Get("userid"))
+	if userID == 0 || idChar == 0 {
 		return nil, nil, errors.New("Not authenticated")
 	}
 
 	// Authorize the character with the user
 	cliAuth := auth.NewAuthClient(f.cnxAuth)
 	uView, err := cliAuth.CharacterShow(contextMacaronToGrpc(ctx, sess),
-		&auth.CharacterShowReq{User: userid, Character: idChar})
+		&auth.CharacterShowReq{User: userID, Character: idChar})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -65,8 +65,8 @@ func doLogin(f *frontService, m *macaron.Macaron) macaron.Handler {
 		// Cleanup a previous session
 		sess.Flush()
 
-		sessionId := uuid.New().String()
-		sess.Set("session-id", sessionId)
+		sessionID := uuid.New().String()
+		sess.Set("session-id", sessionID)
 
 		// Authorize the character with the user
 		cliAuth := auth.NewAuthClient(f.cnxAuth)

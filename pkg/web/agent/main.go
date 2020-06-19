@@ -411,12 +411,10 @@ func utoa(u uint64) string {
 }
 
 func atou(s string) uint64 {
-	u, err := strconv.ParseUint(s, 10, 63)
-	if err != nil {
-		return 0
-	} else {
+	if u, err := strconv.ParseUint(s, 10, 63); err == nil {
 		return u
 	}
+	return 0
 }
 
 func ptou(p interface{}) uint64 {
