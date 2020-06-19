@@ -24,7 +24,7 @@ func doPush(cmd *cobra.Command, args []string, cfg *eventConfig) error {
 		return errors.New("Too few arguments (minimum: 2)")
 	}
 
-	charId, err := strconv.ParseUint(args[0], 10, 64)
+	charID, err := strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
 		return err
 	}
@@ -42,16 +42,16 @@ func doPush(cmd *cobra.Command, args []string, cfg *eventConfig) error {
 	for _, a := range args[1:] {
 		id := uuid.New().String()
 		req := proto.Push1Req{
-			CharId:  charId,
+			CharId:  charID,
 			EvtId:   id,
 			Payload: []byte(a),
 		}
 		_, err := client.Push1(ctx, &req)
 		if err != nil {
 			anyError = true
-			utils.Logger.Error().Uint64("char", charId).Str("msg", a).Str("uuid", id).Err(err).Msg("PUSH")
+			utils.Logger.Error().Uint64("char", charID).Str("msg", a).Str("uuid", id).Err(err).Msg("PUSH")
 		} else {
-			utils.Logger.Info().Uint64("char", charId).Str("msg", a).Str("uuid", id).Msg("PUSH")
+			utils.Logger.Info().Uint64("char", charID).Str("msg", a).Str("uuid", id).Msg("PUSH")
 		}
 	}
 	if !anyError {
@@ -61,15 +61,15 @@ func doPush(cmd *cobra.Command, args []string, cfg *eventConfig) error {
 }
 
 func doAck(cmd *cobra.Command, args []string, cfg *eventConfig) error {
-	var charId, when uint64
-	var id string
+	var charID, when uint64
+	var evtID string
 	var err error
 
 	// Parse the input
 	if len(args) != 3 {
 		return errors.New("3 arguments expected (Character When Uuid)")
 	}
-	charId, err = strconv.ParseUint(args[0], 10, 64)
+	charID, err = strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func doAck(cmd *cobra.Command, args []string, cfg *eventConfig) error {
 	if err != nil {
 		return err
 	}
-	id = args[2]
+	evtID = args[2]
 
 	// Send the request
 	ctx := context.Background()
@@ -87,13 +87,13 @@ func doAck(cmd *cobra.Command, args []string, cfg *eventConfig) error {
 	}
 	defer cnx.Close()
 	client := proto.NewConsumerClient(cnx)
-	req := proto.Ack1Req{CharId: charId, When: when, EvtId: id}
+	req := proto.Ack1Req{CharId: charID, When: when, EvtId: evtID}
 	_, err = client.Ack1(ctx, &req)
 
 	if err != nil {
 		return err
 	}
-	utils.Logger.Info().Uint64("char", charId).Uint64("when", when).Str("uuid", id).Msg("ACK")
+	utils.Logger.Info().Uint64("char", charID).Uint64("when", when).Str("uuid", evtID).Msg("ACK")
 	return nil
 }
 

@@ -64,7 +64,7 @@ func (m *Map) UniqueRoads() <-chan Road {
 	go func() {
 		seen := make(map[RoadRaw]bool)
 		for _, s := range m.sites {
-			for peer, _ := range s.peers {
+			for peer := range s.peers {
 				r0 := RoadRaw{Src: s.raw.ID, Dst: peer.raw.ID}
 				r1 := RoadRaw{Src: peer.raw.ID, Dst: s.raw.ID}
 				if !seen[r0] && !seen[r1] {
@@ -83,7 +83,7 @@ func (m *Map) SortedSites() <-chan *Site {
 	out := make(chan *Site)
 	go func() {
 		keys := make([]string, 0, len(m.sites))
-		for k, _ := range m.sites {
+		for k := range m.sites {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
@@ -116,7 +116,7 @@ func (m *Map) DeepCopy() Map {
 	}
 	for _, s := range m.sites {
 		src := mFinal.sites[s.raw.ID]
-		for d, _ := range s.peers {
+		for d := range s.peers {
 			dst := mFinal.sites[d.raw.ID]
 			src.peers[dst] = true
 			dst.peers[src] = true

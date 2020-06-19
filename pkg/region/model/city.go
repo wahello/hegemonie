@@ -163,7 +163,7 @@ func (c *City) GetStock(w *World) *CityStock {
 }
 
 func (c *City) CreateEmptyArmy(w *World) *Army {
-	aid := w.getNextId()
+	aid := w.getNextID()
 	a := &Army{
 		ID:       aid,
 		City:     c,
@@ -178,7 +178,7 @@ func (c *City) CreateEmptyArmy(w *World) *Army {
 	return a
 }
 
-func unitsToId(uv []*Unit) (out []uint64) {
+func unitsToIDs(uv []*Unit) (out []uint64) {
 	for _, u := range uv {
 		out = append(out, u.ID)
 	}
@@ -196,7 +196,7 @@ func unitsFilterIdle(uv []*Unit) (out []*Unit) {
 
 // Create an Army made of some Unit of the City
 func (c *City) CreateArmyFromUnit(w *World, units ...*Unit) (*Army, error) {
-	return c.CreateArmyFromIds(w, unitsToId(unitsFilterIdle(units))...)
+	return c.CreateArmyFromIds(w, unitsToIDs(unitsFilterIdle(units))...)
 }
 
 // Create an Army made of some Unit of the City
@@ -212,7 +212,7 @@ func (c *City) CreateArmyFromIds(w *World, ids ...uint64) (*Army, error) {
 
 // Create an Army made of all the Units defending the City
 func (c *City) CreateArmyDefence(w *World) (*Army, error) {
-	ids := unitsToId(unitsFilterIdle(c.Units))
+	ids := unitsToIDs(unitsFilterIdle(c.Units))
 	if len(ids) <= 0 {
 		return nil, ErrNoSuchUnit
 	}
@@ -462,7 +462,7 @@ func (c *City) UnitAllowed(pType *UnitType) bool {
 // Create a Unit of the given UnitType.
 // No check is performed to verify the City has all the requirements.
 func (c *City) UnitCreate(w *World, pType *UnitType) *Unit {
-	id := w.getNextId()
+	id := w.getNextID()
 	u := &Unit{ID: id, Type: pType.ID, Ticks: pType.Ticks, Health: pType.Health}
 	c.Units.Add(u)
 	return u
@@ -506,7 +506,7 @@ func (c *City) Study(w *World, typeID uint64) (uint64, error) {
 		}
 	}
 
-	id := w.getNextId()
+	id := w.getNextID()
 	c.Knowledges.Add(&Knowledge{ID: id, Type: typeID, Ticks: pType.Ticks})
 	return id, nil
 }
@@ -544,7 +544,7 @@ func (c *City) Build(w *World, bID uint64) (uint64, error) {
 		return 0, errors.New("Not enough ressources")
 	}
 
-	id := w.getNextId()
+	id := w.getNextID()
 	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: pType.Ticks})
 	return id, nil
 }

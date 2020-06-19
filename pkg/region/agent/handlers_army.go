@@ -35,41 +35,39 @@ func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView,
 	s.w.RLock()
 	defer s.w.RUnlock()
 
-	if _, army, err := s.getAndCheckArmy(req); err != nil {
+	_, army, err := s.getAndCheckArmy(req)
+	if err != nil {
 		return nil, err
-	} else {
-		return ShowArmy(s.w, army), nil
 	}
+	return ShowArmy(s.w, army), nil
 }
 
 func (s *srvArmy) Flea(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
 	s.w.WLock()
 	defer s.w.WUnlock()
 
-	if _, army, err := s.getAndCheckArmy(req); err != nil {
+	_, army, err := s.getAndCheckArmy(req)
+	if err != nil {
 		return nil, err
-	} else {
-		if err = army.Flea(s.w); err != nil {
-			return nil, err
-		} else {
-			return &proto.None{}, nil
-		}
 	}
+	if err = army.Flea(s.w); err != nil {
+		return nil, err
+	}
+	return &proto.None{}, nil
 }
 
 func (s *srvArmy) Flip(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
 	s.w.WLock()
 	defer s.w.WUnlock()
 
-	if _, army, err := s.getAndCheckArmy(req); err != nil {
+	_, army, err := s.getAndCheckArmy(req)
+	if err != nil {
 		return nil, err
-	} else {
-		if err = army.Flip(s.w); err != nil {
-			return nil, err
-		} else {
-			return &proto.None{}, nil
-		}
 	}
+	if err = army.Flip(s.w); err != nil {
+		return nil, err
+	}
+	return &proto.None{}, nil
 }
 
 func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*proto.None, error) {
@@ -82,35 +80,31 @@ func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*prot
 	}
 	target := s.w.Places.CellGet(req.Command.Target)
 	if target == nil {
-		err = status.Errorf(codes.NotFound, "Target Not found")
-	} else {
-		switch req.Command.Action {
-		case proto.ArmyCommandType_Move:
-			err = army.DeferMove(s.w, target)
-		case proto.ArmyCommandType_Attack:
-			err = army.DeferAttack(s.w, target)
-		case proto.ArmyCommandType_Defend:
-			err = army.DeferDefend(s.w, target)
-		case proto.ArmyCommandType_Wait:
-			err = army.DeferWait(s.w, target)
-		case proto.ArmyCommandType_Overlord:
-			err = army.DeferOverlord(s.w, target)
-		case proto.ArmyCommandType_Break:
-			err = army.DeferBreak(s.w, target)
-		case proto.ArmyCommandType_Massacre:
-			err = army.DeferMassacre(s.w, target)
-		case proto.ArmyCommandType_Deposit:
-			err = army.DeferDeposit(s.w, target)
-		case proto.ArmyCommandType_Disband:
-			err = army.DeferDisband(s.w, target)
-		default:
-			err = status.Errorf(codes.InvalidArgument, "Invalid action")
-		}
+		return nil, status.Errorf(codes.NotFound, "Target Not found")
 	}
 
-	if err != nil {
-		return nil, err
-	} else {
-		return &proto.None{}, nil
+	switch req.Command.Action {
+	case proto.ArmyCommandType_Move:
+		err = army.DeferMove(s.w, target)
+	case proto.ArmyCommandType_Attack:
+		err = army.DeferAttack(s.w, target)
+	case proto.ArmyCommandType_Defend:
+		err = army.DeferDefend(s.w, target)
+	case proto.ArmyCommandType_Wait:
+		err = army.DeferWait(s.w, target)
+	case proto.ArmyCommandType_Overlord:
+		err = army.DeferOverlord(s.w, target)
+	case proto.ArmyCommandType_Break:
+		err = army.DeferBreak(s.w, target)
+	case proto.ArmyCommandType_Massacre:
+		err = army.DeferMassacre(s.w, target)
+	case proto.ArmyCommandType_Deposit:
+		err = army.DeferDeposit(s.w, target)
+	case proto.ArmyCommandType_Disband:
+		err = army.DeferDisband(s.w, target)
+	default:
+		err = status.Errorf(codes.InvalidArgument, "Invalid action")
 	}
+
+	return &proto.None{}, err
 }

@@ -19,8 +19,8 @@ func (w *World) RLock() { w.rw.RLock() }
 
 func (w *World) RUnlock() { w.rw.RUnlock() }
 
-func (w *World) getNextId() uint64 {
-	return atomic.AddUint64(&w.NextId, 1)
+func (w *World) getNextID() uint64 {
+	return atomic.AddUint64(&w.nextID, 1)
 }
 
 func (w *World) Produce() {
@@ -59,7 +59,7 @@ func (w *World) CityCreateModel(loc uint64, model *City) (*City, error) {
 		return nil, errors.New("Location already occupied")
 	}
 
-	id := w.getNextId()
+	id := w.getNextID()
 	city := CopyCity(model)
 	city.ID = id
 	cell.City = id
@@ -80,13 +80,13 @@ func (w *World) CityCreateRandom(loc uint64) (*City, error) {
 	return w.CityCreateModel(loc, nil)
 }
 
-func (w *World) CityGetAndCheck(characterId, cityId uint64) (*City, error) {
+func (w *World) CityGetAndCheck(charID, cityID uint64) (*City, error) {
 	// Fetch + sanity checks about the city
-	pCity := w.CityGet(cityId)
+	pCity := w.CityGet(cityID)
 	if pCity == nil {
 		return nil, errors.New("Not Found")
 	}
-	if pCity.Deputy != characterId && pCity.Owner != characterId {
+	if pCity.Deputy != charID && pCity.Owner != charID {
 		return nil, errors.New("Forbidden")
 	}
 

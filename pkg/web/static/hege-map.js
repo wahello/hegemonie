@@ -5,7 +5,7 @@
 
 const installAction = function (obj, cls, action) {
     let elements = obj.getElementsByClassName("clickable")
-    for (i = 0; i < elements.length; i++) {
+    for (let i = 0; i < elements.length; i++) {
         let element = elements[i];
         element.onclick = action;
     }

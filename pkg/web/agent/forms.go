@@ -77,9 +77,9 @@ func doLogin(f *frontService, m *macaron.Macaron) macaron.Handler {
 			flash.Warning(err.Error())
 			ctx.Redirect("/")
 		} else {
-			strId := utoa(uView.Id)
-			ctx.SetSecureCookie("session", strId)
-			sess.Set("userid", strId)
+			strID := utoa(uView.Id)
+			ctx.SetSecureCookie("session", strID)
+			sess.Set("userid", strID)
 			ctx.Redirect("/game/user")
 		}
 	}

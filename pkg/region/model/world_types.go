@@ -46,7 +46,7 @@ type World struct {
 
 	notifier Notifier
 
-	NextId uint64
+	nextID uint64
 	Salt   string
 	rw     sync.RWMutex
 }
@@ -480,11 +480,11 @@ type MapVertex struct {
 // A Map is a directed graph destined to be used as a transport network,
 // organised as an adjacency list.
 type Map struct {
-	Cells  SetOfVertices `json:"cells"`
-	Roads  SetOfEdges    `json:"roads"`
-	NextId uint64        `json:""`
+	Cells SetOfVertices `json:"cells"`
+	Roads SetOfEdges    `json:"roads"`
 
-	steps map[vector]uint64
+	nextID uint64
+	steps  map[vector]uint64
 }
 
 type SetOfFights []*Fight

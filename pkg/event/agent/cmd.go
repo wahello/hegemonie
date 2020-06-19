@@ -62,7 +62,7 @@ func (srv *eventService) execute() error {
 
 	var lis net.Listener
 	if lis, err = net.Listen("tcp", srv.cfg.endpoint); err != nil {
-		return e("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %v", err)
 	}
 
 	server := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
@@ -74,12 +74,8 @@ func (srv *eventService) execute() error {
 		Str("url", srv.cfg.endpoint).
 		Msg("starting")
 	if err := server.Serve(lis); err != nil {
-		return e("failed to serve: %v", err)
+		return fmt.Errorf("failed to serve: %v", err)
 	}
 
 	return nil
-}
-
-func e(format string, args ...interface{}) error {
-	return errors.New(fmt.Sprintf(format, args...))
 }

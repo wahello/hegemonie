@@ -6,7 +6,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -44,10 +43,10 @@ func (mr *MapRaw) Finalize() (Map, error) {
 	}
 	for _, r := range mr.Roads {
 		if src, ok := m.sites[r.Src]; !ok {
-			err = errors.New(fmt.Sprintf("No such site [%s]", r.Src))
+			err = fmt.Errorf("No such site [%s]", r.Src)
 			break
 		} else if dst, ok := m.sites[r.Dst]; !ok {
-			err = errors.New(fmt.Sprintf("No such site [%s]", r.Dst))
+			err = fmt.Errorf("No such site [%s]", r.Dst)
 			break
 		} else {
 			src.peers[dst] = true

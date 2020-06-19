@@ -168,7 +168,7 @@ func (a *Army) JoinCityDefence(w *World, pCity *City) bool {
 func (a *Army) JoinCityAttack(w *World, pCity *City) {
 	if pCity.Assault == nil {
 		pCity.Assault = &Fight{
-			ID: w.getNextId(), Cell: pCity.Cell,
+			ID: w.getNextID(), Cell: pCity.Cell,
 			Defense: make(SetOfArmies, 0),
 			Attack:  make(SetOfArmies, 0)}
 		if def, _ := pCity.CreateArmyDefence(w); def != nil {

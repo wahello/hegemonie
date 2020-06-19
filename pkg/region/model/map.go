@@ -74,7 +74,7 @@ func (m *Map) Init() {
 }
 
 func (m *Map) getNextID() uint64 {
-	return atomic.AddUint64(&m.NextId, 1)
+	return atomic.AddUint64(&m.nextID, 1)
 }
 
 func (m *Map) CellGet(id uint64) *MapVertex {

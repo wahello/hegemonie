@@ -25,9 +25,7 @@ func (w *World) Init() {
 	w.SetNotifier(&noEvt{})
 	w.Places.Init()
 
-	if w.NextId <= 0 {
-		w.NextId = 1
-	}
+	w.nextID = 1
 	w.Live.Cities = make(SetOfCities, 0)
 	w.Live.Fights = make(SetOfFights, 0)
 	w.Definitions.Units = make(SetOfUnitTypes, 0)
@@ -127,7 +125,7 @@ func (w *World) PostLoad() error {
 	}
 
 	// Compute the highest unique ID
-	maxID := w.NextId
+	maxID := w.nextID
 	for _, u := range w.Definitions.Units {
 		if u.ID > maxID {
 			maxID = u.ID
@@ -174,7 +172,7 @@ func (w *World) PostLoad() error {
 		}
 	}
 
-	w.NextId = maxID + 1
+	w.nextID = maxID + 1
 	return nil
 }
 

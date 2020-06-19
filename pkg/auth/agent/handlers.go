@@ -72,9 +72,8 @@ func (srv *authService) UserCreate(ctx context.Context, req *proto.UserCreateReq
 	u := srv.db.UserLookup(req.Mail)
 	if u != nil {
 		return nil, status.Error(codes.AlreadyExists, "User already registered")
-	} else {
-		u, err = srv.db.CreateUser(req.Mail)
 	}
+	u, err = srv.db.CreateUser(req.Mail)
 	return userViewFull(u), err
 }
 

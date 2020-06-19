@@ -51,10 +51,6 @@ func Command() *cobra.Command {
 	return agent
 }
 
-func e(format string, args ...interface{}) error {
-	return errors.New(fmt.Sprintf(format, args...))
-}
-
 func (cfg *regionConfig) execute() error {
 	var err error
 
@@ -64,15 +60,15 @@ func (cfg *regionConfig) execute() error {
 	if cfg.pathSave != "" {
 		err = os.MkdirAll(cfg.pathSave, 0755)
 		if err != nil {
-			return e("Failed to create [%s]: %s", cfg.pathSave, err.Error())
+			return fmt.Errorf("Failed to create [%s]: %v", cfg.pathSave, err)
 		}
 	}
 
 	if cfg.pathLive == "" {
-		return e("Missing path for live data")
+		return errors.New("Missing path for live data")
 	}
 	if cfg.pathDefs == "" {
-		return e("Missing path for definitions data")
+		return errors.New("Missing path for definitions data")
 	}
 
 	err = w.LoadDefinitionsFromFiles(cfg.pathDefs)
@@ -87,19 +83,19 @@ func (cfg *regionConfig) execute() error {
 
 	err = w.PostLoad()
 	if err != nil {
-		return e("Inconsistent World from [%s] and [%s]: %s", cfg.pathDefs, cfg.pathLive, err.Error())
+		return fmt.Errorf("Inconsistent World from [%s] and [%s]: %v", cfg.pathDefs, cfg.pathLive, err)
 	}
 
 	w.Places.Rehash()
 
 	err = w.Check()
 	if err != nil {
-		return e("Inconsistent World: %s", err.Error())
+		return fmt.Errorf("Inconsistent World: %v", err)
 	}
 
 	lis, err := net.Listen("tcp", cfg.endpoint)
 	if err != nil {
-		return e("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %v", err)
 	}
 
 	var cnxEvent *grpc.ClientConn
@@ -117,13 +113,13 @@ func (cfg *regionConfig) execute() error {
 	proto.RegisterAdminServer(srv, &srvAdmin{cfg: cfg, w: &w})
 	proto.RegisterArmyServer(srv, &srvArmy{cfg: cfg, w: &w})
 	if err := srv.Serve(lis); err != nil {
-		return e("failed to serve: %v", err)
+		return fmt.Errorf("failed to serve: %v", err)
 	}
 
 	if cfg.pathSave != "" {
 		p, err := w.SaveLiveToFiles(cfg.pathSave)
 		if err != nil {
-			return e("Failed to save the World at exit: %s", err.Error())
+			return fmt.Errorf("Failed to save the World at exit: %v", err)
 		}
 		log.Fatalf("World saved at [%s]", p)
 	}

@@ -36,9 +36,9 @@ func newUnaryServerInterceptor__zerolog() grpc.UnaryServerInterceptor {
 			if len(auth) > 0 {
 				z.Str("local", auth[0])
 			}
-			sessionId := md.Get("session-id")
-			if len(sessionId) > 0 {
-				z.Str("session", sessionId[0])
+			sessionID := md.Get("session-id")
+			if len(sessionID) > 0 {
+				z.Str("session", sessionID[0])
 			}
 		}
 		if peer, ok := peer.FromContext(ctx); ok {
