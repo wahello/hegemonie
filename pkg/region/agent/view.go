@@ -96,7 +96,6 @@ func ShowProduction(w *region.World, c *region.City) *proto.ProductionView {
 	v.Base = resAbsM2P(prod.Base)
 	v.Buildings = resModM2P(prod.Buildings)
 	v.Knowledge = resModM2P(prod.Knowledge)
-	v.Troops = resModM2P(prod.Troops)
 	v.Actual = resAbsM2P(prod.Actual)
 	return v
 }
@@ -107,7 +106,6 @@ func ShowStock(w *region.World, c *region.City) *proto.StockView {
 	v.Base = resAbsM2P(stock.Base)
 	v.Buildings = resModM2P(stock.Buildings)
 	v.Knowledge = resModM2P(stock.Knowledge)
-	v.Troops = resModM2P(stock.Troops)
 	v.Actual = resAbsM2P(stock.Actual)
 	v.Usage = resAbsM2P(stock.Usage)
 	return v

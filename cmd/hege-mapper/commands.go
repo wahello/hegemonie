@@ -272,15 +272,13 @@ func CommandExport() *cobra.Command {
 			}
 
 			// Patch the resource multipliers
-			one := region.MultiplierUniform(1.0)
 			for _, x := range w.Definitions.Buildings {
-				x.Prod.Mult.Add(one)
+				x.Prod = region.ResourceModifierNoop()
+				x.Stock = region.ResourceModifierNoop()
 			}
 			for _, x := range w.Definitions.Knowledges {
-				x.Prod.Mult.Add(one)
-			}
-			for _, x := range w.Definitions.Units {
-				x.Prod.Mult.Add(one)
+				x.Prod = region.ResourceModifierNoop()
+				x.Stock = region.ResourceModifierNoop()
 			}
 
 			// Populate the cities with a set of minimal troops / units

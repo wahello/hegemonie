@@ -42,3 +42,17 @@ func (s SetOfKnowledgeTypes) Frontier(owned []*Knowledge) []*KnowledgeType {
 	}
 	return result
 }
+
+func CheckKnowledgeDependencies(owned SetOfKnowledges, required, forbidden []uint64) bool {
+	for _, k := range forbidden {
+		if owned.Has(k) {
+			return false
+		}
+	}
+	for _, k := range required {
+		if !owned.Has(k) {
+			return false
+		}
+	}
+	return true
+}

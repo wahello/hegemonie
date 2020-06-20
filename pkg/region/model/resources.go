@@ -52,6 +52,12 @@ func (r *Resources) Set(o Resources) {
 	}
 }
 
+func (r *Resources) SetValue(v uint64) {
+	for i := 0; i < ResourceMax; i++ {
+		r[i] = v
+	}
+}
+
 func (r *Resources) Add(o Resources) {
 	for i := 0; i < ResourceMax; i++ {
 		r[i] = r[i] + o[i]
@@ -72,9 +78,9 @@ func (r *Resources) TrimTo(limit Resources) {
 	}
 }
 
-func (r *Resources) Multiply(m ResourcesMultiplier) {
+func (r *Resources) Multiply(rm ResourcesMultiplier) {
 	for i := 0; i < ResourceMax; i++ {
-		vf := float64(r[i]) * m[i]
+		vf := float64(r[i]) * rm[i]
 		if vf < 0 {
 			r[i] = 0
 		} else {
@@ -83,29 +89,63 @@ func (r *Resources) Multiply(m ResourcesMultiplier) {
 	}
 }
 
-func (m *ResourcesMultiplier) Add(o ResourcesMultiplier) {
+func (r *Resources) Increment(ri ResourcesIncrement) {
 	for i := 0; i < ResourceMax; i++ {
-		m[i] += o[i]
+		post := r[i] + uint64(ri[i])
+		if post > r[i] {
+			r[i] = 0
+		} else {
+			r[i] = post
+		}
+	}
+}
+
+func (r *Resources) Apply(rm ResourceModifiers) {
+	r.Multiply(rm.Mult)
+	r.Increment(rm.Plus)
+}
+
+func (rm *ResourcesMultiplier) SetValue(v float64) {
+	for i := 0; i < ResourceMax; i++ {
+		rm[i] = v
+	}
+}
+
+func (ri *ResourcesIncrement) SetValue(v int64) {
+	for i := 0; i < ResourceMax; i++ {
+		ri[i] = v
 	}
 }
 
 func MultiplierUniform(nb float64) (rc ResourcesMultiplier) {
-	for i := 0; i < ResourceMax; i++ {
-		rc[i] = nb
-	}
+	rc.SetValue(nb)
 	return rc
 }
 
 func IncrementUniform(nb int64) (rc ResourcesIncrement) {
-	for i := 0; i < ResourceMax; i++ {
-		rc[i] += nb
-	}
+	rc.SetValue(nb)
 	return rc
 }
 
 func ResourcesUniform(nb uint64) (rc Resources) {
-	for i := 0; i < ResourceMax; i++ {
-		rc[i] += nb
-	}
+	rc.SetValue(nb)
 	return rc
+}
+
+func ResourceModifierUniform(mult float64, inc int64) ResourceModifiers {
+	return ResourceModifiers{
+		MultiplierUniform(mult),
+		IncrementUniform(inc),
+	}
+}
+
+func ResourceModifierNoop() ResourceModifiers {
+	return ResourceModifierUniform(1.0, 0.0)
+}
+
+func (o0 *ResourceModifiers) ComposeWith(o1 ResourceModifiers) {
+	for i := 0; i < ResourceMax; i++ {
+		o0.Mult[i] *= o1.Mult[i]
+		o0.Plus[i] += o1.Plus[i]
+	}
 }

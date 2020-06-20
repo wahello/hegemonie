@@ -110,7 +110,6 @@ type CityProduction struct {
 	Base      Resources
 	Knowledge ResourceModifiers
 	Buildings ResourceModifiers
-	Troops    ResourceModifiers
 	Actual    Resources
 }
 
@@ -118,7 +117,6 @@ type CityStock struct {
 	Base      Resources
 	Knowledge ResourceModifiers
 	Buildings ResourceModifiers
-	Troops    ResourceModifiers
 	Actual    Resources
 
 	Usage Resources

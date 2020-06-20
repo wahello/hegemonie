@@ -87,78 +87,47 @@ func (c *City) GetActualPopularity(w *World) int64 {
 }
 
 func (c *City) GetProduction(w *World) *CityProduction {
-	p := &CityProduction{}
-	for i := 0; i < ResourceMax; i++ {
-		p.Buildings.Mult[i] = 1.0
-		p.Knowledge.Mult[i] = 1.0
-		p.Troops.Mult[i] = 1.0
+	p := &CityProduction{
+		Buildings: ResourceModifierNoop(),
+		Knowledge: ResourceModifierNoop(),
 	}
+
 	for _, b := range c.Buildings {
-		t := *w.BuildingTypeGet(b.Type)
-		for i := 0; i < ResourceMax; i++ {
-			p.Buildings.Plus[i] += t.Prod.Plus[i]
-			p.Buildings.Mult[i] *= t.Prod.Mult[i]
-		}
+		t := w.BuildingTypeGet(b.Type)
+		p.Buildings.ComposeWith(t.Prod)
 	}
-	for _, u := range c.Units {
-		t := *w.UnitTypeGet(u.Type)
-		for i := 0; i < ResourceMax; i++ {
-			p.Troops.Plus[i] += t.Prod.Plus[i]
-			p.Troops.Mult[i] *= t.Prod.Mult[i]
-		}
+	for _, u := range c.Knowledges {
+		t := w.KnowledgeTypeGet(u.Type)
+		p.Knowledge.ComposeWith(t.Prod)
 	}
 
 	p.Base = c.Production
 	p.Actual = c.Production
-	for i := 0; i < ResourceMax; i++ {
-		v := float64(p.Base[i])
-		v = v * p.Troops.Mult[i]
-		v = v * p.Buildings.Mult[i]
-		v = v * p.Knowledge.Mult[i]
-
-		vi := int64(v)
-		vi = vi + p.Troops.Plus[i]
-		vi = vi + p.Buildings.Plus[i]
-		vi = vi + p.Knowledge.Plus[i]
-
-		p.Actual[i] = uint64(vi)
-	}
-
+	p.Actual.Apply(p.Buildings)
+	p.Actual.Apply(p.Knowledge)
 	return p
 }
 
 func (c *City) GetStock(w *World) *CityStock {
-	p := &CityStock{}
-	for i := 0; i < ResourceMax; i++ {
-		p.Buildings.Mult[i] = 1.0
-		p.Knowledge.Mult[i] = 1.0
-		p.Troops.Mult[i] = 1.0
+	p := &CityStock{
+		Buildings: ResourceModifierNoop(),
+		Knowledge: ResourceModifierNoop(),
 	}
+
 	for _, b := range c.Buildings {
-		t := *w.BuildingTypeGet(b.Type)
-		for i := 0; i < ResourceMax; i++ {
-			p.Buildings.Plus[i] += t.Stock.Plus[i]
-			p.Buildings.Mult[i] *= t.Stock.Mult[i]
-		}
+		t := w.BuildingTypeGet(b.Type)
+		p.Buildings.ComposeWith(t.Stock)
+	}
+	for _, b := range c.Knowledges {
+		t := w.BuildingTypeGet(b.Type)
+		p.Buildings.ComposeWith(t.Stock)
 	}
 
 	p.Base = c.StockCapacity
 	p.Actual = c.StockCapacity
+	p.Actual.Apply(p.Buildings)
+	p.Actual.Apply(p.Knowledge)
 	p.Usage = c.Stock
-	for i := 0; i < ResourceMax; i++ {
-		v := float64(p.Base[i])
-		v = v * p.Troops.Mult[i]
-		v = v * p.Buildings.Mult[i]
-		v = v * p.Knowledge.Mult[i]
-
-		vi := int64(v)
-		vi = vi + p.Troops.Plus[i]
-		vi = vi + p.Buildings.Plus[i]
-		vi = vi + p.Knowledge.Plus[i]
-
-		p.Actual[i] = uint64(vi)
-	}
-
 	return p
 }
 
@@ -484,68 +453,45 @@ func (c *City) Train(w *World, typeID uint64) (uint64, error) {
 }
 
 func (c *City) Study(w *World, typeID uint64) (uint64, error) {
-	pType := w.KnowledgeTypeGet(typeID)
-	if pType == nil {
+	kType := w.KnowledgeTypeGet(typeID)
+	if kType == nil {
 		return 0, errors.New("Knowledge Type not found")
 	}
-	owned := make(map[uint64]bool)
 	for _, k := range c.Knowledges {
 		if typeID == k.Type {
 			return 0, errors.New("Already started")
 		}
-		owned[k.Type] = true
 	}
-	for _, k := range pType.Conflicts {
-		if owned[k] {
-			return 0, errors.New("Conflict")
-		}
-	}
-	for _, k := range pType.Requires {
-		if !owned[k] {
-			return 0, errors.New("Precondition Failed")
-		}
+	if !CheckKnowledgeDependencies(c.Knowledges, kType.Requires, kType.Conflicts) {
+		return 0, errors.New("Conflict")
 	}
 
 	id := w.getNextID()
-	c.Knowledges.Add(&Knowledge{ID: id, Type: typeID, Ticks: pType.Ticks})
+	c.Knowledges.Add(&Knowledge{ID: id, Type: typeID, Ticks: kType.Ticks})
 	return id, nil
 }
 
 func (c *City) Build(w *World, bID uint64) (uint64, error) {
-	pType := w.BuildingTypeGet(bID)
-	if pType == nil {
+	bType := w.BuildingTypeGet(bID)
+	if bType == nil {
 		return 0, errors.New("Building Type not found")
 	}
-	if !pType.MultipleAllowed {
+	if !bType.MultipleAllowed {
 		for _, b := range c.Buildings {
 			if b.Type == bID {
 				return 0, errors.New("Building already present")
 			}
 		}
 	}
-
-	// Check the knowledge requirements are met
-	owned := make(map[uint64]bool)
-	for _, k := range c.Knowledges {
-		owned[k.Type] = true
+	if !CheckKnowledgeDependencies(c.Knowledges, bType.Requires, bType.Conflicts) {
+		return 0, errors.New("Conflict")
 	}
-	for _, k := range pType.Conflicts {
-		if owned[k] {
-			return 0, errors.New("Conflict")
-		}
-	}
-	for _, k := range pType.Requires {
-		if !owned[k] {
-			return 0, errors.New("Precondition Failed")
-		}
-	}
-
-	if !c.Stock.GreaterOrEqualTo(pType.Cost0) {
+	if !c.Stock.GreaterOrEqualTo(bType.Cost0) {
 		return 0, errors.New("Not enough ressources")
 	}
 
 	id := w.getNextID()
-	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: pType.Ticks})
+	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: bType.Ticks})
 	return id, nil
 }
 
