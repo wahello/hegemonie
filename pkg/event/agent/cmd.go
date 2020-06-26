@@ -8,6 +8,7 @@ package hegemonie_event_agent
 import (
 	"errors"
 	"fmt"
+	grpc_health_v1 "github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"net"
 
 	"github.com/spf13/cobra"
@@ -68,6 +69,7 @@ func (srv *eventService) execute() error {
 	server := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
 	proto.RegisterProducerServer(server, srv)
 	proto.RegisterConsumerServer(server, srv)
+	grpc_health_v1.RegisterHealthServer(server, srv)
 
 	utils.Logger.Warn().
 		Str("base", srv.cfg.pathBase).

@@ -26,3 +26,10 @@ func (s SetOfUnitTypes) Frontier(owned []*Building) []*UnitType {
 	}
 	return result
 }
+
+// Abruptly terminate the training of the Unit.
+// The number of training ticks suddenly drop to 0, whatever its prior value.
+func (u *Unit) Finish() *Unit {
+	u.Ticks = 0
+	return u
+}

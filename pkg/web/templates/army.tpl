@@ -59,13 +59,13 @@ window.addEventListener("load", function() {
 {% for cmd in Commands %}
     <p>{{cmd.Order}}:
     {% if cmd.CommandId == 0 %}
-    Move to
+    Take selfies on
     {% elif cmd.CommandId == 1 %}
-    Wait on
+    Disband on
     {% elif cmd.CommandId == 2 %}
-    Attack
+    Wait on
     {% elif cmd.CommandId == 3 %}
-    Defend
+    Move to
     {% elif cmd.CommandId == 4 %}
     Attack and Overlord
     {% elif cmd.CommandId == 5 %}

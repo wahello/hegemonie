@@ -8,6 +8,7 @@ package hegemonie_region_agent
 import (
 	"errors"
 	"fmt"
+	grpc_health_v1 "github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
@@ -112,6 +113,8 @@ func (cfg *regionConfig) execute() error {
 	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: cfg, w: &w})
 	proto.RegisterAdminServer(srv, &srvAdmin{cfg: cfg, w: &w})
 	proto.RegisterArmyServer(srv, &srvArmy{cfg: cfg, w: &w})
+	grpc_health_v1.RegisterHealthServer(srv, &srvHealth{w: &w})
+
 	if err := srv.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %v", err)
 	}

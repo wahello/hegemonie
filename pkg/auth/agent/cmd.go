@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/jfsmig/hegemonie/pkg/auth/model"
 	proto "github.com/jfsmig/hegemonie/pkg/auth/proto"
+	grpc_health_v1 "github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -94,6 +95,7 @@ func (srv *authService) execute() error {
 
 	server := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
 	proto.RegisterAuthServer(server, srv)
+	grpc_health_v1.RegisterHealthServer(server, srv)
 	if err := server.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %v", err)
 	}

@@ -159,7 +159,7 @@ func doCityCommandArmy(f *frontService, m *macaron.Macaron) macaron.Handler {
 
 		url := "/game/army?cid=" + utoa(info.CharacterID) + "&lid=" + utoa(info.CityID) + "&aid=" + utoa(info.ArmyID)
 
-		actionID := region.ArmyCommandType_Move
+		actionID := region.ArmyCommandType_Unknown
 		switch strings.ToLower(info.Action) {
 		case "move":
 			actionID = region.ArmyCommandType_Move
@@ -169,14 +169,6 @@ func doCityCommandArmy(f *frontService, m *macaron.Macaron) macaron.Handler {
 			actionID = region.ArmyCommandType_Attack
 		case "defend":
 			actionID = region.ArmyCommandType_Defend
-		case "overlord":
-			actionID = region.ArmyCommandType_Overlord
-		case "break":
-			actionID = region.ArmyCommandType_Break
-		case "massacre":
-			actionID = region.ArmyCommandType_Massacre
-		case "deposit":
-			actionID = region.ArmyCommandType_Deposit
 		case "disband":
 			actionID = region.ArmyCommandType_Disband
 		default:

@@ -64,14 +64,6 @@ func (a *Army) Move(w *World) {
 				if a.JoinCityDefence(w, pLocalCity) {
 					preventPopping = true
 				}
-			case CmdCityOverlord:
-				a.Conquer(w, pLocalCity)
-			case CmdCityBreak:
-				a.BreakBuilding(w, pLocalCity)
-			case CmdCityMassacre:
-				a.Massacre(w, pLocalCity)
-			case CmdCityDeposit:
-				a.Deposit(w, pLocalCity)
 			case CmdCityDisband:
 				a.Disband(w, pLocalCity, true)
 			}
@@ -210,28 +202,8 @@ func (a *Army) DeferDefend(w *World, t *MapVertex) error {
 	return nil
 }
 
-func (a *Army) DeferBreak(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityBreak, Cell: t.ID})
-	return nil
-}
-
-func (a *Army) DeferDeposit(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityDeposit, Cell: t.ID})
-	return nil
-}
-
 func (a *Army) DeferDisband(w *World, t *MapVertex) error {
 	a.Targets = append(a.Targets, Command{Action: CmdCityDisband, Cell: t.ID})
-	return nil
-}
-
-func (a *Army) DeferMassacre(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityMassacre, Cell: t.ID})
-	return nil
-}
-
-func (a *Army) DeferOverlord(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityOverlord, Cell: t.ID})
 	return nil
 }
 

@@ -175,7 +175,7 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 }
 
 func ShowArmyCommand(c *region.Command) *proto.ArmyCommand {
-	t := proto.ArmyCommandType_Move
+	t := proto.ArmyCommandType_Unknown
 	switch c.Action {
 	case region.CmdMove:
 		t = proto.ArmyCommandType_Move
@@ -185,14 +185,6 @@ func ShowArmyCommand(c *region.Command) *proto.ArmyCommand {
 		t = proto.ArmyCommandType_Attack
 	case region.CmdCityDefend:
 		t = proto.ArmyCommandType_Defend
-	case region.CmdCityOverlord:
-		t = proto.ArmyCommandType_Overlord
-	case region.CmdCityBreak:
-		t = proto.ArmyCommandType_Break
-	case region.CmdCityMassacre:
-		t = proto.ArmyCommandType_Massacre
-	case region.CmdCityDeposit:
-		t = proto.ArmyCommandType_Deposit
 	case region.CmdCityDisband:
 		t = proto.ArmyCommandType_Disband
 	}

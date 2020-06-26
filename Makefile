@@ -12,6 +12,7 @@ AUTO=  pkg/region/model/world_auto.go
 AUTO+= pkg/auth/proto/auth.pb.go
 AUTO+= pkg/event/proto/event.pb.go
 AUTO+= pkg/region/proto/region.pb.go
+AUTO+= pkg/healthcheck/healthcheck.pb.go
 
 all: prepare
 	$(GO) install $(BASE)/cmd/gen-set
@@ -33,6 +34,9 @@ pkg/region/proto/%.pb.go: api/region.proto
 
 pkg/event/proto/%.pb.go: api/event.proto
 	$(PROTOC) -I api api/event.proto  --go_out=plugins=grpc:pkg/event/proto
+
+pkg/healthcheck/%.pb.go: api/healthcheck.proto
+	$(PROTOC) -I api api/healthcheck.proto  --go_out=plugins=grpc:pkg/healthcheck
 
 clean:
 	-rm $(AUTO)

@@ -85,4 +85,17 @@ func TestModifiers(t *testing.T) {
 			t.Fatal()
 		}
 	}
+
+	mod := ResourceModifierNoop()
+	mod1 := ResourceModifiers{Mult: mult, Plus: inc}
+	mod.ComposeWith(mod1)
+	mod.ComposeWith(mod1)
+	for i := 0; i < ResourceMax; i++ {
+		if mod.Plus[i] != mod1.Plus[i]*2 {
+			t.Fatal()
+		}
+		if mod.Mult[i] != mod1.Mult[i]*mod1.Mult[i] {
+			t.Fatal()
+		}
+	}
 }

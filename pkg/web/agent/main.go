@@ -82,6 +82,7 @@ func Command() *cobra.Command {
 			m := macaron.New()
 			m.SetDefaultCookieSecret("heged-session-NOT-SET")
 			m.Use(macaron.Recovery())
+			m.Get("/health", serveHealth(&front, m))
 			m.Use(macaron.Static(front.dirStatic, macaron.StaticOptions{
 				Prefix:      "static",
 				SkipLogging: true,

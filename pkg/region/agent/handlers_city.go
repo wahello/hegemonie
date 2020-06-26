@@ -8,6 +8,7 @@ package hegemonie_region_agent
 import (
 	"context"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -42,6 +43,14 @@ func (s *srvCity) Show(ctx context.Context, req *proto.CityId) (*proto.CityView,
 	}
 
 	view := ShowCity(s.w, city)
+	utils.Logger.Debug().
+		Int("#a", len(view.Assets.Armies)).
+		Int("#k", len(view.Assets.Knowledges)).
+		Int("#b", len(view.Assets.Buildings)).
+		Int("#u", len(view.Assets.Units)).
+		Interface("prod", view.Production).
+		Interface("stock", view.Stock).
+		Msg("city")
 	return view, nil
 }
 

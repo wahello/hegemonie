@@ -18,24 +18,37 @@ const (
 )
 
 const (
-	// Do nothing. Useful for waypoints
-	CmdMove = 0
+	// Disband the Army and transfer its whole content to the local City
+	// If there is no local City at the current position, the content of
+	// the Army is lost.
+	// Argument: ignored
+	CmdCityDisband = "disband"
+
 	// Like CmdMove but the command doesn't expire
-	CmdWait = 1
+	// Argument: ignored
+	CmdWait = "wait"
+
+	// Do nothing. Useful for waypoints
+	// Argument: ActionArgTransfer
+	CmdMove = "move"
+
+	// Flea from the Fight the army is currently involved in
+	// Any action post-victory should be discarded.
+	// Argument: ignored
+	CmdFlea = "flea"
+
+	// Flip the attitude in the fight the army is currently involved in.
+	// Any action post-victory should be discarded.
+	// Argument: ignored
+	CmdFlip = "flip"
+
 	// Start a fight or join a running fight on the side of the attackers
-	CmdCityAttack = 2
+	// Argument: ActionArgAssault
+	CmdCityAttack = "attack"
+
 	// Join a running fight on the side of the defenders, or Watch the City if
-	CmdCityDefend = 3
-	// Attack the City and become its overlord in case of victory
-	CmdCityOverlord = 4
-	// Attack the City and break a building in case of victory
-	CmdCityBreak = 5
-	// Attack the City and reduce its production for the next turn
-	CmdCityMassacre = 6
-	// Deposit all the resources of the Army to the local City
-	CmdCityDeposit = 7
-	// Disband the Army and transfer its units and resources to the local City
-	CmdCityDisband = 8
+	// Argument: ignored
+	CmdCityDefend = "defend"
 )
 
 type World struct {
@@ -100,6 +113,13 @@ type Resources [ResourceMax]uint64
 type ResourcesIncrement [ResourceMax]int64
 
 type ResourcesMultiplier [ResourceMax]float64
+
+type Artifact struct {
+	ID      uint64 `json:"id"`
+	Type    uint64 `json:"type"`
+	Name    string `json:"name"`
+	Visible bool   `json:"visible,omitempty"`
+}
 
 type ResourceModifiers struct {
 	Mult ResourcesMultiplier
@@ -315,9 +335,11 @@ type City struct {
 	// Units directly defending the current City
 	Units SetOfUnits
 
-	// PRIVATE
 	// Armies under the responsibility of the current City
 	Armies SetOfArmies
+
+	// Artifacts currently placed in the City.
+	Artifacts SetOfArtifacts
 
 	// PRIVATE
 	// Pointer to the current Overlord of the current City
@@ -401,12 +423,44 @@ type Command struct {
 	Cell uint64
 
 	// What to do once arrived at the given Cell.
-	Action uint
+	Action string `json:"action"`
+
+	// Json
+	Args string `json:"args"`
 }
 
+type ActionArgTransfer struct {
+	// Resources to be transferred
+	Amount Resources `json:"amount,omitempty"`
+
+	// Artifact to be trasnferred
+	Artifact uint64 `json:"artifact,omitempty"`
+
+	// Troops to be transferred
+	Units []uint64 `json:"units,omitempty"`
+}
+
+// What to do if the army is victorious
+type ActionArgAssault struct {
+	// Become the overlord of the City.
+	Overlord bool `json:"overlord,omitempty"`
+
+	// Break a random building
+	Break bool `json:"break,omitempty"`
+
+	// Impact the production of the subbsequent seasons
+	Massacre bool `json:"massacre,omitempty"`
+}
+
+// An army is the entity able to act on a map.
+// The actions are produced in a queued (fielf :Targets:) and the queue
+// is consumed by a periodical task.
 type Army struct {
 	// The unique ID of the current Army
 	ID uint64 `json:"Id"`
+
+	// A display name for the current City
+	Name string
 
 	// The ID of the City that controls the current Army
 	City *City `json:"-"`
@@ -417,13 +471,17 @@ type Army struct {
 	// The ID of the Cell the Army is on
 	Cell uint64 `json:",omitempty"`
 
-	// A display name for the current City
-	Name string
-
 	// How many resources are carried by that Army
-	Stock Resources
+	// The set may be empty.
+	Stock Resources `json:",omitempty"`
 
-	Units SetOfUnits
+	// Units that compose the current Army.
+	// The set may be empty.
+	Units SetOfUnits `json:",omitempty"`
+
+	// Artifacts carried by the current Army
+	// The set may be empty
+	Artifacts SetOfArtifacts `json:",omitempty"`
 
 	// The IS of a Cell of the Map that is a goal of the current movement of the Army
 	Targets []Command `json:",omitempty"`
@@ -489,6 +547,7 @@ type SetOfFights []*Fight
 
 type SetOfEdges []*MapEdge
 
+//go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Artifact      SetOfArtifacts
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Army          SetOfArmies
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *Building      SetOfBuildings
 //go:generate go run github.com/jfsmig/hegemonie/cmd/gen-set -acc .ID region ./world_auto.go *BuildingType  SetOfBuildingTypes

@@ -92,14 +92,6 @@ func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*prot
 		err = army.DeferDefend(s.w, target)
 	case proto.ArmyCommandType_Wait:
 		err = army.DeferWait(s.w, target)
-	case proto.ArmyCommandType_Overlord:
-		err = army.DeferOverlord(s.w, target)
-	case proto.ArmyCommandType_Break:
-		err = army.DeferBreak(s.w, target)
-	case proto.ArmyCommandType_Massacre:
-		err = army.DeferMassacre(s.w, target)
-	case proto.ArmyCommandType_Deposit:
-		err = army.DeferDeposit(s.w, target)
 	case proto.ArmyCommandType_Disband:
 		err = army.DeferDisband(s.w, target)
 	default:

@@ -285,12 +285,15 @@ func CommandExport() *cobra.Command {
 			for _, pCity := range w.Live.Cities {
 				pCity.Owner = u.Characters[0].ID
 				// Create one Army per City
-				_ = pCity.UnitCreate(&w, w.Definitions.Units[0])
-				_, _ = pCity.CreateArmyDefence(&w)
+				pCity.UnitCreate(&w, w.Definitions.Units[0]).Finish()
+				pArmy, _ := pCity.CreateArmyDefence(&w)
+				if pArmy == nil {
+					panic("bug")
+				}
 				// Create one finished Unit per City
-				pCity.UnitCreate(&w, w.Definitions.Units[0]).Ticks = 0
+				pCity.UnitCreate(&w, w.Definitions.Units[0]).Finish()
 				// Create one pending Unit per City
-				_ = pCity.UnitCreate(&w, w.Definitions.Units[0])
+				pCity.UnitCreate(&w, w.Definitions.Units[0])
 			}
 
 			// Dump the LIVE base of the world concerned by the current script

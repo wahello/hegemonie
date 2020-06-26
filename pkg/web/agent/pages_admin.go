@@ -12,6 +12,12 @@ import (
 	"sort"
 )
 
+func serveHealth(f *frontService, m *macaron.Macaron) macaron.Handler {
+	return func(ctx *macaron.Context) {
+		ctx.Status(204)
+	}
+}
+
 func serveGameAdmin(f *frontService) ActionPage {
 	return func(ctx *macaron.Context, sess session.Store, flash *session.Flash) {
 		uView, err := f.authenticateAdminFromSession(ctx, sess)
