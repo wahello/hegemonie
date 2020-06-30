@@ -181,40 +181,74 @@ func makeSaveFilename() string {
 	return "save-" + now.Format("20060102_030405")
 }
 
-func (w *World) SaveLiveToFiles(basePath string) (string, error) {
-	if basePath == "" {
-		return "", errors.New("No save path configured")
-	}
+type persistencyMapping []cfgSection
 
-	p := basePath + "/" + makeSaveFilename()
-	if err := os.MkdirAll(p, 0755); err != nil {
-		return p, err
-	}
+type cfgSection struct {
+	path string
+	obj  interface{}
+}
 
-	type cfgSection struct {
-		path string
-		obj  interface{}
-	}
-	cfgSections := []cfgSection{
+func liveSections(p string, w *World) persistencyMapping {
+	return []cfgSection{
 		{p + "/map.json", &w.Places},
 		{p + "/cities.json", &w.Live.Cities},
 		{p + "/fights.json", &w.Live.Fights},
 	}
-	for _, section := range cfgSections {
+}
+
+func defsSections(p string, w *World) persistencyMapping {
+	return []cfgSection{
+		{p + "/config.json", &w.Config},
+		{p + "/units.json", &w.Definitions.Units},
+		{p + "/buildings.json", &w.Definitions.Buildings},
+		{p + "/knowledge.json", &w.Definitions.Knowledges},
+	}
+}
+
+func (p persistencyMapping) dump() error {
+	for _, section := range p {
 		out, err := os.Create(section.path)
 		if err != nil {
-			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
+			return fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
 		}
 		encoder := json.NewEncoder(out)
 		encoder.SetIndent("", " ")
 		err = encoder.Encode(section.obj)
 		_ = out.Close()
 		if err != nil {
-			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
+			return fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
 		}
 	}
+	return nil
+}
 
-	return p, nil
+func (p persistencyMapping) load() error {
+	for _, section := range p {
+		in, err := os.Open(section.path)
+		if err != nil {
+			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
+		}
+		err = json.NewDecoder(in).Decode(section.obj)
+		in.Close()
+		if err != nil {
+			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
+		}
+	}
+	return nil
+}
+
+func (w *World) SaveLiveToFiles(basePath string) (string, error) {
+	if basePath == "" {
+		return "", errors.New("No save path configured")
+	}
+
+	p := basePath + "/" + makeSaveFilename()
+	err := os.MkdirAll(p, 0755)
+	if err != nil {
+		return p, err
+	}
+
+	return p, liveSections(p, w).dump()
 }
 
 func (w *World) LoadLiveFromFiles(basePath string) error {
@@ -222,28 +256,7 @@ func (w *World) LoadLiveFromFiles(basePath string) error {
 		return errors.New("No save path configured")
 	}
 
-	type cfgSection struct {
-		path string
-		obj  interface{}
-	}
-	cfgSections := []cfgSection{
-		{basePath + "/map.json", &w.Places},
-		{basePath + "/cities.json", &w.Live.Cities},
-		{basePath + "/fights.json", &w.Live.Fights},
-	}
-	for _, section := range cfgSections {
-		in, err := os.Open(section.path)
-		if err != nil {
-			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
-		}
-		err = json.NewDecoder(in).Decode(section.obj)
-		in.Close()
-		if err != nil {
-			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
-		}
-	}
-
-	return nil
+	return liveSections(basePath, w).load()
 }
 
 func (w *World) SaveDefinitionsToFiles(basePath string) (string, error) {
@@ -251,64 +264,16 @@ func (w *World) SaveDefinitionsToFiles(basePath string) (string, error) {
 		return "", errors.New("No save path configured")
 	}
 
-	p := basePath
-	if err := os.MkdirAll(p, 0755); err != nil {
-		return p, err
+	err := os.MkdirAll(basePath, 0755)
+	if err != nil {
+		return basePath, err
 	}
-
-	type cfgSection struct {
-		path string
-		obj  interface{}
-	}
-	cfgSections := []cfgSection{
-		{p + "/config.json", &w.Config},
-		{p + "/units.json", &w.Definitions.Units},
-		{p + "/buildings.json", &w.Definitions.Buildings},
-		{p + "/knowledge.json", &w.Definitions.Knowledges},
-	}
-	for _, section := range cfgSections {
-		out, err := os.Create(section.path)
-		if err != nil {
-			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
-		}
-		encoder := json.NewEncoder(out)
-		encoder.SetIndent("", " ")
-		err = encoder.Encode(section.obj)
-		_ = out.Close()
-		if err != nil {
-			return "", fmt.Errorf("Failed to save the World in [%s]: %s", section.path, err.Error())
-		}
-	}
-
-	return p, nil
+	return basePath, defsSections(basePath, w).dump()
 }
 
 func (w *World) LoadDefinitionsFromFiles(basePath string) error {
 	if basePath == "" {
 		return errors.New("No save path configured")
 	}
-
-	type cfgSection struct {
-		path string
-		obj  interface{}
-	}
-	cfgSections := []cfgSection{
-		{basePath + "/config.json", &w.Config},
-		{basePath + "/units.json", &w.Definitions.Units},
-		{basePath + "/buildings.json", &w.Definitions.Buildings},
-		{basePath + "/knowledge.json", &w.Definitions.Knowledges},
-	}
-	for _, section := range cfgSections {
-		in, err := os.Open(section.path)
-		if err != nil {
-			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
-		}
-		err = json.NewDecoder(in).Decode(section.obj)
-		in.Close()
-		if err != nil {
-			return fmt.Errorf("Failed to load the World from [%s]: %s", section.path, err.Error())
-		}
-	}
-
-	return nil
+	return defsSections(basePath, w).load()
 }
