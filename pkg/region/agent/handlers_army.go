@@ -31,72 +31,70 @@ func (s *srvArmy) getAndCheckArmy(req *proto.ArmyId) (*region.City, *region.Army
 	return city, army, err
 }
 
-func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView, error) {
+func (s *srvArmy) wlock(action func() error) error {
+	s.w.WLock()
+	defer s.w.WUnlock()
+	return action()
+}
+
+func (s *srvArmy) rlock(action func() error) error {
 	s.w.RLock()
 	defer s.w.RUnlock()
+	return action()
+}
 
-	_, army, err := s.getAndCheckArmy(req)
-	if err != nil {
-		return nil, err
+func (s *srvArmy) getAndDo(id *proto.ArmyId, action func(*region.City, *region.Army) error) error {
+	city, army, err := s.getAndCheckArmy(id)
+	if err == nil {
+		err = action(city, army)
 	}
-	return ShowArmy(s.w, army), nil
+	return err
+}
+
+func (s *srvArmy) wlockDo(id *proto.ArmyId, action func(*region.City, *region.Army) error) error {
+	return s.wlock(func() error { return s.getAndDo(id, action) })
+}
+
+func (s *srvArmy) rlockDo(id *proto.ArmyId, action func(*region.City, *region.Army) error) error {
+	return s.rlock(func() error { return s.getAndDo(id, action) })
+}
+
+func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView, error) {
+	var rc *proto.ArmyView
+	err := s.rlockDo(req, func(_ *region.City, army *region.Army) error {
+		rc = ShowArmy(s.w, army)
+		return nil
+	})
+	return rc, err
 }
 
 func (s *srvArmy) Flea(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
-	s.w.WLock()
-	defer s.w.WUnlock()
-
-	_, army, err := s.getAndCheckArmy(req)
-	if err != nil {
-		return nil, err
-	}
-	if err = army.Flea(s.w); err != nil {
-		return nil, err
-	}
-	return &proto.None{}, nil
+	return &proto.None{}, s.wlockDo(req, func(_ *region.City, a *region.Army) error { return a.Flea(s.w) })
 }
 
 func (s *srvArmy) Flip(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
-	s.w.WLock()
-	defer s.w.WUnlock()
-
-	_, army, err := s.getAndCheckArmy(req)
-	if err != nil {
-		return nil, err
-	}
-	if err = army.Flip(s.w); err != nil {
-		return nil, err
-	}
-	return &proto.None{}, nil
+	return &proto.None{}, s.wlockDo(req, func(_ *region.City, a *region.Army) error { return a.Flip(s.w) })
 }
 
 func (s *srvArmy) Command(ctx context.Context, req *proto.ArmyCommandReq) (*proto.None, error) {
-	s.w.WLock()
-	defer s.w.WUnlock()
-
-	_, army, err := s.getAndCheckArmy(req.Id)
-	if err != nil {
-		return nil, err
-	}
-	target := s.w.Places.CellGet(req.Command.Target)
-	if target == nil {
-		return nil, status.Errorf(codes.NotFound, "Target Not found")
-	}
-
-	switch req.Command.Action {
-	case proto.ArmyCommandType_Move:
-		err = army.DeferMove(s.w, target)
-	case proto.ArmyCommandType_Attack:
-		err = army.DeferAttack(s.w, target)
-	case proto.ArmyCommandType_Defend:
-		err = army.DeferDefend(s.w, target)
-	case proto.ArmyCommandType_Wait:
-		err = army.DeferWait(s.w, target)
-	case proto.ArmyCommandType_Disband:
-		err = army.DeferDisband(s.w, target)
-	default:
-		err = status.Errorf(codes.InvalidArgument, "Invalid action")
-	}
-
-	return &proto.None{}, err
+	return &proto.None{}, s.wlockDo(req.Id, func(_ *region.City, army *region.Army) error {
+		target := s.w.Places.CellGet(req.Command.Target)
+		if target == nil {
+			return status.Errorf(codes.NotFound, "Target Not found")
+		}
+		switch req.Command.Action {
+		case proto.ArmyCommandType_Move:
+			return army.DeferMove(s.w, target)
+		case proto.ArmyCommandType_Attack:
+			return army.DeferAttack(s.w, target)
+		case proto.ArmyCommandType_Defend:
+			return army.DeferDefend(s.w, target)
+		case proto.ArmyCommandType_Wait:
+			return army.DeferWait(s.w, target)
+		case proto.ArmyCommandType_Disband:
+			return army.DeferDisband(s.w, target)
+		default:
+			return status.Errorf(codes.InvalidArgument, "Invalid action")
+		}
+	})
 }

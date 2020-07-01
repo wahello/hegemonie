@@ -16,39 +16,37 @@ type srvAdmin struct {
 	w   *region.World
 }
 
-func (s *srvAdmin) Produce(ctx context.Context, req *proto.None) (*proto.None, error) {
-	s.w.WLock()
-	defer s.w.WUnlock()
+func (srv *srvAdmin) rlockDo(action func() error) error {
+	srv.w.RLock()
+	defer srv.w.RUnlock()
+	return action()
+}
 
-	s.w.Produce()
-	return &proto.None{}, nil
+func (srv *srvAdmin) wlockDo(action func() error) error {
+	srv.w.WLock()
+	defer srv.w.WUnlock()
+	return action()
+}
+
+func (s *srvAdmin) Produce(ctx context.Context, req *proto.None) (*proto.None, error) {
+	return &proto.None{}, s.wlockDo(func() error { s.w.Produce(); return nil })
 }
 
 func (s *srvAdmin) Move(ctx context.Context, req *proto.None) (*proto.None, error) {
-	s.w.WLock()
-	defer s.w.WUnlock()
-
-	s.w.Move()
-	return &proto.None{}, nil
-}
-
-func (s *srvAdmin) GetScores(ctx context.Context, req *proto.None) (*proto.ListOfCities, error) {
-	s.w.RLock()
-	defer s.w.RUnlock()
-
-	sb := &proto.ListOfCities{}
-	for _, c := range s.w.Live.Cities {
-		sb.Items = append(sb.Items, ShowCityPublic(s.w, c, true))
-	}
-	return sb, nil
+	return &proto.None{}, s.wlockDo(func() error { s.w.Move(); return nil })
 }
 
 func (s *srvAdmin) Save(ctx context.Context, req *proto.None) (*proto.None, error) {
-	s.w.RLock()
-	defer s.w.RUnlock()
+	return &proto.None{}, s.wlockDo(func() error { return s.w.SaveLiveToFiles(s.cfg.pathSave) })
+}
 
-	if _, err := s.w.SaveLiveToFiles(s.cfg.pathSave); err != nil {
-		return nil, err
-	}
-	return &proto.None{}, nil
+func (s *srvAdmin) GetScores(ctx context.Context, req *proto.None) (*proto.ListOfCities, error) {
+	sb := &proto.ListOfCities{}
+	err := s.rlockDo(func() error {
+		for _, c := range s.w.Live.Cities {
+			sb.Items = append(sb.Items, ShowCityPublic(s.w, c, true))
+		}
+		return nil
+	})
+	return sb, err
 }

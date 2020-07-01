@@ -14,6 +14,7 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -120,7 +121,11 @@ func (cfg *regionConfig) execute() error {
 	}
 
 	if cfg.pathSave != "" {
-		p, err := w.SaveLiveToFiles(cfg.pathSave)
+		p, err := ioutil.TempDir(cfg.pathSave, "dump-*")
+		if err != nil {
+			return fmt.Errorf("Failed to save the World at exit: %v", err)
+		}
+		err = w.SaveLiveToFiles(p)
 		if err != nil {
 			return fmt.Errorf("Failed to save the World at exit: %v", err)
 		}
