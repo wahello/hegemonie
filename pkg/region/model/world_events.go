@@ -116,7 +116,7 @@ func (evt *logEvtArmy) Move(src, dst uint64) EventArmy {
 }
 
 func (evt *logEvtArmy) NoRoute(src, dst uint64) EventArmy {
-	evt.sub.Move(src, dst)
+	evt.sub.NoRoute(src, dst)
 	evt.log.Uint64("src", src).Uint64("dst", dst)
 	return evt
 }

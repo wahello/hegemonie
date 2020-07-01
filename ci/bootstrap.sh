@@ -53,41 +53,23 @@ mkdir -p "${OUT}/lang"
 mkdir -p "${OUT}/live"
 mkdir -p "${OUT}/save"
 mkdir -p "${OUT}/evt"
-TMP=$(mktemp -d)
 
 
 # Generate the database for a world
-hege-mapper normalize < "${MAP}" > "${TMP}/map_seed.json"
-hege-mapper export --config "${DEFS}" "${TMP}" < "${TMP}/map_seed.json" > "${TMP}/env"
-. "${TMP}/env"
+hege-mapper normalize < "${MAP}" > "${OUT}/map_seed.json"
+hege-mapper export --config "${DEFS}" "${OUT}" < "${OUT}/map_seed.json"
 
-[[ -r "${HEGE_LIVE}/cities.json" ]]
-[[ -r "${HEGE_LIVE}/map.json" ]]
-[[ -r "${HEGE_LIVE}/fights.json" ]]
-[[ -r "${TMP}/auth.json" ]]
-
-cp -p \
-  "${HEGE_DEFS}/units.json" \
-  "${HEGE_DEFS}/config.json" \
-  "${HEGE_DEFS}/buildings.json" \
-  "${HEGE_DEFS}/knowledge.json" \
-  "${OUT}/definitions/"
+[[ -r "${OUT}/definitions/config.json" ]]
+[[ -r "${OUT}/definitions/knowledge.json" ]]
+[[ -r "${OUT}/definitions/buildings.json" ]]
+[[ -r "${OUT}/definitions/units.json" ]]
+[[ -r "${OUT}/live/map.json" ]]
+[[ -r "${OUT}/live/cities.json" ]]
+[[ -r "${OUT}/live/fights.json" ]]
+[[ -r "${OUT}/auth.json" ]]
 
 cp -p \
   "${TRANSLATIONS}/"active.*.toml \
   "${OUT}/lang"
-
-cp -p \
-	"${TMP}/map_seed.json" \
-  "${OUT}/"
-
-cp -p \
-  "${HEGE_LIVE}/fights.json" \
-  "${HEGE_LIVE}/cities.json" \
-  "${HEGE_LIVE}/map.json" \
-  "${TMP}/auth.json" \
-	"${OUT}/live/"
-
-rm -rf "${TMP}"
 
 echo "${OUT}"

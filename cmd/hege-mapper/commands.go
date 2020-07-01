@@ -297,29 +297,29 @@ func CommandExport() *cobra.Command {
 			}
 
 			// Dump the LIVE base of the world concerned by the current script
-			p, err := w.SaveLiveToFiles(dirOut)
+			err = w.SaveLiveToFiles(dirOut + "/live")
 			if err != nil {
 				return err
 			}
-			fmt.Println("HEGE_LIVE=" + p)
 
 			// Dump the configuration
-			p, err = w.SaveDefinitionsToFiles(dirOut + "/definitions")
+			err = w.SaveDefinitionsToFiles(dirOut + "/definitions")
 			if err != nil {
 				return err
 			}
-			fmt.Println("HEGE_DEFS=" + p)
 
+			// Dump the authentication base
 			f, err := os.Create(dirOut + "/auth.json")
 			if err != nil {
 				return err
+			} else {
+				encoder := json.NewEncoder(f)
+				encoder.SetIndent("", " ")
+				err = encoder.Encode(aaa.UsersByID)
+				_ = f.Close()
 			}
 
-			encoder := json.NewEncoder(f)
-			encoder.SetIndent("", " ")
-			err = encoder.Encode(aaa.UsersByID)
-			_ = f.Close()
-			return nil
+			return err
 		},
 	}
 

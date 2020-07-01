@@ -133,7 +133,7 @@ consul agent \
 
 heged auth \
   --id hege,aaa,1 \
-  --live "${BASE}/live" \
+  --live "${BASE}/" \
   --save "${BASE}/save" \
   --endpoint $ip:8082 \
   &

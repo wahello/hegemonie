@@ -189,6 +189,9 @@ type cfgSection struct {
 }
 
 func liveSections(p string, w *World) persistencyMapping {
+	if p == "" {
+		panic("Invalid path")
+	}
 	return []cfgSection{
 		{p + "/map.json", &w.Places},
 		{p + "/cities.json", &w.Live.Cities},
@@ -197,6 +200,9 @@ func liveSections(p string, w *World) persistencyMapping {
 }
 
 func defsSections(p string, w *World) persistencyMapping {
+	if p == "" {
+		panic("Invalid path")
+	}
 	return []cfgSection{
 		{p + "/config.json", &w.Config},
 		{p + "/units.json", &w.Definitions.Units},
@@ -237,43 +243,26 @@ func (p persistencyMapping) load() error {
 	return nil
 }
 
-func (w *World) SaveLiveToFiles(basePath string) (string, error) {
-	if basePath == "" {
-		return "", errors.New("No save path configured")
+func (w *World) SaveLiveToFiles(basePath string) error {
+	err := os.MkdirAll(basePath, 0755)
+	if err == nil {
+		err = liveSections(basePath, w).dump()
 	}
+	return err
+}
 
-	p := basePath + "/" + makeSaveFilename()
-	err := os.MkdirAll(p, 0755)
-	if err != nil {
-		return p, err
+func (w *World) SaveDefinitionsToFiles(basePath string) error {
+	err := os.MkdirAll(basePath, 0755)
+	if err == nil {
+		err = defsSections(basePath, w).dump()
 	}
-
-	return p, liveSections(p, w).dump()
+	return err
 }
 
 func (w *World) LoadLiveFromFiles(basePath string) error {
-	if basePath == "" {
-		return errors.New("No save path configured")
-	}
-
 	return liveSections(basePath, w).load()
 }
 
-func (w *World) SaveDefinitionsToFiles(basePath string) (string, error) {
-	if basePath == "" {
-		return "", errors.New("No save path configured")
-	}
-
-	err := os.MkdirAll(basePath, 0755)
-	if err != nil {
-		return basePath, err
-	}
-	return basePath, defsSections(basePath, w).dump()
-}
-
 func (w *World) LoadDefinitionsFromFiles(basePath string) error {
-	if basePath == "" {
-		return errors.New("No save path configured")
-	}
 	return defsSections(basePath, w).load()
 }
