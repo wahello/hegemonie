@@ -346,7 +346,7 @@ func (f *frontService) loadAllKnowledges(ctx context.Context, cli region.Definit
 	}
 }
 
-func (f *frontService) reload(cli region.DefinitionsClient, sessionID string, ctx0 context.Context) {
+func (f *frontService) reload(ctx0 context.Context, cli region.DefinitionsClient, sessionID string) {
 	ctx := metadata.AppendToOutgoingContext(ctx0, "session-id", sessionID)
 
 	var uerr, berr, kerr error
@@ -397,12 +397,12 @@ func (f *frontService) loopReload(ctx context.Context) {
 	sessionID := uuid.New().String()
 	for _, v := range []int{2, 4, 8, 16} {
 		cli := region.NewDefinitionsClient(f.cnxRegion)
-		f.reload(cli, sessionID, ctx)
+		f.reload(ctx, cli, sessionID)
 		<-time.After(time.Duration(v) * time.Second)
 	}
 	for {
 		cli := region.NewDefinitionsClient(f.cnxRegion)
-		f.reload(cli, sessionID, ctx)
+		f.reload(ctx, cli, sessionID)
 		<-time.After(61 * time.Second)
 	}
 }
