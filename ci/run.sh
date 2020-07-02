@@ -125,11 +125,11 @@ consul_service_grpc hege,reg,1 8081 reg
 consul_service_grpc hege,aaa,1 8082 aaa
 consul_service_grpc hege,evt,1 8083 evt
 
-consul agent \
-  -server -bootstrap -dev -ui \
-  -config-file $TMP/consul.json \
-  -config-dir $TMP/consul.d \
-  &
+#consul agent \
+#  -server -bootstrap -dev -ui \
+#  -config-file $TMP/consul.json \
+#  -config-dir $TMP/consul.d \
+#  &
 
 heged auth \
   --id hege,aaa,1 \
