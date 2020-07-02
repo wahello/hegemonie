@@ -6,19 +6,38 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+const onField = function (field, v) { if (field != null) { field.value = v; } };
+
+const onForm = function (form, pos, cityId, cityName) {
+  let items = form.children;
+  for (let i=0; i<items.length; i++) {
+    let f = items[i];
+    if (f.id === "Location") {
+      f.value = pos;
+    } else if (f.id === "CityId") {
+      f.value = cityId;
+    } else if (f.id === "CityName") {
+      f.value = cityName;
+    }
+  }
+};
+
+const allForms = function (doc, pos, cityId, cityName) {
+  let forms = doc.getElementsByTagName('form');
+  for (let i = 0; i < forms.length; i++) {
+    onForm(forms[i], pos, cityId, cityName);
+  }
+};
+
 window.addEventListener("load", function() {
   let svg1 = document.getElementById('interactive-map');
   let armies = [{"id":{{aid}}, "cell":{{Army.Location}}}];
   drawMapWithCities(svg1, "calaquyr",
     function (position) {
-      document.getElementById('Location').value = position;
-      //document.getElementById('CityId').value = null;
-      document.getElementById('CityName').value = null;
+      allForms(document, pos, null, null);
     },
     function (position, cityId, cityName) {
-      document.getElementById('Location').value = position;
-      //document.getElementById('CityId').value = cityId;
-      document.getElementById('CityName').value = cityName;
+      allForms(document, position, cityId, cityName);
     })
     .then(map => {
       hightlightCell(svg1, {{Land.Location}});
@@ -33,26 +52,63 @@ window.addEventListener("load", function() {
 {% include "map.tpl" %}
 
 <div><h2>Actions</h2>
-<form action="/action/army/command" method="post">
+<form if="action-move" method="post" action="/action/army/move">
     <input type="hidden" name="cid" value="{{Character.Id}}"/>
     <input type="hidden" name="lid" value="{{Land.Id}}"/>
     <input type="hidden" name="aid" value="{{Army.Id}}"/>
     <input type="hidden" name="location" id="Location" value=""/>
     Target: <input type="text" id="CityName" value=""/><br/>
-    <fieldset>
-        <legend>Action</legend>
-        <input type="radio" name="action" value="move" checked> Move<br/>
-        <input type="radio" name="action" value="wait"/> Wait<br/>
-        <input type="radio" name="action" value="attack"> Attack<br/>
-        <input type="radio" name="action" value="defend"> Defend<br/>
-        <input type="radio" name="action" value="massacre"/> Massacre<br/>
-        <input type="radio" name="action" value="break"/> Break<br/>
-        <input type="radio" name="action" value="overlord"/> Overlord<br/>
-        <input type="radio" name="action" value="deposit"/> Deposit<br/>
-        <input type="radio" name="action" value="disband"/> Disband<br/>
-    </fieldset>
-    <input type="submit" value="Go"/>
+    <input type="submit" value="Move"/>
 </form>
+
+<form if="action-wait" method="post" action="/action/army/wait">
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="hidden" name="location" id="Location" value=""/>
+    Target: <input type="text" id="CityName" value=""/><br/>
+    <input type="submit" value="Go & Wait"/>
+</form>
+
+<form if="action-defend" method="post" action="/action/army/defend">
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="hidden" name="location" id="Location" value=""/>
+    Target: <input type="text" id="CityName" value=""/><br/>
+    <input type="submit" value="Go & Defend"/>
+</form>
+
+<form if="action-assault" method="post" action="/action/army/assault">
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="hidden" name="location" id="Location" value=""/>
+    Target: <input type="text" id="CityName" value=""/><br/>
+    <input type="submit" value="Go & Attack"/>
+</form>
+
+<form if="action-disband" method="post" action="/action/army/flea">
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="submit" value="Flea from the fight"/>
+</form>
+
+<form if="action-disband" method="post" action="/action/army/flip">
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="submit" value="Flip in the fight"/>
+</form>
+
+<form if="action-disband" method="post" action="/action/army/cancel">
+    <input type="hidden" name="cid" value="{{Character.Id}}"/>
+    <input type="hidden" name="lid" value="{{Land.Id}}"/>
+    <input type="hidden" name="aid" value="{{Army.Id}}"/>
+    <input type="submit" value="Dismantle"/>
+</form>
+
 </div>
 
 <div><h2>Commands</h2>

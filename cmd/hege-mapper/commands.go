@@ -312,12 +312,11 @@ func CommandExport() *cobra.Command {
 			f, err := os.Create(dirOut + "/auth.json")
 			if err != nil {
 				return err
-			} else {
-				encoder := json.NewEncoder(f)
-				encoder.SetIndent("", " ")
-				err = encoder.Encode(aaa.UsersByID)
-				_ = f.Close()
 			}
+			encoder := json.NewEncoder(f)
+			encoder.SetIndent("", " ")
+			err = encoder.Encode(aaa.UsersByID)
+			_ = f.Close()
 
 			return err
 		},

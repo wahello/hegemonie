@@ -9,7 +9,6 @@ import (
 	"github.com/go-macaron/session"
 	region "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"gopkg.in/macaron.v1"
-	"strings"
 )
 
 type FormCityStudy struct {
@@ -37,34 +36,28 @@ type FormCityUnitTransfer struct {
 	ArmyID      uint64 `form:"aid" binding:"Required"`
 }
 
+type FormCityStockTransfer struct {
+	// Identifier of the city
+	CharacterID uint64 `form:"cid" binding:"Required"`
+	CityID      uint64 `form:"lid" binding:"Required"`
+	ArmyID      uint64 `form:"aid" binding:"Required"`
+
+	// Resources to be transferred
+	R0 int64 `form:"r0" binding:"Required"`
+	R1 int64 `form:"r1" binding:"Required"`
+	R2 int64 `form:"r2" binding:"Required"`
+	R3 int64 `form:"r3" binding:"Required"`
+	R4 int64 `form:"r4" binding:"Required"`
+	R5 int64 `form:"r5" binding:"Required"`
+}
+
 type FormCityArmyCreate struct {
 	CharacterID uint64 `form:"cid" binding:"Required"`
 	CityID      uint64 `form:"lid" binding:"Required"`
 	Name        string `form:"name" binding:"Required"`
 }
 
-type FormCityArmyCommand struct {
-	CharacterID uint64 `form:"cid" binding:"Required"`
-	CityID      uint64 `form:"lid" binding:"Required"`
-	ArmyID      uint64 `form:"aid" binding:"Required"`
-
-	Location uint64 `form:"location" binding:"Required"`
-	Action   string `form:"action" binding:"Required"`
-}
-
-type FormCityArmyDisband struct {
-	CharacterID uint64 `form:"cid" binding:"Required"`
-	CityID      uint64 `form:"lid" binding:"Required"`
-	ArmyID      uint64 `form:"aid" binding:"Required"`
-}
-
-type FormCityArmyCancel struct {
-	CharacterID uint64 `form:"cid" binding:"Required"`
-	CityID      uint64 `form:"lid" binding:"Required"`
-	ArmyID      uint64 `form:"aid" binding:"Required"`
-}
-
-func doCityStudy(f *frontService, m *macaron.Macaron) macaron.Handler {
+func doCityStudy(f *frontService) macaron.Handler {
 	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityStudy) {
 		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterID)
 		if err != nil {
@@ -84,7 +77,7 @@ func doCityStudy(f *frontService, m *macaron.Macaron) macaron.Handler {
 	}
 }
 
-func doCityBuild(f *frontService, m *macaron.Macaron) macaron.Handler {
+func doCityBuild(f *frontService) macaron.Handler {
 	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityBuild) {
 		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterID)
 		if err != nil {
@@ -104,7 +97,7 @@ func doCityBuild(f *frontService, m *macaron.Macaron) macaron.Handler {
 	}
 }
 
-func doCityTrain(f *frontService, m *macaron.Macaron) macaron.Handler {
+func doCityTrain(f *frontService) macaron.Handler {
 	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityTrain) {
 		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterID)
 		if err != nil {
@@ -124,76 +117,20 @@ func doCityTrain(f *frontService, m *macaron.Macaron) macaron.Handler {
 	}
 }
 
-func doCityCreateArmy(f *frontService, m *macaron.Macaron) macaron.Handler {
+func doCityArmyCreate(f *frontService) macaron.Handler {
 	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCreate) {
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterID) + "&lid=" + utoa(info.CityID))
 	}
 }
 
-func doCityTransferUnit(f *frontService, m *macaron.Macaron) macaron.Handler {
+func doCityTransferUnit(f *frontService) macaron.Handler {
 	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityUnitTransfer) {
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterID) + "&lid=" + utoa(info.CityID))
 	}
 }
 
-func doCityDisbandArmy(f *frontService, m *macaron.Macaron) macaron.Handler {
-	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyDisband) {
+func doCityTransferResources(f *frontService) macaron.Handler {
+	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityUnitTransfer) {
 		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterID) + "&lid=" + utoa(info.CityID))
-	}
-}
-
-func doCityCancelArmy(f *frontService, m *macaron.Macaron) macaron.Handler {
-	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCancel) {
-		ctx.Redirect("/game/land/overview?cid=" + utoa(info.CharacterID) + "&lid=" + utoa(info.CityID))
-	}
-}
-
-func doCityCommandArmy(f *frontService, m *macaron.Macaron) macaron.Handler {
-	return func(ctx *macaron.Context, flash *session.Flash, sess session.Store, info FormCityArmyCommand) {
-		_, _, err := f.authenticateCharacterFromSession(ctx, sess, info.CharacterID)
-		if err != nil {
-			flash.Warning(err.Error())
-			ctx.Redirect("/game/user")
-			return
-		}
-
-		url := "/game/army?cid=" + utoa(info.CharacterID) + "&lid=" + utoa(info.CityID) + "&aid=" + utoa(info.ArmyID)
-
-		actionID := region.ArmyCommandType_Unknown
-		switch strings.ToLower(info.Action) {
-		case "move":
-			actionID = region.ArmyCommandType_Move
-		case "wait":
-			actionID = region.ArmyCommandType_Wait
-		case "attack":
-			actionID = region.ArmyCommandType_Attack
-		case "defend":
-			actionID = region.ArmyCommandType_Defend
-		case "disband":
-			actionID = region.ArmyCommandType_Disband
-		default:
-			flash.Warning("Invalid action name")
-			ctx.Redirect(url)
-			return
-		}
-
-		cli := region.NewArmyClient(f.cnxRegion)
-		cmd := &region.ArmyCommandReq{
-			Id: &region.ArmyId{
-				Character: info.CharacterID,
-				City:      info.CityID,
-				Army:      info.ArmyID,
-			},
-			Command: &region.ArmyCommand{
-				Action: actionID,
-				Target: info.Location,
-			},
-		}
-		_, err = cli.Command(contextMacaronToGrpc(ctx, sess), cmd)
-		if err != nil {
-			flash.Warning(err.Error())
-		}
-
-		ctx.Redirect(url)
 	}
 }

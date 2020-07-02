@@ -22,14 +22,17 @@ func expandArmyView(f *frontService, aView *region.ArmyView) {
 }
 
 type ArmyCommandExpanded struct {
-	Order       int
-	CommandID   int
-	Location    uint64
-	CityID      uint64
-	ArmyID      uint64
-	CityName    string
-	ArmyName    string
-	CommandName string
+	Order     int
+	CommandID int
+	Location  uint64
+
+	// City at the location of the army
+	CityID   uint64
+	CityName string
+
+	// Army concerned by the command
+	ArmyID   uint64
+	ArmyName string
 }
 
 func serveGameArmyDetail(f *frontService) ActionPage {
@@ -37,7 +40,7 @@ func serveGameArmyDetail(f *frontService) ActionPage {
 		cid := atou(ctx.Query("cid"))
 		lid := atou(ctx.Query("lid"))
 		aid := atou(ctx.Query("aid"))
-		url := fmt.Sprintf("/game/army?cid=%d&lid=%d&aid=%d", cid, lid, aid)
+		url := fmt.Sprintf("/game/land/armies?cid=%d&lid=%d", cid, lid)
 
 		uView, cView, err := f.authenticateCharacterFromSession(ctx, sess, cid)
 		if err != nil {
@@ -93,7 +96,7 @@ func serveGameArmyDetail(f *frontService) ActionPage {
 					Order:     idx,
 					Location:  c.Target,
 					ArmyID:    aid,
-					CommandID: int(c.Action),
+					CommandID: int(c.Type),
 					CityID:    city.Id,
 					ArmyName:  aView.Name,
 					CityName:  city.Name,

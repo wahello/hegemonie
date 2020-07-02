@@ -1,4 +1,35 @@
 {% include "header.tpl" %}
+<script src="/static/hege-map.js"></script>
+<script>
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+window.addEventListener("load", function() {
+  let svg1 = document.getElementById('interactive-map');
+  let armies = [
+  {% for a in Land.Assets.Armies %}
+      {"id":{{a.Id}}, "cell":{{a.Location}}},
+  {% endfor %}
+  ];
+  drawMapWithArmies(svg1, "calaquyr", armies)
+    .then(map => {
+        hightlightCell(svg1, {{Land.Location}});
+        return map;
+    })
+    .catch(err => { console.log(err); });
+});
+</script>
+{% include "map.tpl" %}
+
+<div><h2>Armies</h2>
+    <ul>{% for a in Land.Assets.Armies %}
+        <li>
+            <a href="/game/army?cid={{Character.Id}}&lid={{Land.Id}}&aid={{a.Id}}">{{a.Name}}</a>
+        </li>{% endfor %}
+    </ul>
+</div>
+
 {% if Land.Assets.Units %}
 <div><h2>Create an Army</h2>
     <p>Cancel the Army and give both its freight and its troops to the local City.
@@ -13,14 +44,6 @@
     </form>
 </div>
 {% endif %}
-
-<div><h2>Armies</h2>
-    <ul>{% for a in Land.Assets.Armies %}
-        <li>
-            <a href="/game/army?cid={{Character.Id}}&lid={{Land.Id}}&aid={{a.Id}}">{{a.Name}}</a>
-        </li>{% endfor %}
-    </ul>
-</div>
 
 <div><h2>Pack a Caravan</h2>
     <p>Create an army around a pile of Resources.</p>

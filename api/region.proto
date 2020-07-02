@@ -69,6 +69,10 @@ service Army {
     // Return a detailed view of the given Army
     rpc Show (ArmyId) returns (ArmyView) {}
 
+    // Destroy the army and return all its content to the local city
+    // Only works when the city is at home.
+    rpc Cancel (ArmyId) returns (None) {}
+
     // Make the Army flea the fight it is involved in.
     rpc Flea (ArmyId) returns (None) {}
 
@@ -76,7 +80,19 @@ service Army {
     rpc Flip (ArmyId) returns (None) {}
 
     // Append the specified command on the list of the Army.
-    rpc Command (ArmyCommandReq) returns (None) {}
+    rpc Move (ArmyMoveReq) returns (None) {}
+
+    // Append the specified command on the list of the Army.
+    rpc Wait (ArmyTarget) returns (None) {}
+
+    // Append the specified command on the list of the Army.
+    rpc Attack (ArmyAssaultReq) returns (None) {}
+
+    // Append the specified command on the list of the Army.
+    rpc Defend (ArmyTarget) returns (None) {}
+
+    // Append the specified command on the list of the Army.
+    rpc Disband (ArmyTarget) returns (None) {}
 }
 
 message NamedItem {
@@ -116,24 +132,58 @@ enum ArmyCommandType {
     // Move to the location. The command expires at the arrival at the position.
     // Useful to let the attitude play and enter attack/defense on local fights
     Move = 3;
-    // Leave the battle as a loser.
-    Flea = 4;
-    // Change the attitude in a battle.
-    Flip = 5;
     // Move to the location and join the attack of the city
     Attack = 6;
     // Move to the location and join the defense of the local city
     Defend = 7;
 }
 
-message ArmyCommand {
-    uint64 target = 1;
-    ArmyCommandType action = 2;
+message ArmyMoveReq {
+    ArmyId id = 1;
+    uint64 target = 2;
+    // What to do at the destination
+    ArmyMoveArgs args = 3;
 }
 
-message ArmyCommandReq {
+message ArmyMoveArgs {
+    // Resources to be given to the local City
+    ResourcesAbs stock = 1;
+    // Artifacts to be dropped
+    repeated uint64 artifacts = 2;
+    // Units to be transferred to the local City
+    repeated uint64 units = 3;
+};
+
+message ArmyAssaultReq {
     ArmyId id = 1;
-    ArmyCommand command = 2;
+    // Unique ID of the map cell (which must have a city settled)
+    uint64 target = 2;
+    // What to do upon victory
+    ArmyAssaultArgs args = 3;
+}
+
+message ArmyAssaultArgs {
+    // Massacre the peasants to force a production drop
+    bool massacre = 1;
+    // Become overlord of the victim, in case of victory
+    bool overlord = 2;
+    // Break a random building, in case of victory
+    bool break = 3;
+}
+
+message ArmyTarget {
+    ArmyId id = 1;
+    uint64 target = 2;
+}
+
+message ArmyCommand {
+    uint64 target = 1;
+
+    ArmyCommandType type = 2;
+    // Optional field that may be set in case of move
+    ArmyMoveArgs move = 3;
+    // Optional field that may be set in case of attack
+    ArmyAssaultArgs attack = 4;
 }
 
 // Identifies a City and Character who is

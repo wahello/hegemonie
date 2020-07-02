@@ -6,10 +6,13 @@
 package region
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"math/rand"
 	"sort"
+	"strings"
 )
 
 func (a *Army) PopCommand() {
@@ -192,8 +195,17 @@ func (a *Army) Flip(w *World) error {
 	return errors.New("Flip NYI")
 }
 
-func (a *Army) DeferAttack(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdCityAttack, Cell: t.ID})
+func (a *Army) Cancel(w *World) error {
+	return errors.New("Cancel NYI")
+}
+
+func (a *Army) DeferAttack(w *World, t *MapVertex, args ActionArgAssault) error {
+	var sb strings.Builder
+	err := json.NewEncoder(&sb).Encode(&args)
+	if err != nil {
+		return fmt.Errorf("Invalid action argument: %v", err.Error())
+	}
+	a.Targets = append(a.Targets, Command{Action: CmdCityAttack, Cell: t.ID, Args: sb.String()})
 	return nil
 }
 
@@ -207,8 +219,13 @@ func (a *Army) DeferDisband(w *World, t *MapVertex) error {
 	return nil
 }
 
-func (a *Army) DeferMove(w *World, t *MapVertex) error {
-	a.Targets = append(a.Targets, Command{Action: CmdMove, Cell: t.ID})
+func (a *Army) DeferMove(w *World, t *MapVertex, args ActionArgMove) error {
+	var sb strings.Builder
+	err := json.NewEncoder(&sb).Encode(&args)
+	if err != nil {
+		return fmt.Errorf("Invalid action argument: %v", err.Error())
+	}
+	a.Targets = append(a.Targets, Command{Action: CmdMove, Cell: t.ID, Args: sb.String()})
 	return nil
 }
 

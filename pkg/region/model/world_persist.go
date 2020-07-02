@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"time"
 )
 
 func (w *World) SetNotifier(n Notifier) {
@@ -176,11 +175,6 @@ func (w *World) PostLoad() error {
 	return nil
 }
 
-func makeSaveFilename() string {
-	now := time.Now().Round(1 * time.Second)
-	return "save-" + now.Format("20060102_030405")
-}
-
 type persistencyMapping []cfgSection
 
 type cfgSection struct {
@@ -243,6 +237,12 @@ func (p persistencyMapping) load() error {
 	return nil
 }
 
+// Save the current state of the World as a set of JSON objects, each for a dataset
+// that participates to represent the World. Only the "LIVE" entities are concerned:
+// - the map in use in the region
+// - the cities spwaned on the map
+// - the fights currently running on the map.
+// Counter-part of LoadLiveFromFiles()
 func (w *World) SaveLiveToFiles(basePath string) error {
 	err := os.MkdirAll(basePath, 0755)
 	if err == nil {
@@ -251,6 +251,13 @@ func (w *World) SaveLiveToFiles(basePath string) error {
 	return err
 }
 
+// Save the current state of the World as a set of JSON objects, each for a dataset
+// that participates to represent the World. Only the "DEFINITIONS" entities are concerned:
+// - the knowledge tree
+// - the building definitions
+// - the troops definitions
+// - the general configuration of the World.
+// Counter-part of LoadDefinitionsFromFiles()
 func (w *World) SaveDefinitionsToFiles(basePath string) error {
 	err := os.MkdirAll(basePath, 0755)
 	if err == nil {
@@ -259,10 +266,25 @@ func (w *World) SaveDefinitionsToFiles(basePath string) error {
 	return err
 }
 
+// Restore a state for the World, from a set of JSON objects, where each file/object
+// participates to represent of dataset of the World. Only the "LIVE" entities
+// are concerned:
+// - the map in use in the region
+// - the cities spwaned on the map
+// - the fights currently running on the map.
+// Counter-part of SaveLiveToFiles()
 func (w *World) LoadLiveFromFiles(basePath string) error {
 	return liveSections(basePath, w).load()
 }
 
+// Restore a state for the World, from a set of JSON objects, where each file/object
+// participates to represent of dataset of the World. Only the "DEFINITIONS" entities
+// are concerned:
+// - the knowledge tree
+// - the building definitions
+// - the troops definitions
+// - the general configuration of the World.
+// Counter-part of SaveDefinitionsToFiles()
 func (w *World) LoadDefinitionsFromFiles(basePath string) error {
 	return defsSections(basePath, w).load()
 }

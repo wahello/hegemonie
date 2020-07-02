@@ -29,18 +29,8 @@ const (
 	CmdWait = "wait"
 
 	// Do nothing. Useful for waypoints
-	// Argument: ActionArgTransfer
+	// Argument: ActionArgMove
 	CmdMove = "move"
-
-	// Flea from the Fight the army is currently involved in
-	// Any action post-victory should be discarded.
-	// Argument: ignored
-	CmdFlea = "flea"
-
-	// Flip the attitude in the fight the army is currently involved in.
-	// Any action post-victory should be discarded.
-	// Argument: ignored
-	CmdFlip = "flip"
 
 	// Start a fight or join a running fight on the side of the attackers
 	// Argument: ActionArgAssault
@@ -418,6 +408,7 @@ type Unit struct {
 	Health uint32 `json:"H,omitempty"`
 }
 
+// A queued order for a specific Army.
 type Command struct {
 	// The unique ID of the Cell to target
 	Cell uint64
@@ -429,11 +420,12 @@ type Command struct {
 	Args string `json:"args"`
 }
 
-type ActionArgTransfer struct {
+// Additional actions to be performed when the Army reaches its destination.
+type ActionArgMove struct {
 	// Resources to be transferred
 	Amount Resources `json:"amount,omitempty"`
 
-	// Artifact to be trasnferred
+	// Artifact to be transferred
 	Artifact uint64 `json:"artifact,omitempty"`
 
 	// Troops to be transferred
