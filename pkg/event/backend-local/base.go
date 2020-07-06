@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_event_backend_local
+package evtbacklocal
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ type Backend struct {
 }
 
 type Item struct {
-	CharID  uint64
+	CharID  string
 	When    uint64
 	ID      string
 	Payload []byte
@@ -39,29 +39,29 @@ func Open(path string) (*Backend, error) {
 	return &Backend{db: db}, nil
 }
 
-func (b *Backend) Push1(charID uint64, id string, payload []byte) error {
+func (b *Backend) Push1(charID string, id string, payload []byte) error {
 	opts := gorocksdb.NewDefaultWriteOptions()
 	opts.SetSync(false)
 	defer opts.Destroy()
 
 	when := math.MaxUint64 - uint64(time.Now().UnixNano())
-	k := fmt.Sprintf("%d/%16X/%s", charID, when, id)
+	k := fmt.Sprintf("%s/%16X/%s", charID, when, id)
 	utils.Logger.Warn().Bytes("key", []byte(k)).Msg("PUSH")
 	return b.db.Put(opts, []byte(k), payload)
 }
 
-func (b *Backend) Ack1(charID, when uint64, id string) error {
+func (b *Backend) Ack1(charID string, when uint64, id string) error {
 	opts := gorocksdb.NewDefaultWriteOptions()
 	opts.SetSync(false)
 	defer opts.Destroy()
 
 	w := math.MaxUint64 - when
-	k := fmt.Sprintf("%d/%16X/%s", charID, w, id)
+	k := fmt.Sprintf("%s/%16X/%s", charID, w, id)
 	utils.Logger.Warn().Bytes("key", []byte(k)).Msg("DEL")
 	return b.db.Delete(opts, []byte(k))
 }
 
-func (b *Backend) List(charID, when uint64, max uint32) ([]Item, error) {
+func (b *Backend) List(charID string, when uint64, max uint32) ([]Item, error) {
 	if max <= 0 {
 		max = 100
 	} else if max > 1000 {
@@ -75,8 +75,8 @@ func (b *Backend) List(charID, when uint64, max uint32) ([]Item, error) {
 		w = math.MaxUint64 - when
 	}
 
-	prefix := []byte(fmt.Sprintf("%d/", charID))
-	needle := []byte(fmt.Sprintf("%d/%016X/", charID, w))
+	prefix := []byte(fmt.Sprintf("%s/", charID))
+	needle := []byte(fmt.Sprintf("%s/%016X/", charID, w))
 
 	opts := gorocksdb.NewDefaultReadOptions()
 	defer opts.Destroy()

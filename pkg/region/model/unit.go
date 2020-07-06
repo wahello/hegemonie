@@ -5,8 +5,8 @@
 
 package region
 
-func (w *World) UnitGet(city, id uint64) *Unit {
-	c := w.CityGet(city)
+func (reg *Region) UnitGet(city uint64, id string) *Unit {
+	c := reg.CityGet(city)
 	if c != nil {
 		return c.Unit(id)
 	}

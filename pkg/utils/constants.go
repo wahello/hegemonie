@@ -5,9 +5,25 @@
 
 package utils
 
+import "fmt"
+
 const (
-	DefaultEndpointWww    = "127.0.0.1:8080"
-	DefaultEndpointRegion = "127.0.0.1:8081"
-	DefaultEndpointAuth   = "127.0.0.1:8082"
-	DefaultEndpointEvent  = "127.0.0.1:8083"
+	// Authentication by ORY
+	DefaultPortKratos = 4434
+	// Autorisation by ORY
+	DefaultPortKeto = 4466
+	// OpenID connect by ORY
+	DefaultPortHydra = 6686
+
+	// Hegemonie Web Front
+	DefaultPortWww = 8080
+	// Hegemonie Region internal API
+	DefaultPortRegion = 8081
+	// Hegemonie Event internal API
+	DefaultPortEvent = 8082
+	// Hegemonie Map internal API
+	DefaultPortMap = 8083
 )
+
+func EndpointLocal(port uint) string { return fmt.Sprintf("localhost:%v", port) }
+func EndpointAny(port uint) string   { return fmt.Sprintf("0.0.0.0:%v", port) }

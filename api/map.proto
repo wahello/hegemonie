@@ -1,0 +1,110 @@
+// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+syntax = "proto3";
+
+option go_package = "proto";
+
+package hege.map;
+
+// 
+service Map {
+  rpc Maps(ListMapsReq) returns (stream MapName) {}
+
+  // Paginated query for the vertices of the graph
+  rpc Vertices(ListVerticesReq) returns (stream Vertex) {}
+
+  // Paginated query for the edges of the graph
+  rpc Edges(ListEdgesReq) returns (stream Edge) {}
+
+  // Paginated query of the location occupied by a City
+  rpc Cities(ListCitiesReq) returns (stream CityLocation) {}
+
+  // Request a path computation on the map
+  rpc GetPath(PathRequest) returns (stream PathElement) {}
+}
+
+message ListMapsReq {
+  string marker = 1;
+}
+
+message MapName {
+  string name = 1;
+}
+
+message ListVerticesReq {
+  // Unique name of the map
+  string mapName = 1;
+
+  // Largest integer that is smaller than the expected value of the first
+  // vertex ID returned. In other words, the subsequent assertion
+  // `reply.items[0] > marker` is true as long as there are items returned.
+  uint64 marker = 2;
+}
+
+message ListEdgesReq {
+  // Unique name of the map
+  string mapName = 1;
+
+  // Largest integer that is smaller than the expected value of the first
+  // vertex ID used as a source in the set returned. In other words, the
+  // subsequent assertion is true
+  // `reply.items[0].Src > markerSrc && reply.items[0].Dst > markerDst`
+  uint64 markerSrc = 2;
+
+  // Largest integer that is smaller than the expected value of the first
+  // vertex ID used as a source in the set returned. In other words, the
+  // subsequent assertion is true
+  // `reply.items[0].Src > markerSrc && reply.items[0].Dst > markerDst`
+  uint64 markerDst = 3;
+}
+
+message ListCitiesReq {
+  // Unique name of the map
+  string mapName = 1;
+
+  // Largest integer that is smaller than the expected value of the first
+  // vertex ID used as a source in the set returned. In other words, the
+  // subsequent assertion is true
+  // `reply.items[0].ID > marker`
+  uint64 marker = 2;
+}
+
+message CityLocation {
+  // ID of the cell that must carry the city
+  uint64 id = 1;
+  // Name of the City after the creation
+  string name = 2;
+}
+
+message Vertex {
+  uint64 id = 1;
+  uint64 x = 2;
+  uint64 y = 3;
+}
+
+message Edge {
+  uint64 src = 1;
+  uint64 dst = 2;
+}
+
+message PathRequest {
+  // Unique name of the map
+  string mapName = 1;
+
+  // Source of the path (Vertex ID)
+  uint64 src = 2;
+
+  // Target of the path (Vertex ID)
+  uint64 dst = 3;
+
+  // How many max hops are expected
+  uint32 max = 4;
+}
+
+message PathElement {
+  // Identifier of the Vertex/City belonging to the path.
+  uint64 id = 1;
+}

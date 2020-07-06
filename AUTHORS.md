@@ -1,5 +1,4 @@
 # Individuals
 
-  * jfsmig <jf.smigielski@gmail.com>
-  * korween <kortechmail@gmail.com>
-
+* [jfsmig](https://github.com/jfsmig)
+* [korween](https://github.com/korween)

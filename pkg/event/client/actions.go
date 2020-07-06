@@ -3,144 +3,96 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_event_client
+package evtclient
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-
 	"github.com/google/uuid"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-
+	"github.com/jfsmig/hegemonie/pkg/discovery"
 	proto "github.com/jfsmig/hegemonie/pkg/event/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"google.golang.org/grpc"
 )
 
-func doPush(cmd *cobra.Command, args []string, cfg *eventConfig) error {
-	if len(args) < 2 {
-		return errors.New("Too few arguments (minimum: 2)")
-	}
+// ClientCLI gathers the event-related client actions available at the command line.
+type ClientCLI struct{}
 
-	charID, err := strconv.ParseUint(args[0], 10, 64)
+type actionFunc func(ctx context.Context, conn *grpc.ClientConn) error
+
+func (cfg *ClientCLI) connect(ctx context.Context, action actionFunc) error {
+	endpoint, err := discovery.DefaultDiscovery.Event()
 	if err != nil {
 		return err
 	}
-
-	ctx := context.Background()
-
-	cnx, err := grpc.Dial(cfg.endpoint, grpc.WithInsecure(), grpc.WithBlock())
+	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return err
 	}
 	defer cnx.Close()
-	client := proto.NewProducerClient(cnx)
+	return action(ctx, cnx)
+}
 
-	anyError := false
-	for _, a := range args[1:] {
-		id := uuid.New().String()
-		req := proto.Push1Req{
-			CharId:  charID,
-			EvtId:   id,
-			Payload: []byte(a),
+// DoPush insert an event whose content and target are described on the command line.
+// A descriptive error is returned in case of failure.
+// FIXME(jfsmig): no retry is performed upon error
+func (cfg *ClientCLI) DoPush(ctx context.Context, charID string, msg ...string) error {
+	return cfg.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
+		var anyError bool
+		client := proto.NewProducerClient(cnx)
+		for _, a := range msg {
+			id := uuid.New().String()
+			_, err := client.Push1(ctx, &proto.Push1Req{CharId: charID, EvtId: id, Payload: []byte(a)})
+			if err != nil {
+				anyError = true
+				utils.Logger.Error().Str("char", charID).Str("msg", a).Str("uuid", id).Err(err).Msg("PUSH")
+			} else {
+				utils.Logger.Info().Str("char", charID).Str("msg", a).Str("uuid", id).Msg("PUSH")
+			}
 		}
-		_, err := client.Push1(ctx, &req)
+		if !anyError {
+			return nil
+		}
+		return errors.New("Errors occured")
+	})
+}
+
+// DoAck consumes a message whose owner, timestamp and ID are described on the command line.
+// FIXME(jfsmig): no retry is performed upon error
+func (cfg *ClientCLI) DoAck(ctx context.Context, charID, evtID string, when uint64) error {
+	return cfg.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
+		client := proto.NewConsumerClient(cnx)
+		_, err := client.Ack1(ctx, &proto.Ack1Req{CharId: charID, When: when, EvtId: evtID})
 		if err != nil {
-			anyError = true
-			utils.Logger.Error().Uint64("char", charID).Str("msg", a).Str("uuid", id).Err(err).Msg("PUSH")
-		} else {
-			utils.Logger.Info().Uint64("char", charID).Str("msg", a).Str("uuid", id).Msg("PUSH")
+			return err
 		}
-	}
-	if !anyError {
+		utils.Logger.Info().
+			Str("char", charID).
+			Uint64("when", when).
+			Str("uuid", evtID).
+			Msg("ACK")
 		return nil
-	}
-	return errors.New("Errors occured")
+	})
 }
 
-func doAck(cmd *cobra.Command, args []string, cfg *eventConfig) error {
-	var charID, when uint64
-	var evtID string
-	var err error
-
-	// Parse the input
-	if len(args) != 3 {
-		return errors.New("3 arguments expected (Character When Uuid)")
-	}
-	charID, err = strconv.ParseUint(args[0], 10, 64)
-	if err != nil {
-		return err
-	}
-	when, err = strconv.ParseUint(args[1], 10, 64)
-	if err != nil {
-		return err
-	}
-	evtID = args[2]
-
-	// Send the request
-	ctx := context.Background()
-	cnx, err := grpc.Dial(cfg.endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	client := proto.NewConsumerClient(cnx)
-	req := proto.Ack1Req{CharId: charID, When: when, EvtId: evtID}
-	_, err = client.Ack1(ctx, &req)
-
-	if err != nil {
-		return err
-	}
-	utils.Logger.Info().Uint64("char", charID).Uint64("when", when).Str("uuid", evtID).Msg("ACK")
-	return nil
-}
-
-func doList(cmd *cobra.Command, args []string, cfg *eventConfig) error {
-	var charId, when uint64
-	var err error
-
-	// Parse the input
-	switch len(args) {
-	case 1:
-		charId, err = strconv.ParseUint(args[0], 10, 64)
+// DoList dumps to os.Stdout the Event objects streamed by the contacted service. The output consists
+// in a JSON stream of objects separated by a CRLF (i.e. one object per line)
+// FIXME(jfsmig): no retry is performed upon error
+func (cfg *ClientCLI) DoList(ctx context.Context, charID string, when uint64, marker string, max uint32) error {
+	return cfg.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
+		client := proto.NewConsumerClient(cnx)
+		rep, err := client.List(ctx, &proto.ListReq{CharId: charID, Marker: when, Max: 100})
 		if err != nil {
 			return err
 		}
-	case 2:
-		charId, err = strconv.ParseUint(args[0], 10, 64)
-		if err != nil {
-			return err
+		anyError := false
+		for _, x := range rep.Items {
+			fmt.Printf("%s %d %s %s\n", x.CharId, x.When, x.EvtId, x.Payload)
 		}
-		when, err = strconv.ParseUint(args[1], 10, 64)
-		if err != nil {
-			return err
+		if anyError {
+			return errors.New("Invalid events matched")
 		}
-	default:
-		return errors.New("1 or 2 arguments expected (CHARACTER [MARKER])")
-	}
-
-	// Send the request
-	ctx := context.Background()
-	cnx, err := grpc.Dial(cfg.endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	client := proto.NewConsumerClient(cnx)
-	req := proto.ListReq{CharId: charId, Marker: when, Max: 100}
-	rep, err := client.List(ctx, &req)
-
-	if err != nil {
-		return err
-	}
-	anyError := false
-	for _, x := range rep.Items {
-		fmt.Printf("%d %d %s %s\n", x.CharId, x.When, x.EvtId, x.Payload)
-	}
-	if anyError {
-		return errors.New("Invalid events matched")
-	}
-	return nil
+		return nil
+	})
 }

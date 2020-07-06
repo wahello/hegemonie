@@ -5,7 +5,9 @@
 
 syntax = "proto3";
 
-package hegemonie.rpevent.proto;
+option go_package = "proto";
+
+package hege.evt;
 
 service Consumer {
   // Acknowledge one message given its ID and the in-game Character
@@ -27,7 +29,7 @@ service Producer {
 }
 
 message ListReq {
-  uint64 charId = 1;
+  string charId = 1;
   // marker regarding the timestamp
   uint64 marker = 2;
   uint32 max = 3;
@@ -38,7 +40,7 @@ message ListRep {
 }
 
 message ListItem {
-  uint64 charId = 1;
+  string charId = 1;
 
   // Exact naming of the Event
   uint64 when = 2;
@@ -48,7 +50,7 @@ message ListItem {
 }
 
 message Ack1Req {
-  uint64 charId = 1;
+  string charId = 1;
 
   // Exact naming of the Event
   uint64 when = 2;
@@ -56,7 +58,7 @@ message Ack1Req {
 }
 
 message Push1Req {
-  uint64 charId = 1;
+  string charId = 1;
 
   // JFS: The timestamp of the message is decided by the service.
   // Unique ID of the message.

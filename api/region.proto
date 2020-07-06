@@ -5,453 +5,416 @@
 
 syntax = "proto3";
 
-package hegemonie.region.proto;
+option go_package = "proto";
 
-service Map {
-    rpc Vertices(PaginatedQuery) returns (ListOfVertices) {}
+package hege.reg;
 
-    rpc Edges(ListEdgesReq) returns (ListOfEdges) {}
+service Admin {
+  //
+  rpc CreateRegion(RegionCreateReq) returns (None) {}
 
-    rpc Cities (PaginatedQuery) returns (ListOfCities) {}
+  // Have all the Cities on the Region to produce their resources
+  rpc Produce(RegionId) returns (None) {}
+
+  // Make all the armies on the Region to move on step
+  rpc Move(RegionId) returns (None) {}
+
+  // Compute the scoreboard of the region.
+  rpc GetScores(RegionId) returns (stream PublicCity) {}
 }
 
 service City {
-    // Returns a list of cities owned by the given character
-    rpc List (ListReq) returns (ListOfCities) {}
+  // Paginated query of the cities owned by the given character.
+  // Only a summary of the cities are returned.
+  rpc List (CitiesByCharReq) returns (stream PublicCity) {}
 
-    // Returns a view of the City
-    // Be careful, the request might fail because of a too large object.
-    rpc Show (CityId) returns (CityView) {}
+  // Paginated query of all the cities of the region.
+  // Only a summary of the cities are returned.
+  rpc AllCities (PaginatedQuery) returns (stream PublicCity) {}
 
-    rpc Study (StudyReq) returns (None) {}
+  // Returns a complete view of the City
+  // TODO(jfs): the request might fail because of a too large object
+  //            to be replied.
+  rpc Show (CityId) returns (CityView) {}
 
-    rpc Build (BuildReq) returns (None) {}
+  // Start the study of a knowledge whose type is specified by its unique ID.
+  // If the conditions are not met, an error is returned.
+  rpc Study (StudyReq) returns (None) {}
 
-    rpc Train (TrainReq) returns (None) {}
+  // Start the construction of a building whose type is specified by its unique ID.
+  // If the conditions are not met, an error is returned.
+  rpc Build (BuildReq) returns (None) {}
 
-    // Create an army around a set of units.
-    // The set of units must not be empty and all the units must stay in the given City.
-    rpc CreateArmy (CreateArmyReq) returns (None) {}
+  // Start the training of a Unit whose type is specified by its unique ID.
+  // If the conditions are not met, an error is returned.
+  rpc Train (TrainReq) returns (None) {}
 
-    rpc CreateTransport (CreateTransportReq) returns (None) {}
+  // Create an army around a set of units.
+  // The set of units must not be empty and all the units must stay in the given City.
+  rpc CreateArmy (CreateArmyReq) returns (None) {}
 
-    // Transfer a Unit from the given City to the given Army.
-    // The City must control the Army and the Unit must be in the City.
-    rpc TransferUnit (TransferUnitReq) returns (None) {}
+  // Create an army around a pile of resources, with a given destination.
+  // The army immediately preempts the stock in the reserve of the City
+  // and starts it movement. That army will have no aggressivity.
+  rpc CreateTransport (CreateTransportReq) returns (None) {}
 
-    // Transfer a pile of Resources from the given City to the given Army.
-    // The City must control the Army and the Stock must hold the amount of Resources.
-    rpc TransferResources (TransferResourcesReq) returns (None) {}
+  // Transfer a Unit from the given City to the given Army.
+  // The City must control the Army and the Unit must be in the City.
+  rpc TransferUnit (TransferUnitReq) returns (None) {}
 
-    // Return the list of armies that can be controlled by the given City
-    rpc ListArmies (CityId) returns (ListOfNamedItems) {}
+  // Transfer a pile of Resources from the given City to the given Army.
+  // The City must control the Army and the Stock must hold the amount of Resources.
+  rpc TransferResources (TransferResourcesReq) returns (None) {}
+
+  // Return the list of armies that can be controlled by the given City
+  rpc ListArmies (CityId) returns (stream ArmyName) {}
 }
 
 service Definitions {
-    rpc ListUnits (PaginatedQuery) returns (ListOfUnitTypes) {}
+  // Return (a page of) a list of all the Units that are possible in the world
+  rpc ListUnits (PaginatedQuery) returns (stream UnitTypeView) {}
 
-    rpc ListBuildings (PaginatedQuery) returns (ListOfBuildingTypes) {}
+  // Return (a page of) a list of all the Buildings that are possible in the world
+  rpc ListBuildings (PaginatedQuery) returns (stream BuildingTypeView) {}
 
-    rpc ListKnowledges (PaginatedQuery) returns (ListOfKnowledgeTypes) {}
-}
-
-service Admin {
-    // Have all the Cities on the Region to produce their resources
-    rpc Produce(None) returns (None) {}
-
-    // Make all the armies on the Region to move on step
-    rpc Move(None) returns (None) {}
-
-    rpc GetScores(None) returns (ListOfCities) {}
+  // Return (a page of) a list of all the Knowledge that are possible in the world
+  rpc ListKnowledges (PaginatedQuery) returns (stream KnowledgeTypeView) {}
 }
 
 service Army {
-    // Return a detailed view of the given Army
-    rpc Show (ArmyId) returns (ArmyView) {}
+  // Return a detailed view of the given Army
+  rpc Show (ArmyId) returns (ArmyView) {}
 
-    // Destroy the army and return all its content to the local city
-    // Only works when the city is at home.
-    rpc Cancel (ArmyId) returns (None) {}
+  // Destroy the army and return all its content to the local city
+  // Only works when the city is at home.
+  rpc Cancel (ArmyId) returns (None) {}
 
-    // Make the Army flea the fight it is involved in.
-    rpc Flea (ArmyId) returns (None) {}
+  // Make the Army flea the fight it is involved in.
+  rpc Flea (ArmyId) returns (None) {}
 
-    // Make the Army flip in the fight it is involved in.
-    rpc Flip (ArmyId) returns (None) {}
+  // Make the Army flip in the fight it is involved in.
+  rpc Flip (ArmyId) returns (None) {}
 
-    // Append the specified command on the list of the Army.
-    rpc Move (ArmyMoveReq) returns (None) {}
+  // Append the specified command on the list of the Army.
+  rpc Move (ArmyMoveReq) returns (None) {}
 
-    // Append the specified command on the list of the Army.
-    rpc Wait (ArmyTarget) returns (None) {}
+  // Append the specified command on the list of the Army.
+  rpc Wait (ArmyTarget) returns (None) {}
 
-    // Append the specified command on the list of the Army.
-    rpc Attack (ArmyAssaultReq) returns (None) {}
+  // Append the specified command on the list of the Army.
+  rpc Attack (ArmyAssaultReq) returns (None) {}
 
-    // Append the specified command on the list of the Army.
-    rpc Defend (ArmyTarget) returns (None) {}
+  // Append the specified command on the list of the Army.
+  rpc Defend (ArmyTarget) returns (None) {}
 
-    // Append the specified command on the list of the Army.
-    rpc Disband (ArmyTarget) returns (None) {}
-}
-
-message NamedItem {
-    uint64 id = 1;
-    string name = 2;
-}
-
-message ListOfNamedItems {
-    repeated NamedItem items = 1;
-}
-
-// Identifies an army managed by the city
-message ArmyId {
-    uint64 character = 1;
-    uint64 city = 2;
-    uint64 army = 3;
-}
-
-message ArmyView {
-    uint64 id = 1;
-    string name = 2;
-    uint64 location = 3;
-    ResourcesAbs stock = 4;
-    repeated UnitView units = 5;
-    repeated ArmyCommand commands = 6;
-}
-
-enum ArmyCommandType {
-    // A value that should not be encountered.
-    Unknown = 0;
-    // Move to the location, disband the army and transfer the units to the
-    // local city, if any
-    Disband = 1;
-    // Move to the location and hold the position. Like 'Move' but the
-    // Useful to let the attitude play and enter attack/defense on local fights
-    Wait = 2;
-    // Move to the location. The command expires at the arrival at the position.
-    // Useful to let the attitude play and enter attack/defense on local fights
-    Move = 3;
-    // Move to the location and join the attack of the city
-    Attack = 6;
-    // Move to the location and join the defense of the local city
-    Defend = 7;
-}
-
-message ArmyMoveReq {
-    ArmyId id = 1;
-    uint64 target = 2;
-    // What to do at the destination
-    ArmyMoveArgs args = 3;
-}
-
-message ArmyMoveArgs {
-    // Resources to be given to the local City
-    ResourcesAbs stock = 1;
-    // Artifacts to be dropped
-    repeated uint64 artifacts = 2;
-    // Units to be transferred to the local City
-    repeated uint64 units = 3;
-};
-
-message ArmyAssaultReq {
-    ArmyId id = 1;
-    // Unique ID of the map cell (which must have a city settled)
-    uint64 target = 2;
-    // What to do upon victory
-    ArmyAssaultArgs args = 3;
-}
-
-message ArmyAssaultArgs {
-    // Massacre the peasants to force a production drop
-    bool massacre = 1;
-    // Become overlord of the victim, in case of victory
-    bool overlord = 2;
-    // Break a random building, in case of victory
-    bool break = 3;
-}
-
-message ArmyTarget {
-    ArmyId id = 1;
-    uint64 target = 2;
-}
-
-message ArmyCommand {
-    uint64 target = 1;
-
-    ArmyCommandType type = 2;
-    // Optional field that may be set in case of move
-    ArmyMoveArgs move = 3;
-    // Optional field that may be set in case of attack
-    ArmyAssaultArgs attack = 4;
-}
-
-// Identifies a City and Character who is
-message CityId {
-    uint64 character = 1;
-    uint64 city = 2;
-}
-
-message ResourcesAbs {
-    uint64 r0 = 1;
-    uint64 r1 = 2;
-    uint64 r2 = 3;
-    uint64 r3 = 4;
-    uint64 r4 = 5;
-    uint64 r5 = 6;
-}
-
-message ResourcesPlus {
-    int64 r0 = 1;
-    int64 r1 = 2;
-    int64 r2 = 3;
-    int64 r3 = 4;
-    int64 r4 = 5;
-    int64 r5 = 6;
-}
-
-message ResourcesMult {
-    double r0 = 1;
-    double r1 = 2;
-    double r2 = 3;
-    double r3 = 4;
-    double r4 = 5;
-    double r5 = 6;
-}
-
-message ResourcesMod {
-    ResourcesPlus plus = 1;
-    ResourcesMult mult = 2;
-}
-
-message UnitTypeView {
-    uint64 id = 1;
-    string name = 2;
-    uint32 ticks = 3;
-    uint32 health = 4;
-}
-
-message BuildingTypeView {
-    uint64 id = 1;
-    string name = 2;
-    uint32 ticks = 3;
-}
-
-message KnowledgeTypeView {
-    uint64 id = 1;
-    string name = 2;
-    uint32 ticks = 3;
-}
-
-message UnitView {
-    UnitTypeView type = 1;
-    uint64 id = 2;
-    uint64 idType = 3;
-    uint32 ticks = 4;
-    uint32 health = 5;
-    string name = 6;
-}
-
-message BuildingView {
-    BuildingTypeView type = 1;
-    uint64 id = 2;
-    uint64 idType = 3;
-    uint32 ticks = 4;
-    string name = 5;
-}
-
-message KnowledgeView {
-    KnowledgeTypeView type = 1;
-    uint64 id = 2;
-    uint64 idType = 3;
-    uint32 ticks = 4;
-    string name = 5;
-}
-
-message StockView {
-    ResourcesAbs base = 1;
-    ResourcesMod knowledge = 2;
-    ResourcesMod buildings = 3;
-    ResourcesMod troops = 4;
-    ResourcesAbs actual = 5;
-
-    ResourcesAbs usage = 6;
-}
-
-message ProductionView {
-    ResourcesAbs base = 1;
-    ResourcesMod knowledge = 2;
-    ResourcesMod buildings = 3;
-    ResourcesMod troops = 4;
-    ResourcesAbs actual = 5;
-}
-
-message CityEvolution {
-    repeated KnowledgeTypeView kFrontier = 1;
-    repeated BuildingTypeView bFrontier = 2;
-    repeated UnitTypeView uFrontier = 3;
-}
-
-message CityAssets {
-    repeated UnitView units = 1;
-    repeated BuildingView buildings = 2;
-    repeated KnowledgeView knowledges = 3;
-    repeated ArmyView armies = 4;
-}
-
-message CityPolitics {
-    uint64 overlord = 1;
-    repeated uint64 lieges = 2;
-}
-
-message CityView {
-    uint64 id = 1;
-    string name = 2;
-    uint64 owner = 3;
-    uint64 deputy = 4;
-    uint64 location = 5;
-
-    int32 chaotic = 6;
-    int32 alignment = 7;
-    uint32 cult = 8;
-    uint32 ethnicGroup = 9;
-    uint32 politicalGroup = 10;
-
-    int64 popularity = 11;
-
-    uint32 tickMassacres = 12;
-    bool auto = 13;
-
-    CityPolitics politics = 15;
-
-    // The resources owned by the City
-    StockView stock = 16;
-    ProductionView production = 17;
-
-    // All the things owned by the current city
-    CityAssets assets = 18;
-
-    // All the things that the current may start to own
-    CityEvolution evol = 19;
-}
-
-message StudyReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    uint64 knowledgeType = 3;
-}
-
-message TrainReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    uint64 unitType = 3;
-}
-
-message BuildReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    uint64 buildingType = 3;
-}
-
-message CreateTransportReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    string name = 3;
-    ResourcesAbs stock = 4;
-}
-
-message CreateArmyReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    string name = 3;
-    repeated uint64 unit = 4;
-}
-
-message TransferUnitReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    uint64 army = 3;
-    repeated uint64 unit = 4;
-}
-
-message TransferResourcesReq {
-    uint64 character = 1;
-    uint64 city = 2;
-    uint64 army = 3;
-    ResourcesAbs stock = 4;
-}
-
-message ListReq {
-    uint64 character = 1;
-}
-
-message ListSetReq {
-    repeated uint64 characters = 1;
+  // Append the specified command on the list of the Army.
+  rpc Disband (ArmyTarget) returns (None) {}
 }
 
 message None {}
 
-message PaginatedQuery {
-    uint64 marker = 1;
-    uint32 max = 2;
+message RegionId {
+  string region = 1;
 }
 
-message ListOfUnitTypes {
-    repeated UnitTypeView items = 1;
+message RegionCreateReq {
+  string name = 1;
+  string mapName = 2;
 }
 
-message ListOfBuildingTypes {
-    repeated BuildingTypeView items = 1;
+message ArmyName {
+  string id = 1;
+  string name = 2;
 }
 
-message ListOfKnowledgeTypes {
-    repeated KnowledgeTypeView items = 1;
+// Identifies an army managed by the city
+message ArmyId {
+  string region = 1;
+  string character = 2;
+  uint64 city = 3;
+  string army = 4;
 }
 
-message ListEdgesReq {
-    uint64 markerSrc = 1;
-    uint64 markerDst = 2;
-    uint32 max = 3;
+message ArmyView {
+  string id = 1;
+  string name = 2;
+  uint64 location = 3;
+  ResourcesAbs stock = 4;
+  repeated UnitView units = 5;
+  repeated ArmyCommand commands = 6;
 }
 
-message ListOfVertices {
-    repeated Vertex items = 1;
+enum ArmyCommandType {
+  // A value that should not be encountered.
+  Unknown = 0;
+  // Move to the location, disband the army and transfer the units to the
+  // local city, if any
+  Disband = 1;
+  // Move to the location and hold the position. Like 'Move' but the
+  // Useful to let the attitude play and enter attack/defense on local fights
+  Wait = 2;
+  // Move to the location. The command expires at the arrival at the position.
+  // Useful to let the attitude play and enter attack/defense on local fights
+  Move = 3;
+  // Move to the location and join the attack of the city
+  Attack = 4;
+  // Move to the location and join the defense of the local city
+  Defend = 5;
 }
 
-message ListOfEdges {
-    repeated Edge items = 1;
+message ArmyMoveReq {
+  ArmyId id = 1;
+  uint64 target = 2;
+  // What to do at the destination
+  ArmyMoveArgs args = 3;
 }
 
-message ListOfCities {
-    repeated PublicCity items = 1;
+message ArmyMoveArgs {
+  // Resources to be given to the local City
+  ResourcesAbs stock = 1;
+  // Artifacts to be dropped
+  repeated uint64 artifacts = 2;
+  // Units to be transferred to the local City
+  repeated uint64 units = 3;
+};
+
+message ArmyAssaultReq {
+  ArmyId id = 1;
+  // Unique ID of the map cell (which must have a city settled)
+  uint64 target = 2;
+  // What to do upon victory
+  ArmyAssaultArgs args = 3;
+}
+
+message ArmyAssaultArgs {
+  // Massacre the peasants to force a production drop
+  bool massacre = 1;
+  // Become overlord of the victim, in case of victory
+  bool overlord = 2;
+  // Break a random building, in case of victory
+  bool break = 3;
+}
+
+message ArmyTarget {
+  ArmyId id = 1;
+  uint64 target = 2;
+}
+
+message ArmyCommand {
+  uint64 target = 1;
+
+  ArmyCommandType type = 2;
+  // Optional field that may be set in case of move
+  ArmyMoveArgs move = 3;
+  // Optional field that may be set in case of attack
+  ArmyAssaultArgs attack = 4;
+}
+
+// Identifies a City and Character who is
+message CityId {
+  string region = 1;
+  string character = 2;
+  uint64 city = 3;
+}
+
+message ResourcesAbs {
+  uint64 r0 = 1;
+  uint64 r1 = 2;
+  uint64 r2 = 3;
+  uint64 r3 = 4;
+  uint64 r4 = 5;
+  uint64 r5 = 6;
+}
+
+message ResourcesPlus {
+  int64 r0 = 1;
+  int64 r1 = 2;
+  int64 r2 = 3;
+  int64 r3 = 4;
+  int64 r4 = 5;
+  int64 r5 = 6;
+}
+
+message ResourcesMult {
+  double r0 = 1;
+  double r1 = 2;
+  double r2 = 3;
+  double r3 = 4;
+  double r4 = 5;
+  double r5 = 6;
+}
+
+message ResourcesMod {
+  ResourcesPlus plus = 1;
+  ResourcesMult mult = 2;
+}
+
+message UnitTypeView {
+  uint64 id = 1;
+  string name = 2;
+  uint32 ticks = 3;
+  uint32 health = 4;
+}
+
+message BuildingTypeView {
+  uint64 id = 1;
+  string name = 2;
+  uint32 ticks = 3;
+}
+
+message KnowledgeTypeView {
+  uint64 id = 1;
+  string name = 2;
+  uint32 ticks = 3;
+}
+
+message UnitView {
+  // Lazily populated
+  UnitTypeView type = 1;
+  string id = 2;
+  uint64 idType = 3;
+  uint32 ticks = 4;
+  uint32 health = 5;
+  string name = 6;
+}
+
+message BuildingView {
+  BuildingTypeView type = 1;
+  string id = 2;
+  uint64 idType = 3;
+  uint32 ticks = 4;
+  string name = 5;
+}
+
+message KnowledgeView {
+  KnowledgeTypeView type = 1;
+  string id = 2;
+  uint64 idType = 3;
+  uint32 ticks = 4;
+  string name = 5;
+}
+
+message StockView {
+  ResourcesAbs base = 1;
+  ResourcesMod knowledge = 2;
+  ResourcesMod buildings = 3;
+  ResourcesMod troops = 4;
+  ResourcesAbs actual = 5;
+
+  ResourcesAbs usage = 6;
+}
+
+message ProductionView {
+  ResourcesAbs base = 1;
+  ResourcesMod knowledge = 2;
+  ResourcesMod buildings = 3;
+  ResourcesMod troops = 4;
+  ResourcesAbs actual = 5;
+}
+
+message CityEvolution {
+  repeated KnowledgeTypeView kFrontier = 1;
+  repeated BuildingTypeView bFrontier = 2;
+  repeated UnitTypeView uFrontier = 3;
+}
+
+message CityAssets {
+  repeated UnitView units = 1;
+  repeated BuildingView buildings = 2;
+  repeated KnowledgeView knowledges = 3;
+  repeated ArmyView armies = 4;
+}
+
+message CityPolitics {
+  uint64 overlord = 1;
+  repeated uint64 lieges = 2;
 }
 
 message PublicCity {
-    uint64 id = 1;
-    string name = 2;
-    uint64 location = 3;
-    int32 alignment = 4;
-    int32 chaos = 5;
-    uint32 politics = 6;
-    uint32 cult = 7;
-    uint32 ethny = 8;
-    int64 score = 9;
+  uint64 id = 1;
+  string name = 2;
+  int32 alignment = 4;
+  int32 chaos = 5;
+  uint32 politics = 6;
+  uint32 cult = 7;
+  uint32 ethny = 8;
+  int64 score = 9;
 }
 
-message Vertex {
-    uint64 id = 1;
-    uint64 x = 2;
-    uint64 y = 3;
-    uint64 cityId = 4;
+message CityView {
+  PublicCity public = 1;
+  string owner = 3;
+  string deputy = 4;
+
+  uint32 tickMassacres = 12;
+  bool auto = 13;
+
+  CityPolitics politics = 15;
+
+  // The resources owned by the City
+  StockView stock = 16;
+  ProductionView production = 17;
+
+  // All the things owned by the current city
+  CityAssets assets = 18;
+
+  // All the things that the current may start to own
+  CityEvolution evol = 19;
 }
 
-message Edge {
-    uint64 src = 1;
-    uint64 dst = 2;
+message StudyReq {
+  CityId city = 1;
+  uint64 knowledgeType = 2;
+}
+
+message TrainReq {
+  CityId city = 1;
+  uint64 unitType = 2;
+}
+
+message BuildReq {
+  CityId city = 1;
+  uint64 buildingType = 2;
+}
+
+message CreateTransportReq {
+  CityId city = 1;
+  string name = 2;
+  uint64 target = 3;
+  ResourcesAbs stock = 4;
+}
+
+message CreateArmyReq {
+  CityId city = 1;
+  string name = 2;
+  repeated string unit = 3;
+}
+
+message TransferUnitReq {
+  CityId city = 1;
+  string army = 3;
+  repeated string unit = 4;
+}
+
+message TransferResourcesReq {
+  CityId city = 1;
+  string army = 3;
+  ResourcesAbs stock = 4;
+}
+
+message CitiesByCharReq {
+  string region = 1;
+  string character = 2;
+  uint64 marker = 3;
+}
+
+message PaginatedQuery {
+  string region = 1;
+  uint64 marker = 2;
 }
 
 message Artifact {
-    uint64 id = 1;
-    uint64 idType = 2;
-    string name = 3;
+  string id = 1;
+  string idType = 2;
+  string name = 3;
 }

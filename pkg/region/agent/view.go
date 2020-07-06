@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_agent
+package regagent
 
 import (
 	"github.com/jfsmig/hegemonie/pkg/region/model"
@@ -142,17 +142,19 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 
 func ShowCity(w *region.World, c *region.City) *proto.CityView {
 	cv := &proto.CityView{
-		Id:       c.ID,
-		Name:     c.Name,
-		Owner:    c.Owner,
-		Deputy:   c.Deputy,
-		Location: c.Cell,
+		Public: &proto.PublicCity{
+			Id:   c.ID,
+			Name: c.Name,
 
-		Cult:           c.Cult,
-		Chaotic:        c.Chaotic,
-		Alignment:      c.Alignment,
-		EthnicGroup:    c.EthnicGroup,
-		PoliticalGroup: c.PoliticalGroup,
+			Cult:      c.Cult,
+			Chaos:     c.Chaotic,
+			Alignment: c.Alignment,
+			Ethny:     c.EthnicGroup,
+			Politics:  c.PoliticalGroup,
+		},
+
+		Owner:  c.Owner,
+		Deputy: c.Deputy,
 
 		TickMassacres: c.TicksMassacres,
 		Auto:          c.Auto,
@@ -228,7 +230,6 @@ func ShowCityPublic(w *region.World, c *region.City, scored bool) *proto.PublicC
 		Id:        c.ID,
 		Name:      c.Name,
 		Score:     score,
-		Location:  c.Cell,
 		Alignment: c.Alignment,
 		Chaos:     c.Chaotic,
 		Cult:      c.Cult,

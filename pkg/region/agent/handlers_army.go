@@ -3,32 +3,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_agent
+package regagent
 
 import (
 	"context"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
+	"github.com/jfsmig/hegemonie/pkg/region/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
 type srvArmy struct {
-	cfg *regionConfig
+	cfg *Config
 	w   *region.World
 }
 
-func (s *srvArmy) getAndCheckArmy(req *proto.ArmyId) (*region.City, *region.Army, error) {
-	city, err := s.w.CityGetAndCheck(req.Character, req.City)
+func (s *srvArmy) getAndCheckArmy(req *proto.ArmyId) (*region.Region, *region.City, *region.Army, error) {
+	r := s.w.Regions.Get(req.Region)
+	if r == nil {
+		return nil, nil, nil, status.Error(codes.NotFound, "no such region")
+	}
+	city, err := r.CityGetAndCheck(req.Character, req.City)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, status.Error(codes.NotFound, "no such city")
 	}
 	army := city.Armies.Get(req.Army)
 	if army == nil {
-		return nil, nil, status.Errorf(codes.NotFound, "Army Not found (id=%d)", req.Army)
+		return nil, nil, nil, status.Error(codes.NotFound, "no such army")
 	}
-	return city, army, err
+	return r, city, army, err
 }
 
 func (s *srvArmy) wlock(action func() error) error {
@@ -43,25 +46,27 @@ func (s *srvArmy) rlock(action func() error) error {
 	return action()
 }
 
-func (s *srvArmy) getAndDo(id *proto.ArmyId, action func(*region.City, *region.Army) error) error {
-	city, army, err := s.getAndCheckArmy(id)
+type actionFunc func(*region.Region, *region.City, *region.Army) error
+
+func (s *srvArmy) getAndDo(id *proto.ArmyId, action actionFunc) error {
+	r, city, army, err := s.getAndCheckArmy(id)
 	if err == nil {
-		err = action(city, army)
+		err = action(r, city, army)
 	}
 	return err
 }
 
-func (s *srvArmy) wlockDo(id *proto.ArmyId, action func(*region.City, *region.Army) error) error {
+func (s *srvArmy) wlockDo(id *proto.ArmyId, action actionFunc) error {
 	return s.wlock(func() error { return s.getAndDo(id, action) })
 }
 
-func (s *srvArmy) rlockDo(id *proto.ArmyId, action func(*region.City, *region.Army) error) error {
+func (s *srvArmy) rlockDo(id *proto.ArmyId, action actionFunc) error {
 	return s.rlock(func() error { return s.getAndDo(id, action) })
 }
 
 func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView, error) {
 	var rc *proto.ArmyView
-	err := s.rlockDo(req, func(_ *region.City, army *region.Army) error {
+	err := s.rlockDo(req, func(_ *region.Region, _ *region.City, army *region.Army) error {
 		rc = ShowArmy(s.w, army)
 		return nil
 	})
@@ -69,69 +74,55 @@ func (s *srvArmy) Show(ctx context.Context, req *proto.ArmyId) (*proto.ArmyView,
 }
 
 func (s *srvArmy) Flea(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req, func(_ *region.City, a *region.Army) error {
-		return a.Flea(s.w)
+	return &proto.None{}, s.wlockDo(req, func(r *region.Region, _ *region.City, a *region.Army) error {
+		return a.Flea(r)
 	})
 }
 
 func (s *srvArmy) Flip(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req, func(_ *region.City, a *region.Army) error {
-		return a.Flip(s.w)
+	return &proto.None{}, s.wlockDo(req, func(r *region.Region, _ *region.City, a *region.Army) error {
+		return a.Flip(r)
 	})
 }
 
 func (s *srvArmy) Move(ctx context.Context, req *proto.ArmyMoveReq) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req.Id, func(_ *region.City, army *region.Army) error {
-		target := s.w.Places.CellGet(req.Target)
-		if target == nil {
-			return status.Errorf(codes.NotFound, "Target Not found")
-		}
-		return army.DeferMove(s.w, target, region.ActionArgMove{})
-	})
+	return &proto.None{}, s.wlockDo(req.Id,
+		func(r *region.Region, _ *region.City, army *region.Army) error {
+			return army.DeferMove(r, req.Target, region.ActionArgMove{})
+		})
 }
 
 func (s *srvArmy) Attack(ctx context.Context, req *proto.ArmyAssaultReq) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req.Id, func(_ *region.City, army *region.Army) error {
-		target := s.w.Places.CellGet(req.Target)
-		if target == nil {
-			return status.Errorf(codes.NotFound, "Target Not found")
-		}
-		return army.DeferAttack(s.w, target, region.ActionArgAssault{})
-	})
+	return &proto.None{}, s.wlockDo(req.Id,
+		func(r *region.Region, _ *region.City, army *region.Army) error {
+			return army.DeferAttack(r, req.Target, region.ActionArgAssault{})
+		})
 }
 
 func (s *srvArmy) Wait(ctx context.Context, req *proto.ArmyTarget) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req.Id, func(_ *region.City, army *region.Army) error {
-		target := s.w.Places.CellGet(req.Target)
-		if target == nil {
-			return status.Errorf(codes.NotFound, "Target Not found")
-		}
-		return army.DeferWait(s.w, target)
-	})
+	return &proto.None{}, s.wlockDo(req.Id,
+		func(r *region.Region, _ *region.City, army *region.Army) error {
+			return army.DeferWait(r, req.Target)
+		})
 }
 
 func (s *srvArmy) Defend(ctx context.Context, req *proto.ArmyTarget) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req.Id, func(_ *region.City, army *region.Army) error {
-		target := s.w.Places.CellGet(req.Target)
-		if target == nil {
-			return status.Errorf(codes.NotFound, "Target Not found")
-		}
-		return army.DeferDefend(s.w, target)
-	})
+	return &proto.None{}, s.wlockDo(req.Id,
+		func(r *region.Region, _ *region.City, army *region.Army) error {
+			return army.DeferDefend(r, req.Target)
+		})
 }
 
 func (s *srvArmy) Disband(ctx context.Context, req *proto.ArmyTarget) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req.Id, func(_ *region.City, army *region.Army) error {
-		target := s.w.Places.CellGet(req.Target)
-		if target == nil {
-			return status.Errorf(codes.NotFound, "Target Not found")
-		}
-		return army.DeferDisband(s.w, target)
-	})
+	return &proto.None{}, s.wlockDo(req.Id,
+		func(r *region.Region, _ *region.City, army *region.Army) error {
+			return army.DeferDisband(r, req.Target)
+		})
 }
 
 func (s *srvArmy) Cancel(ctx context.Context, req *proto.ArmyId) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(req, func(_ *region.City, army *region.Army) error {
-		return army.Cancel(s.w)
-	})
+	return &proto.None{}, s.wlockDo(req,
+		func(r *region.Region, _ *region.City, army *region.Army) error {
+			return army.Cancel(r)
+		})
 }

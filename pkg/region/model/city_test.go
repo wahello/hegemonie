@@ -4,3 +4,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package region
+
+import "testing"
+
+func TestCity_CreateArmyDefence(t *testing.T) {
+	w := World{}
+	w.Init()
+}

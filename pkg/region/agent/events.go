@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_agent
+package regagent
 
 import (
 	"bytes"
@@ -21,12 +21,12 @@ type EventStore struct {
 
 type EventArmy struct {
 	store  *EventStore
-	charID uint64
+	charID string
 
 	SourceCityID uint64 `json:"SourceCityId"`
 	SourceCity   string `json:"SourceCity"`
 
-	ArmyID   uint64 `json:"ArmyId"`
+	ArmyID   string `json:"ArmyId"`
 	ArmyName string `json:"Army"`
 
 	ArmyCityID   uint64 `json:"ArmyCityId"`

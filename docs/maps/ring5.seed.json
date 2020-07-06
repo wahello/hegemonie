@@ -1,0 +1,17 @@
+{
+  "id": "ring5",
+  "sites": [
+    {"id": "s0", "city": true},
+    {"id": "s1", "city": true},
+    {"id": "s2", "city": true},
+    {"id": "s3", "city": true},
+    {"id": "s4", "city": true}
+  ],
+  "roads": [
+    {"src":  "s0", "dst": "s1"},
+    {"src":  "s1", "dst": "s2"},
+    {"src":  "s2", "dst": "s3"},
+		{"src":  "s3", "dst": "s4"},
+		{"src":  "s4", "dst": "s0"}
+  ]
+}

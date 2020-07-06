@@ -3,50 +3,80 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_agent
+package regagent
 
 import (
 	"context"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"io"
 )
 
 type srvAdmin struct {
-	cfg *regionConfig
+	cfg *Config
 	w   *region.World
 }
 
-func (srv *srvAdmin) rlockDo(action func() error) error {
-	srv.w.RLock()
-	defer srv.w.RUnlock()
+var none = &proto.None{}
+
+func (sa *srvAdmin) rlockDo(action func() error) error {
+	sa.w.RLock()
+	defer sa.w.RUnlock()
 	return action()
 }
 
-func (srv *srvAdmin) wlockDo(action func() error) error {
-	srv.w.WLock()
-	defer srv.w.WUnlock()
+func (sa *srvAdmin) wlockDo(action func() error) error {
+	sa.w.WLock()
+	defer sa.w.WUnlock()
 	return action()
 }
 
-func (s *srvAdmin) Produce(ctx context.Context, req *proto.None) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(func() error { s.w.Produce(); return nil })
+func (sa *srvAdmin) Produce(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
+	return none, sa.rlockDo(func() error {
+		r := sa.w.Regions.Get(req.Region)
+		if r == nil {
+			return status.Error(codes.NotFound, "No such region")
+		}
+		r.Produce()
+		return nil
+	})
 }
 
-func (s *srvAdmin) Move(ctx context.Context, req *proto.None) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(func() error { s.w.Move(); return nil })
+func (sa *srvAdmin) Move(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
+	return none, sa.rlockDo(func() error {
+		r := sa.w.Regions.Get(req.Region)
+		if r == nil {
+			return status.Error(codes.NotFound, "No such region")
+		}
+		r.Move()
+		return nil
+	})
 }
 
-func (s *srvAdmin) Save(ctx context.Context, req *proto.None) (*proto.None, error) {
-	return &proto.None{}, s.wlockDo(func() error { return s.w.SaveLiveToFiles(s.cfg.pathSave) })
+func (sa *srvAdmin) CreateRegion(ctx context.Context, req *proto.RegionCreateReq) (*proto.None, error) {
+	return none, sa.wlockDo(func() error {
+		_, err := sa.w.CreateRegion(req.Name, req.MapName)
+		return err
+	})
 }
 
-func (s *srvAdmin) GetScores(ctx context.Context, req *proto.None) (*proto.ListOfCities, error) {
-	sb := &proto.ListOfCities{}
-	err := s.rlockDo(func() error {
-		for _, c := range s.w.Live.Cities {
-			sb.Items = append(sb.Items, ShowCityPublic(s.w, c, true))
+func (sa *srvAdmin) GetScores(req *proto.RegionId, stream proto.Admin_GetScoresServer) error {
+	return sa.rlockDo(func() error {
+		r := sa.w.Regions.Get(req.Region)
+		if r == nil {
+			return status.Error(codes.NotFound, "No such region")
+		}
+		for _, c := range r.Cities {
+			err := stream.Send(ShowCityPublic(sa.w, c, true))
+			if err == io.EOF {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
-	return sb, err
 }

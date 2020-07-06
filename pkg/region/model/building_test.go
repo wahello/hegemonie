@@ -40,9 +40,9 @@ func testFrontier(t *testing.T, f []*BuildingType, nb int) {
 
 func TestBuildingFrontier(t *testing.T) {
 	k := SetOfKnowledges{}
-	k.Add(&Knowledge{ID: 1, Type: 1})
-	k.Add(&Knowledge{ID: 2, Type: 2})
-	k.Add(&Knowledge{ID: 3, Type: 3})
+	k.Add(&Knowledge{ID: "1", Type: 1})
+	k.Add(&Knowledge{ID: "2", Type: 2})
+	k.Add(&Knowledge{ID: "3", Type: 3})
 
 	bt := SetOfBuildingTypes{}
 	bt.Add(&BuildingType{ID: 1})
@@ -50,7 +50,7 @@ func TestBuildingFrontier(t *testing.T) {
 	bt.Add(&BuildingType{ID: 3, Requires: []uint64{3}, MultipleAllowed: false})
 
 	b := SetOfBuildings{}
-	b.Add(&Building{ID: 1, Type: 1})
+	b.Add(&Building{ID: "1", Type: 1})
 
 	var f []*BuildingType
 
@@ -63,10 +63,10 @@ func TestBuildingFrontier(t *testing.T) {
 	testFrontier(t, f, 2)
 
 	// Pop & Req matched
-	f = bt.Frontier(1, []*Building{}, []*Knowledge{{ID: 3, Type: 3}})
+	f = bt.Frontier(1, []*Building{}, []*Knowledge{{ID: "3", Type: 3}})
 	testFrontier(t, f, 3)
 
 	// Pop & Req matched + Unicity
-	f = bt.Frontier(1, []*Building{{ID: 1, Type: 3}}, []*Knowledge{{ID: 3, Type: 3}})
+	f = bt.Frontier(1, []*Building{{ID: "1", Type: 3}}, []*Knowledge{{ID: "3", Type: 3}})
 	testFrontier(t, f, 2)
 }

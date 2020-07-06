@@ -3,10 +3,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package hegemonie_region_client
+package regclient
 
 import (
-	"errors"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -19,15 +18,13 @@ func Command() *cobra.Command {
 	cfg := authConfig{}
 
 	cmd := &cobra.Command{
-		Use:     "client",
-		Aliases: []string{"cli"},
-		Short:   "API service client",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("Missing subcommand")
-		},
+		Use:   "region",
+		Short: "API service client",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  utils.NonLeaf,
 	}
 
 	cmd.Flags().StringVar(&cfg.endpoint,
-		"endpoint", utils.DefaultEndpointRegion, "IP:PORT endpoint for the TCP/IP server")
+		"endpoint", utils.EndpointLocal(utils.DefaultPortRegion), "IP:PORT endpoint for the TCP/IP server")
 	return cmd
 }

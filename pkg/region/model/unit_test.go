@@ -66,19 +66,19 @@ func TestSetOfUnitType(t *testing.T) {
 }
 
 func TestSetOfUnit(t *testing.T) {
-	u2 := &Unit{ID: 2, Type: 1}
+	u2 := &Unit{ID: "2", Type: 1}
 	s := SetOfUnits{}
-	s.Add(&Unit{ID: 1, Type: 1})
-	s.Add(&Unit{ID: 3, Type: 1})
+	s.Add(&Unit{ID: "1", Type: 1})
+	s.Add(&Unit{ID: "3", Type: 1})
 	s.Add(u2)
-	s.Add(&Unit{ID: 4, Type: 1})
+	s.Add(&Unit{ID: "4", Type: 1})
 	if len(s) != 4 {
 		t.Fatal()
 	}
 	if !sort.IsSorted(s) {
 		t.Fatal()
 	}
-	if u2 != s.Get(2) {
+	if u2 != s.Get("2") {
 		t.Fatal()
 	}
 }
@@ -91,9 +91,9 @@ func TestUnitFrontier(t *testing.T) {
 	ut.Add(&UnitType{ID: 4, RequiredBuilding: 3})
 
 	b := SetOfBuildings{}
-	b.Add(&Building{ID: 1, Type: 1})
-	b.Add(&Building{ID: 2, Type: 2})
-	b.Add(&Building{ID: 3, Type: 3})
+	b.Add(&Building{ID: "1", Type: 1})
+	b.Add(&Building{ID: "2", Type: 2})
+	b.Add(&Building{ID: "3", Type: 3})
 
 	var f []*UnitType
 
@@ -102,17 +102,17 @@ func TestUnitFrontier(t *testing.T) {
 	if len(f) != 1 {
 		t.Fatal()
 	}
-	f = ut.Frontier(SetOfBuildings{&Building{ID: 1, Type: 1}})
+	f = ut.Frontier(SetOfBuildings{&Building{ID: "1", Type: 1}})
 	if len(f) != 1 {
 		t.Fatal()
 	}
 
 	// Units with requirements
-	f = ut.Frontier(SetOfBuildings{&Building{ID: 1, Type: 1}, &Building{ID: 3, Type: 3}})
+	f = ut.Frontier(SetOfBuildings{&Building{ID: "1", Type: 1}, &Building{ID: "3", Type: 3}})
 	if len(f) != 2 {
 		t.Fatal()
 	}
-	f = ut.Frontier(SetOfBuildings{&Building{ID: 1, Type: 1}, &Building{ID: 3, Type: 3}, &Building{ID: 2, Type: 2}})
+	f = ut.Frontier(SetOfBuildings{&Building{ID: "1", Type: 1}, &Building{ID: "3", Type: 3}, &Building{ID: "2", Type: 2}})
 	if len(f) != 4 {
 		t.Fatal()
 	}

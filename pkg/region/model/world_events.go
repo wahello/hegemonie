@@ -87,7 +87,7 @@ type logEvtUnits struct {
 
 func logger(to *City) *zerolog.Event {
 	return utils.Logger.Info().
-		Uint64("logChar", to.Owner).
+		Str("logChar", to.Owner).
 		Uint64("logCity", to.ID)
 }
 
@@ -105,7 +105,7 @@ func (n *eventLogger) Units(to *City) EventUnits {
 
 func (evt *logEvtArmy) Item(a *Army) EventArmy {
 	evt.sub.Item(a)
-	evt.log.Uint64("army", a.ID)
+	evt.log.Str("army", a.ID)
 	return evt
 }
 
