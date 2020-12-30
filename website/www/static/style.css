@@ -3,8 +3,8 @@ body { background-color: #FFFFFF; margin: 10px; padding: 0px; }
 * { font-family: Helvetica, Tahoma, sans-serif; color: black; }
 
 header { margin-top: 10px 0px 10px 0px; }
-header h1 { font-size: 48px; color: deeppink; }
-header h2 { font-size: 24px; color: darkorange; }
+header h1 { font-size: 96px; color: deeppink; }
+header h2 { font-size: 48px; color: darkorange; }
 header h1, header h2 {
 	padding-top: 0px;
 	padding-bottom: 0px;
@@ -14,10 +14,12 @@ header h1, header h2 {
 
 main article { background-color: rgba(255, 255, 255, 0.7); }
 main article h1 { display: none; }
-main article h2 { font-size: 24px; color: black; margin: 30px 0px 5px 0px; }
-main article h3 { font-size: 20px; color: darkslategray; margin: 25px 0px 5px 0px; }
-main article h4 { font-size: 16px; color: darkslategray; margin: 20px 0px 5px 0px; }
-main article p  { font-size: 14px; color: darkslategray; }
+main article h2 { font-size: 36px; color: black; margin: 30px 0px 5px 0px; }
+main article h3 { font-size: 24px; color: darkslategray; margin: 25px 0px 5px 0px; }
+main article h4 { font-size: 20px; color: darkslategray; margin: 20px 0px 5px 0px; }
+main article p  { font-size: 16px; color: darkslategray; }
+main article li { font-size: 16px; color: darkslategray; }
+main article a  { font-size: 18px; color: darkslategray; font-weight: bold; }
 main article time { font-size: 12px; font-style: italic; }
 main article p.signature { font-style: italic; }
 
@@ -38,15 +40,18 @@ nav a {
 		}
 		body {
 			display: grid;
-			grid-template-columns: auto 600px 300px auto;
+			grid-template-columns: auto 900px 400px auto;
 		}
 		header { grid-row: 1; grid-column: 2; }
-		nav    { grid-row: 1; grid-column: 3; vertical-align: middle; }
+		header * { vertical-align: middle; padding: auto; }
+		nav    { grid-row: 1; grid-column: 3; vertical-align: middle; padding: 30px; }
 		nav a  { display: block; }
-		main   { grid-row: 2; grid-column: 2 / 4; }
+		aside  { grid-row: 2; grid-column: 3; padding: 30px; }
+		aside * { display: block; }
+		main   { grid-row: 2; grid-column: 2; }
 		footer { grid-row: 3; grid-column: 2 / 4; }
 	}
-	@media (min-width: 900px) and (max-width: 1300px) {
+	@media (max-width: 1300px) {
 		body {
 			display: grid;
 			grid-template-columns: auto 600px 300px auto;
@@ -56,13 +61,5 @@ nav a {
 		nav a  { display: block; }
 		main   { grid-row: 2; grid-column: 2 / 4; }
 		footer { grid-row: 3; grid-column: 2 / 4; }
-	}
-	@media (max-width: 900px) {
-		body   { display: block; }
-		header { display: block; }
-		nav    { display: block; }
-		nav a  { display: inline; }
-		main   { display: block; }
-		footer { display: block; }
 	}
 }
