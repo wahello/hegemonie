@@ -22,17 +22,17 @@ The Hegemonie platform consist in a set of microservices.
   implement the maps in Hegemonie. It proposes path computations and paginated
   listing of the graph elements (vertices, nodes).
 
-Side services act as technology enablers.
+In addition, side services act as technology enablers.
 
 * **The services of the ORY suite** provide OpenAPI interfaces to manage the
   general authentication and authorization needs.
 
-* **The services of the OpenTelemetry suite** provide the collection, the
+* **Services implementing the OpenTelemetry suite** provide the collection, the
   aggregation, the storage and the display of events traces. Those services help
   troubleshooting problems in the whole solution, despite its largely
   distributed character.
 
-* **an API gateway** ensuring the required authentication of the calls to the
+* **An API gateway** ensuring the required authentication of the calls to the
   backend, doing the load balancing among the target backend, rate limiting on a
   per-user basis, etc.
 
@@ -40,11 +40,11 @@ Side services act as technology enablers.
 
 ## Single CLI
 
-Everything is controlled by a single CLI tool, ``hegemonie``. That CLI tool
-allows starting the Hegemonie services, doing the daily operations, and a giving
-a shortcut access to the backend services (without any authentication).
+Everything is controlled by a single CLI tool, ``hege`` that allows starting the
+Hegemonie services, doing the daily operations, and a giving a shortcut access
+to the backend services (without any authentication).
 
-## Single Language: Go
+## 100% Go
 
 Written in 100% in [Go](https://golang.org): for the sake of Simplicity and
 Portability. The code mostly depends
@@ -53,31 +53,34 @@ Golang [standard library](https://golang.org/pkg). At the moment no special
 attention has been paid to the performance of the whole thing: this will happen
 after the release of a very first MVP.
 
+## Reliability
+
+The current effort tend to make every workdload stateless with a proven
+persistence backend solution.
+
 ## Scalability
 
 Scalability is not a concern yet. Large communities are not a target for
 Hegemonie. However, there are already a few opportunities to let the game
 scaling oppotunities:
 
-* The ``API gateway``, whatever nginx or haproxy, acts as a stateless ingress
+* The **API gateway**, whatever nginx or haproxy, acts as a stateless ingress
   proxy and can ensure HA in an active/active fashion.
-* The ``event server`` is currently stateful because it relies on a local
+* The **event server** is currently stateful because it relies on a local
   storage. Further scaling plans exist, based on a stateless service in front of
   a relatively scalabale KV backend (TiKV), plus a partitioning/sharding of the
   users if necessary. ``TiKV`` services have their own scalability model.
-* The ``region server`` is stateful: it manages all the entities in-game.
+* The **region server** is stateful: it manages all the entities in-game.
   Distinct region services (i.e. processes) will host distinct datasets. So
   there is a limit in size for a region, but a de facto natural sharding
   opportunity of the users among the regions (i.e. services).
-* The ``map server`` keeps a cache (loaded from a read-only reference) but
+* The **map server** keeps a cache (loaded from a read-only reference) but
   serves stateless requests on read-only content. It can be multiplied _ad lib_.
-* The services of the ``ORY suite`` are stateless and can be multiplied as much
+* The services of the **ORY suite** are stateless and can be multiplied as much
   as required. Their underlying ``PostgreSQL`` instances have their own
   scalability model.
-
-## Reliability
-
-This is not a topic yet.
+* The services of the **OpenTelemetry stack** are mostly stateless, and the
+  storage solutions have their own scalability measures.
 
 ## Performance
 
@@ -88,7 +91,25 @@ We roughly target a system that can manage a game instance for a small community
 of less than 50 players, that would be lightweight enough to run on a ARM-based
 single board computer (e.g. a RaspberryPi v3).
 
-## Deploy with Docker
+## Security
+
+Hegemonie makes several choices related to the security.
+
+First, the security is enforced at the gate. The API gateway is a TLS
+termination endpoint but no other SSL connection is used internally. There is
+nothing forbidding an internal TLS usage, this is just the default chosen.
+
+The API gateway is also a Zero Trust proxy for RPC calls that requires a valid
+authentication and authorizations. So that gRPC calls are identified by JWT at
+the gate but not in each service's implementation.
+
+Second, Hegemonie made the choice of the ORY suite of tools. Those tools give
+clues of "security well done", in other words all the garantys of best-in-class
+implementation.
+
+## Deployment
+
+### Deploy with Docker
 
 ```shell
 docker-compose up

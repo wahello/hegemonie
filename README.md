@@ -1,15 +1,15 @@
 # Hegemonie
 
+Hegemonie is an online management, strategy and diplomacy RPG. The current
+initiative is a reboot of what [Hegemonie](http://www.hegemonie.be) was between
+1999 and 2003. It is under "heavily inactive" construction. Learn more details
+about the [gameplay](./GAME.md) on the dedicated page.
+
 [![CircleCI](https://circleci.com/gh/jfsmig/hegemonie.svg?style=svg)](https://circleci.com/gh/jfsmig/hegemonie)
 [![Codecov](https://codecov.io/gh/jfsmig/hegemonie/branch/master/graph/badge.svg)](https://codecov.io/gh/jfsmig/hegemonie)
 [![Codacy](https://app.codacy.com/project/badge/Grade/bf7c2872c60445c99f914d31d7b213ae)](https://www.codacy.com/manual/jfsmig/hegemonie?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jfsmig/hegemonie&amp;utm_campaign=Badge_Grade)
 [![MPL-2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 
-Hegemonie is an online management, strategy and diplomacy RPG. The current
-repository is a reboot of what [Hegemonie](http://www.hegemonie.be) was between
-1999 and 2003. It is under "heavily inactive" construction.
-
-Learn more details on the [GAME description](./GAME.md) page.
 
 ## Getting Started
 
@@ -38,21 +38,20 @@ contributions you make are greatly appreciated.
 
 ## License
 
-Hegemonie is distributed under the MPLv2 License. See [LICENSE](./LICENSE) for
-more information.
+Hegemonie is distributed under the MPLv2 License, see the [LICENSE](./LICENSE)
+disclaimer for more information. We strongly believe in Open Source for many
+reasons:
 
-We strongly believe in Open Source for many reasons:
-
-* For the purpose of a better user experience, because bugs will happen and
-  opening the code is the best way to let a skilled user find it as soon as
+* For quality purposes, and a better user experience. Because bugs will happen
+  and opening the code is the best way to let a skilled user find it as soon as
   possible. The value of a game instance definitely is in its players and in the
   description of the world.
-* For software quality purposes because a software with open sources is the best
-  way to have its bugs identified and fixed as soon as possible.
-* For a greater adoption, we deliberately chose a liberal license so that there
-  cannot be any legal concern in using the code.
-* For transparency reasons. an open code lets you check that nothing odd is done
+* For transparency purposes, so that there is no doubt that anything odd is done
   with your data.
+* For an easy adoption, we deliberately chose a liberal license so that there
+  cannot be any legal concern in using the code. We would appreciate you
+  upstream your changes to the code, but you should not be forced to. It is
+  already an honor to have a use case.
 
 ## Contact
 
