@@ -17,16 +17,16 @@ AUTO+= pkg/region/proto/region.pb.go
 AUTO+= pkg/healthcheck/healthcheck.pb.go
 
 all: prepare
-	$(GO) install $(BASE)/cmd/gen-set
-	$(GO) install $(BASE)/cmd/hege
+	$(GO) install $(BASE)/pkg/gen-set
+	$(GO) install $(BASE)/pkg/hege
 
 prepare: $(AUTO)
 
-pkg/map/graph/map_auto.go: pkg/map/graph/map.go cmd/gen-set/gen-set.go
+pkg/map/graph/map_auto.go: pkg/map/graph/map.go pkg/gen-set/gen-set.go
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/map/graph
 
-pkg/region/model/world_auto.go: pkg/region/model/types.go cmd/gen-set/gen-set.go
+pkg/region/model/world_auto.go: pkg/region/model/types.go pkg/gen-set/gen-set.go
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/region/model
 
@@ -55,17 +55,6 @@ test: all
 
 benchmark: all
 	go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic -bench=$$D $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ;  done
-
-img_tag:
-	 ( export L='(C) Quentin Minten / CC BY-NC-SA 3.0' ; \
-		for F in website/www/static/img0/quentin-minten*/*.jpg ; do \
-			BN=$(basename $$F) ; \
-			convert img0/$$BN -gravity south -stroke '#000C' -strokewidth 2 -annotate 0 "$L" -stroke  none -fill yellow -annotate 0 "$L" website/www/static/img/$$BN ; \
-		done )
-
-docker: Dockerfile
-	for T in runtime demo ; do sudo docker build --target=$$T --tag=jfsmig/hegemonie-$$T . ; done
-	for T in runtime demo ; do sudo docker push jfsmig/hegemonie-$$T:latest ; done
 
 try: all
 	sudo docker-compose up

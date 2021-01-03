@@ -3,6 +3,8 @@
 coverage.txt
 profile.out
 
+docs/maps/*.final.json
+
 # Vim temporary files
 **/.*.sw?
 

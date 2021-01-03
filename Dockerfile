@@ -30,7 +30,6 @@ COPY Makefile LICENSE AUTHORS.md go.sum go.mod \
   /gopath/src/github.com/jfsmig/hegemonie/
 COPY pkg /gopath/src/github.com/jfsmig/hegemonie/pkg
 COPY api /gopath/src/github.com/jfsmig/hegemonie/api
-COPY cmd /gopath/src/github.com/jfsmig/hegemonie/cmd
 
 # Build & Install the code
 RUN set -x \
@@ -40,7 +39,8 @@ RUN set -x \
 RUN set -x \
 && cd /gopath/src/github.com/jfsmig/hegemonie \
 && make \
-&& cp -p -v /gopath/bin/hege /dist
+&& cp -p -v /gopath/bin/hege /dist \
+&& cp -p -v /gopath/bin/hege /usr/bin
 
 # Install the dependencies.
 # Inspired by https://dev.to/ivan/go-build-a-minimal-docker-image-in-just-three-steps-514i
@@ -54,20 +54,11 @@ RUN set -x \
 # Mangle the maps to build ther raw shape based on the seed definitions
 # JFS: we do this here because it is very fast to execute and it benefits
 #      from the rich bash environment.
+COPY bin              /usr/bin
 COPY docs/maps        /data/maps
 COPY docs/definitions /data/defs
 COPY docs/lang        /data/lang
-RUN set -ex \
-&& D=/data/maps \
-&& HEGE=/gopath/bin/hege \
-&& ls "$D" | \
-   grep '.seed.json$' | \
-   while read F ; do echo "$F" "$F" ; done | \
-   sed -r 's/^(\S+).seed.json /\1.final.json /' | \
-   while read FINAL SEED ; do \
-    echo "$D" "$SEED" "$FINAL" ; \
-    "$HEGE" tools map init < "$D/$SEED" | "$HEGE" tools map normalize > "$D/$FINAL" ; \
-  done
+RUN hege-map-transform.sh /data/maps
 
 WORKDIR /
 ENTRYPOINT ["/bin/bash"]
@@ -97,11 +88,9 @@ ENTRYPOINT ["/hege"]
 
 FROM runtime as demo
 USER 0
-COPY --chown=65534:0 --from=builder /data/defs/        /data/defs/
-COPY --chown=65534:0 --from=builder /data/lang/        /data/lang/
-COPY --chown=65534:0 --from=builder /data/maps/        /data/maps/
-COPY --chown=65534:0                pkg/web/templates  /data/templates/
-COPY --chown=65534:0                pkg/web/static     /data/static/
+COPY --chown=65534:0 --from=builder /data/defs/ /data/defs/
+COPY --chown=65534:0 --from=builder /data/lang/ /data/lang/
+COPY --chown=65534:0 --from=builder /data/maps/ /data/maps/
 USER 65534
 WORKDIR /data
 ENTRYPOINT ["/hege"]
