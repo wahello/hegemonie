@@ -58,7 +58,7 @@ COPY bin              /usr/bin
 COPY docs/maps        /data/maps
 COPY docs/definitions /data/defs
 COPY docs/lang        /data/lang
-RUN hege-map-transform.sh /data/maps
+RUN hege-map-transform.sh /data/maps /data/maps
 
 WORKDIR /
 ENTRYPOINT ["/bin/bash"]
