@@ -6,14 +6,95 @@
 package region
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
-
-	"github.com/jfsmig/hegemonie/pkg/utils"
+	"strings"
 )
 
-func (w *World) SetNotifier(n Notifier) {
-	w.notifier = LogEvent(n)
+func (defs *DefinitionsBase) Check() error {
+	if !sort.IsSorted(&defs.Knowledges) {
+		return errors.New("knowledge types unsorted")
+	}
+	if !sort.IsSorted(&defs.Buildings) {
+		return errors.New("building types unsorted")
+	}
+	if !sort.IsSorted(&defs.Units) {
+		return errors.New("unit types unsorted")
+	}
+
+	return nil
+}
+
+func walkJson(path string, hook func(path string, decoder *json.Decoder) error) error {
+	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".json") {
+			return nil
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		if info.Size() <= 2 {
+			return nil
+		}
+		f, err := os.Open(path)
+		decoder := json.NewDecoder(f)
+		return hook(path, decoder)
+	})
+
+}
+
+func (defs *DefinitionsBase) loadUnits(basedir string) error {
+	return walkJson(basedir, func(_ string, decoder *json.Decoder) error {
+		tmp := make([]*UnitType, 0)
+		if err := decoder.Decode(&tmp); err != nil {
+			return err
+		}
+		defs.Units = append(defs.Units, tmp...)
+		return nil
+	})
+}
+
+func (defs *DefinitionsBase) loadKnowledge(basedir string) (err error) {
+	return walkJson(basedir, func(_ string, decoder *json.Decoder) error {
+		tmp := make([]*KnowledgeType, 0)
+		if err = decoder.Decode(&tmp); err != nil {
+			return err
+		}
+		defs.Knowledges = append(defs.Knowledges, tmp...)
+		return nil
+	})
+}
+
+func (defs *DefinitionsBase) loadBuildings(basedir string) (err error) {
+	return walkJson(basedir, func(_ string, decoder *json.Decoder) error {
+		tmp := make([]*BuildingType, 0)
+		if err = decoder.Decode(&tmp); err != nil {
+			return err
+		}
+		defs.Buildings = append(defs.Buildings, tmp...)
+		return nil
+	})
+}
+
+func (defs *DefinitionsBase) load(path string) (err error) {
+	err = defs.loadUnits(path + "/units")
+	if err == nil {
+		err = defs.loadKnowledge(path + "/knowledge")
+	}
+	if err == nil {
+		err = defs.loadBuildings(path + "/buildings")
+	}
+
+	if err == nil {
+		sort.Sort(&defs.Knowledges)
+		sort.Sort(&defs.Buildings)
+		sort.Sort(&defs.Units)
+	}
+	return err
 }
 
 func (w *World) Init() {
@@ -41,20 +122,6 @@ func (w *World) Check() error {
 			return err
 		}
 	}
-	return nil
-}
-
-func (defs *DefinitionsBase) Check() error {
-	if !sort.IsSorted(&defs.Knowledges) {
-		return errors.New("knowledge types unsorted")
-	}
-	if !sort.IsSorted(&defs.Buildings) {
-		return errors.New("building types unsorted")
-	}
-	if !sort.IsSorted(&defs.Units) {
-		return errors.New("unit types unsorted")
-	}
-
 	return nil
 }
 
@@ -100,13 +167,6 @@ func (reg *Region) Check() error {
 	return nil
 }
 
-func (defs *DefinitionsBase) PostLoad() error {
-	sort.Sort(&defs.Knowledges)
-	sort.Sort(&defs.Buildings)
-	sort.Sort(&defs.Units)
-	return nil
-}
-
 func (reg *Region) PostLoad() error {
 	// Sort all the lookup arrays
 	sort.Sort(&reg.Cities)
@@ -138,45 +198,37 @@ func (reg *Region) PostLoad() error {
 }
 
 func (w *World) PostLoad() error {
-	w.Definitions.PostLoad()
 	sort.Sort(&w.Regions)
 	for _, r := range w.Regions {
-		r.PostLoad()
+		if err := r.PostLoad(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (defs *DefinitionsBase) Sections(p string) utils.PersistencyMapping {
-	if p == "" {
-		panic("Invalid path")
+func (w *World) LoadDefinitions(basedir string) (err error) {
+	err = w.Definitions.load(basedir)
+	if err != nil {
+		return fmt.Errorf("invalid world from [%s]: %v", basedir, err)
 	}
-	return []utils.CfgSection{
-		{p + "/units.json", &defs.Units},
-		{p + "/buildings.json", &defs.Buildings},
-		{p + "/knowledge.json", &defs.Knowledges},
+
+	err = w.Definitions.Check()
+	if err != nil {
+		return fmt.Errorf("inconsistent world from [%s]: %v", basedir, err)
 	}
+
+	return nil
 }
 
-func (reg *Region) Sections(p string) utils.PersistencyMapping {
-	if p == "" {
-		panic("Invalid path")
-	}
-	return []utils.CfgSection{
-		{p + "/cities.json", &reg.Cities},
-		{p + "/fights.json", &reg.Fights},
-	}
-}
-
-func (w *World) Sections(p string) utils.PersistencyMapping {
-	if p == "" {
-		panic("Invalid path")
-	}
-	sections := []utils.CfgSection{
-		{p + "/config.json", &w.Config},
-	}
-	sections = append(sections, w.Definitions.Sections(p+"/_defs")...)
-	for _, r := range w.Regions {
-		sections = append(sections, r.Sections(p+"/"+r.Name)...)
-	}
-	return sections
+func (w *World) LoadRegions(basedir string) error {
+	return walkJson(basedir, func(path string, decoder *json.Decoder) error {
+		reg := &Region{}
+		err := decoder.Decode(&reg)
+		if err != nil {
+			return fmt.Errorf("region decoding error [%s]: %s", path, err.Error())
+		}
+		w.Regions.Add(reg)
+		return nil
+	})
 }

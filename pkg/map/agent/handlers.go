@@ -54,7 +54,7 @@ func (cfg *Config) Run(ctx context.Context) error {
 
 	utils.Logger.Info().
 		Int("maps", srv.maps.Len()).
-		Str("Endpoint", cfg.Endpoint).
+		Str("endpoint", cfg.Endpoint).
 		Msg("Starting")
 	for _, m := range srv.maps {
 		utils.Logger.Debug().

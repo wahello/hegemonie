@@ -9,15 +9,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	grpc_health_v1 "github.com/jfsmig/hegemonie/pkg/healthcheck"
+	back "github.com/jfsmig/hegemonie/pkg/event/backend-local"
+	"github.com/jfsmig/hegemonie/pkg/event/proto"
+	"github.com/jfsmig/hegemonie/pkg/healthcheck"
+	"github.com/jfsmig/hegemonie/pkg/utils"
+	"google.golang.org/grpc"
 	"math"
 	"net"
-
-	"google.golang.org/grpc"
-
-	back "github.com/jfsmig/hegemonie/pkg/event/backend-local"
-	proto "github.com/jfsmig/hegemonie/pkg/event/proto"
-	"github.com/jfsmig/hegemonie/pkg/utils"
 )
 
 // Config gathers the configuration fields required to start a gRPC Event API service.
@@ -33,9 +31,9 @@ type eventService struct {
 
 // Run starts an Event API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg Config) Run(ctx context.Context) error {
+func (cfg Config) Run(_ context.Context) error {
 	if cfg.PathBase == "" {
-		return errors.New("Missing: path to the live data directory")
+		return errors.New("missing path to the event data directory")
 	}
 
 	var srv eventService
@@ -62,7 +60,7 @@ func (cfg Config) Run(ctx context.Context) error {
 
 	utils.Logger.Info().
 		Str("base", srv.cfg.PathBase).
-		Str("url", srv.cfg.Endpoint).
+		Str("endpoint", srv.cfg.Endpoint).
 		Msg("starting")
 	return server.Serve(lis)
 }
@@ -102,7 +100,7 @@ func (es *eventService) Push1(ctx context.Context, req *proto.Push1Req) (*proto.
 }
 
 // Check implements the one-shot healthcheck of the gRPC service
-func (es *eventService) Check(ctx context.Context, req *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+func (es *eventService) Check(ctx context.Context, _ *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
 	// FIXME(jfs): check the service ID
 	return &grpc_health_v1.HealthCheckResponse{
 		Status: grpc_health_v1.HealthCheckResponse_SERVING,
@@ -110,7 +108,7 @@ func (es *eventService) Check(ctx context.Context, req *grpc_health_v1.HealthChe
 }
 
 // Watch implements the long polling healthcheck of the gRPC service
-func (es *eventService) Watch(req *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.Health_WatchServer) error {
+func (es *eventService) Watch(_ *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.Health_WatchServer) error {
 	// FIXME(jfs): check the service ID
 	for {
 		err := srv.Send(&grpc_health_v1.HealthCheckResponse{

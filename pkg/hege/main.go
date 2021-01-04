@@ -8,12 +8,13 @@ package main
 import (
 	"context"
 	"github.com/google/uuid"
-	 "github.com/jfsmig/hegemonie/pkg/auth/client"
-	 "github.com/jfsmig/hegemonie/pkg/event/agent"
-	 "github.com/jfsmig/hegemonie/pkg/event/client"
-	 "github.com/jfsmig/hegemonie/pkg/map/agent"
-	 "github.com/jfsmig/hegemonie/pkg/region/agent"
-	 "github.com/jfsmig/hegemonie/pkg/map/client"
+	"github.com/jfsmig/hegemonie/pkg/auth/client"
+	"github.com/jfsmig/hegemonie/pkg/event/agent"
+	"github.com/jfsmig/hegemonie/pkg/event/client"
+	"github.com/jfsmig/hegemonie/pkg/map/agent"
+	"github.com/jfsmig/hegemonie/pkg/map/client"
+	"github.com/jfsmig/hegemonie/pkg/region/agent"
+	regclient "github.com/jfsmig/hegemonie/pkg/region/client"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
@@ -65,7 +66,7 @@ func clients(ctx context.Context) *cobra.Command {
 	}
 	ctx = metadata.AppendToOutgoingContext(ctx, "session-id", sessionID)
 
-	cmd.AddCommand(clientMap(ctx), clientEvent(ctx), clientAuth(ctx))
+	cmd.AddCommand(clientMap(ctx), clientEvent(ctx), clientAuth(ctx), clientRegion(ctx))
 	return cmd
 }
 
@@ -81,7 +82,7 @@ func tools(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
-func toolsMap(ctx context.Context) *cobra.Command {
+func toolsMap(_ context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "map",
 		Short: "Map handling tools",
@@ -371,6 +372,41 @@ func clientAuth(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
+func clientRegion(ctx context.Context) *cobra.Command {
+	cfg := regclient.ClientCLI{}
+
+	cmd := &cobra.Command{
+		Use:     "region",
+		Short:   "Region API client",
+		Example: "region (create|list) ...",
+		Args:    cobra.MinimumNArgs(1),
+		RunE:    utils.NonLeaf,
+	}
+
+	createRegion := &cobra.Command{
+		Use:     "create",
+		Short:   "Create a new region",
+		Example: "region create $REGION_ID $MAP_ID",
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cfg.DoCreateRegion(ctx, args)
+		},
+	}
+
+	listRegions := &cobra.Command{
+		Use:     "list",
+		Short:   "List the existing regions",
+		Example: "region list [$REGION_ID_MARKER]",
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cfg.DoListRegions(ctx, args)
+		},
+	}
+
+	cmd.AddCommand(createRegion, listRegions)
+	return cmd
+}
+
 func serverEvent(ctx context.Context) *cobra.Command {
 	cfg := evtagent.Config{}
 
@@ -396,7 +432,7 @@ func serverMap(ctx context.Context) *cobra.Command {
 	agent := &cobra.Command{
 		Use:     "map",
 		Short:   "Map Service",
-		Example: "heged map --Endpoint=10.0.0.1:1234 /path/to/maps/directory",
+		Example: "heged map --endpoint=10.0.0.1:1234 /path/to/maps/directory",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathRepository = args[0]
@@ -404,7 +440,7 @@ func serverMap(ctx context.Context) *cobra.Command {
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
-		"Endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
+		"endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT endpoint for the gRPC server")
 
 	return agent
 }
@@ -415,15 +451,16 @@ func serverRegion(ctx context.Context) *cobra.Command {
 	agent := &cobra.Command{
 		Use:     "region",
 		Short:   "Region Service",
-		Example: "heged region --Endpoint=10.0.0.1:1234 /path/to/world/definitions",
-		Args:    cobra.ExactArgs(1),
+		Example: "heged region --Endpoint=10.0.0.1:1234 /path/to/defs/dir /path/to/live/dir",
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg.Backend = args[0]
+			cfg.PathDefs = args[0]
+			cfg.PathLive = args[1]
 			return cfg.Run(ctx)
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
-		"Endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
+		"endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
 
 	return agent
 }

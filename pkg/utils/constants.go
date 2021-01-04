@@ -15,8 +15,6 @@ const (
 	// OpenID connect by ORY
 	DefaultPortHydra = 6686
 
-	// Hegemonie Web Front
-	DefaultPortWww = 8080
 	// Hegemonie Region internal API
 	DefaultPortRegion = 8081
 	// Hegemonie Event internal API

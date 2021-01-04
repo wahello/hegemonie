@@ -5,28 +5,24 @@
 	"PopBonusArmyLive": 0,
 	"CityPatterns": [
 		{
-			"Id": 0, "Cell": 0, "Owner": 0, "Deputy": 0, "Name": "",
 			"Buildings": [], "Units": [], "Knowledges": [],
 			"Stock": [3, 200, 100, 100, 100, 100],
 			"StockCapacity": [3, 20000, 1000, 1000, 1000, 1000],
 			"Production": [1, 100, 110, 90, 100, 100]
 		},
 		{
-			"Id": 0, "Cell": 0, "Owner": 0, "Deputy": 0, "Name": "",
 			"Buildings": [], "Units": [], "Knowledges": [],
 			"Stock": [3, 200, 100, 100, 100, 100],
 			"StockCapacity": [3, 20000, 1000, 1000, 1000, 1000],
 			"Production": [1, 100, 90, 110, 100, 100]
 		},
 		{
-			"Id": 0, "Cell": 0, "Owner": 0, "Deputy": 0, "Name": "",
 			"Buildings": [], "Units": [], "Knowledges": [],
 			"Stock": [3, 200, 100, 100, 100, 100],
 			"StockCapacity": [3, 20000, 1000, 1000, 1000, 1000],
 			"Production": [1, 100, 100, 100, 90, 110]
 		},
 		{
-			"Id": 0, "Cell": 0, "Owner": 0, "Deputy": 0, "Name": "",
 			"Buildings": [], "Units": [], "Knowledges": [],
 			"Stock": [3, 200, 100, 100, 100, 100],
 			"StockCapacity": [3, 20000, 1000, 1000, 1000, 1000],

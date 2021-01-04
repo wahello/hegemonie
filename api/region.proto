@@ -13,6 +13,8 @@ service Admin {
   //
   rpc CreateRegion(RegionCreateReq) returns (None) {}
 
+  rpc ListRegions(RegionListReq) returns (stream RegionSummary) {}
+
   // Have all the Cities on the Region to produce their resources
   rpc Produce(RegionId) returns (None) {}
 
@@ -112,6 +114,17 @@ service Army {
 }
 
 message None {}
+
+message RegionSummary {
+  string name = 1;
+  string mapName = 2;
+  uint32 countCities = 3;
+  uint32 countFights = 4;
+}
+
+message RegionListReq {
+  string nameMarker = 1;
+}
 
 message RegionId {
   string region = 1;

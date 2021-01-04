@@ -13,10 +13,11 @@ func (w *World) RLock() { w.rw.RLock() }
 
 func (w *World) RUnlock() { w.rw.RUnlock() }
 
-func (w *World) CreateRegion(name, mapName string) (*Region, error) {
-	w.WLock()
-	defer w.WUnlock()
+func (w *World) SetNotifier(n Notifier) {
+	w.notifier = LogEvent(n)
+}
 
+func (w *World) CreateRegion(name, mapName string) (*Region, error) {
 	if w.Regions.Has(name) {
 		return nil, errRegionExists
 	}
@@ -27,6 +28,7 @@ func (w *World) CreateRegion(name, mapName string) (*Region, error) {
 		Fights:  make(SetOfFights, 0),
 		world:   w,
 	}
+	w.Regions.Add(r)
 	return r, nil
 }
 

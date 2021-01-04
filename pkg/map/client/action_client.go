@@ -170,6 +170,9 @@ func (c *ClientCLI) connect(ctx context.Context, action actionFunc) error {
 		return err
 	}
 	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return err
+	}
 	defer cnx.Close()
 	return action(ctx, cnx)
 }

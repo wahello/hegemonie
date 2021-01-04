@@ -1,11 +1,13 @@
 #!/bin/bash
 set -euxo pipefail
 
-D="$1" ; shift
-[[ -n "$D" ]]
+SRC=$1 ; shift
+DST=$1 ; shift
+[[ -n "$SRC" ]]
+[[ -n "$DST" ]]
 
-for SRC in $D/*.seed.json ; do
-	DST=${SRC/.seed./.final.}
-	hege tools map init < "$SRC" | hege tools map normalize > "$DST"
+for S in "$SRC"/*.seed.json ; do
+	D=${S/.seed.json/.final.json}
+	hege tools map init < "$S" | hege tools map normalize > "$D"
 done
 

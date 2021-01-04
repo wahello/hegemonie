@@ -540,4 +540,3 @@ type SetOfFights []*Fight
 //go:generate go run github.com/jfsmig/hegemonie/pkg/gen-set ./world_auto.go region:SetOfUnits:*Unit ID:string
 //go:generate go run github.com/jfsmig/hegemonie/pkg/gen-set ./world_auto.go region:SetOfUnitTypes:*UnitType
 //go:generate go run github.com/jfsmig/hegemonie/pkg/gen-set ./world_auto.go region:SetOfRegions:*Region Name:string
-

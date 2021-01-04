@@ -21,34 +21,34 @@ import (
 // Config gathers the configuration fields required to start a gRPC region API service.
 type Config struct {
 	Endpoint string
-	Backend  string
+	PathDefs string
+	PathLive string
 }
 
 // Run starts a Region API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(ctx context.Context) error {
+func (cfg *Config) Run(_ context.Context) error {
 	var err error
 	var w region.World
 
 	w.Init()
 
-	if cfg.Backend == "" {
-		return errors.New("Missing path for live data")
+	if cfg.PathDefs == "" {
+		return errors.New("Missing path for definition data directory")
 	}
 
-	err = w.Sections(cfg.Backend).Load()
+	if cfg.PathLive == "" {
+		return errors.New("Missing path for live data directory")
+	}
+
+	err = w.LoadDefinitions(cfg.PathDefs)
 	if err != nil {
 		return err
 	}
 
-	err = w.PostLoad()
+	err = w.LoadRegions(cfg.PathLive)
 	if err != nil {
-		return fmt.Errorf("Inconsistent World from [%s]: %v", cfg.Backend, err)
-	}
-
-	err = w.Check()
-	if err != nil {
-		return fmt.Errorf("Inconsistent World from [%s]: %v", cfg.Backend, err)
+		return err
 	}
 
 	lis, err := net.Listen("tcp", cfg.Endpoint)
@@ -76,9 +76,11 @@ func (cfg *Config) Run(ctx context.Context) error {
 	proto.RegisterArmyServer(srv, &srvArmy{cfg: cfg, w: &w})
 	grpc_health_v1.RegisterHealthServer(srv, &srvHealth{w: &w})
 
-	if err := srv.Serve(lis); err != nil {
-		return fmt.Errorf("failed to serve: %v", err)
-	}
+	utils.Logger.Info().
+		Str("defs", cfg.PathDefs).
+		Str("live", cfg.PathLive).
+		Str("endpoint", cfg.Endpoint).
+		Msg("starting")
 
-	return nil
+	return srv.Serve(lis)
 }

@@ -62,6 +62,35 @@ func (sa *srvAdmin) CreateRegion(ctx context.Context, req *proto.RegionCreateReq
 	})
 }
 
+func (sa *srvAdmin) ListRegions(req *proto.RegionListReq, stream proto.Admin_ListRegionsServer) error {
+	marker := req.NameMarker
+	return sa.rlockDo(func() error {
+		for {
+			tab := sa.w.Regions.Slice(marker, 100)
+			if len(tab) <= 0 {
+				break
+			}
+			for _, x := range tab {
+				marker = x.Name
+				summary := &proto.RegionSummary{
+					Name:        x.Name,
+					MapName:     x.MapName,
+					CountCities: uint32(len(x.Cities)),
+					CountFights: uint32(len(x.Fights)),
+				}
+				err := stream.Send(summary)
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 func (sa *srvAdmin) GetScores(req *proto.RegionId, stream proto.Admin_GetScoresServer) error {
 	return sa.rlockDo(func() error {
 		r := sa.w.Regions.Get(req.Region)
