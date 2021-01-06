@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -202,12 +202,24 @@ func (s *srvMap) Cities(req *proto.ListCitiesReq, stream proto.Map_CitiesServer)
 
 // Maps streams the name of the maps registered in the current service
 func (s *srvMap) Maps(req *proto.ListMapsReq, stream proto.Map_MapsServer) error {
-	slice := func(marker string) []string {
+	slice := func(marker string) []proto.MapName {
 		s.rw.RLock()
 		defer s.rw.RUnlock()
-		out := make([]string, 0)
+		out := make([]proto.MapName, 0)
 		for _, m := range s.maps.Slice(marker, 100) {
-			out = append(out, m.ID)
+			out = append(out, proto.MapName{
+				Name:          m.ID,
+				CountEdges:    uint32(len(m.Roads)),
+				CountVertices: uint32(len(m.Cells)),
+				CountCities: func() (total uint32) {
+					for _, c := range m.Cells {
+						if c.City != "" {
+							total++
+						}
+					}
+					return total
+				}(),
+			})
 		}
 		return out
 	}
@@ -219,12 +231,10 @@ func (s *srvMap) Maps(req *proto.ListMapsReq, stream proto.Map_MapsServer) error
 			return nil
 		}
 		for _, v := range names {
-			if err := stream.Send(&proto.MapName{Name: v}); err != nil {
+			if err := stream.Send(&v); err != nil {
 				return err
 			}
-			if v > next {
-				next = v
-			}
+			next = v.Name
 		}
 	}
 }

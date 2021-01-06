@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -69,7 +69,9 @@ func (cfg *Config) Run(_ context.Context) error {
 	defer cnxEvent.Close()
 	w.SetNotifier(&EventStore{cnx: cnxEvent})
 
-	srv := grpc.NewServer(utils.ServerUnaryInterceptorZerolog())
+	srv := grpc.NewServer(
+		utils.ServerUnaryInterceptorZerolog(),
+		utils.ServerStreamInterceptorZerolog())
 	proto.RegisterCityServer(srv, &srvCity{cfg: cfg, w: &w})
 	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: cfg, w: &w})
 	proto.RegisterAdminServer(srv, &srvAdmin{cfg: cfg, w: &w})

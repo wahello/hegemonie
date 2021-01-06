@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,8 +7,11 @@ package regagent
 
 import (
 	"context"
+	"github.com/jfsmig/hegemonie/pkg/discovery"
+	mproto "github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
-	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/region/proto"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
@@ -56,8 +59,43 @@ func (sa *srvAdmin) Move(ctx context.Context, req *proto.RegionId) (*proto.None,
 }
 
 func (sa *srvAdmin) CreateRegion(ctx context.Context, req *proto.RegionCreateReq) (*proto.None, error) {
+	//  first, load the cities from the maps repository
+	endpoint, err := discovery.DefaultDiscovery.Map()
+	if err != nil {
+		return none, err
+	}
+	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return none, err
+	}
+	defer cnx.Close()
+
+	client := mproto.NewMapClient(cnx)
+
+	marker := uint64(0)
+	rep, err := client.Cities(ctx, &mproto.ListCitiesReq{
+		MapName: req.MapName,
+		Marker:  marker,
+	})
+	if err != nil {
+		return none, err
+	}
+
+	out := make([]region.NamedCity, 0)
+	for {
+		x, err := rep.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return none, err
+		}
+		marker = x.GetId()
+		out = append(out, region.NamedCity{Name: x.GetName(), ID: x.GetId()})
+	}
+
 	return none, sa.wlockDo(func() error {
-		_, err := sa.w.CreateRegion(req.Name, req.MapName)
+		_, err := sa.w.CreateRegion(req.Name, req.MapName, out)
 		return err
 	})
 }

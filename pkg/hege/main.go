@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/jfsmig/hegemonie/pkg/auth/client"
 	"github.com/jfsmig/hegemonie/pkg/event/agent"
@@ -30,7 +31,7 @@ func main() {
 		Short: "Hegemonie CLI",
 		Long:  "Hegemonie client with subcommands for the several agents of an Hegemonie system.",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
 	}
 	utils.PatchCommandLogs(cmd)
 	ctx := context.Background()
@@ -45,7 +46,7 @@ func servers(ctx context.Context) *cobra.Command {
 		Use:   "server",
 		Short: "Run Hegemonie services",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
 	}
 	cmd.AddCommand(serverMap(ctx), serverEvent(ctx), serverRegion(ctx))
 	return cmd
@@ -56,7 +57,7 @@ func clients(ctx context.Context) *cobra.Command {
 		Use:   "client",
 		Short: "Client tool for various Hegemonie services",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
 	}
 
 	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
@@ -75,7 +76,7 @@ func tools(ctx context.Context) *cobra.Command {
 		Use:   "tools",
 		Short: "Miscellanous tools to help the operations",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
 	}
 	cmd.AddCommand(
 		toolsMap(ctx))
@@ -87,7 +88,7 @@ func toolsMap(_ context.Context) *cobra.Command {
 		Use:   "map",
 		Short: "Map handling tools",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
 	}
 
 	normalize := &cobra.Command{
@@ -163,13 +164,23 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Use:   "map",
 		Short: "Map service client",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
+	}
+
+	list := &cobra.Command{
+		Use:     "list",
+		Short:   "List all the maps registered",
+		Example: "map list [$MAPID_MARKER]",
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cfg.ListMaps(ctx, pathArgs)
+		},
 	}
 
 	path := &cobra.Command{
 		Use:     "path",
 		Short:   "Compute the path between two nodes",
-		Example: "map path $REGION $SRC $DST",
+		Example: "map path $MAPID $SRC $DST",
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := pathArgs.Parse(args); err != nil {
@@ -237,7 +248,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 	}
 	vertices.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N positions")
 
-	cmd.AddCommand(path, step, cities, edges, vertices)
+	cmd.AddCommand(list, path, step, cities, edges, vertices)
 	return cmd
 }
 
@@ -249,7 +260,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 		Use:   "event",
 		Short: "Event service client",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  utils.NonLeaf,
+		RunE:  nonLeaf,
 	}
 
 	push := &cobra.Command{
@@ -316,7 +327,7 @@ func clientAuth(ctx context.Context) *cobra.Command {
 		Short:   "Authorization and Authentication client",
 		Example: "auth (users|details|create|invite|affect) ...",
 		Args:    cobra.MinimumNArgs(1),
-		RunE:    utils.NonLeaf,
+		RunE:    nonLeaf,
 	}
 
 	users := &cobra.Command{
@@ -380,7 +391,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 		Short:   "Region API client",
 		Example: "region (create|list) ...",
 		Args:    cobra.MinimumNArgs(1),
-		RunE:    utils.NonLeaf,
+		RunE:    nonLeaf,
 	}
 
 	createRegion := &cobra.Command{
@@ -403,7 +414,27 @@ func clientRegion(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(createRegion, listRegions)
+	roundMovement := &cobra.Command{
+		Use:     "move",
+		Short:   "Execute a movement round on the region",
+		Example: "region move $REGION_ID_MARKER...",
+		Args:    cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cfg.DoRegionMovement(ctx, args)
+		},
+	}
+
+	roundProduction := &cobra.Command{
+		Use:     "produce",
+		Short:   "Execute a movement round on the region",
+		Example: "region move $REGION_ID_MARKER...",
+		Args:    cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cfg.DoRegionProduction(ctx, args)
+		},
+	}
+
+	cmd.AddCommand(createRegion, listRegions, roundMovement, roundProduction)
 	return cmd
 }
 
@@ -463,4 +494,8 @@ func serverRegion(ctx context.Context) *cobra.Command {
 		"endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
 
 	return agent
+}
+
+func nonLeaf(cmd *cobra.Command, args []string) error {
+	return errors.New("Missing subcommand")
 }

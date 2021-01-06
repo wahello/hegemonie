@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -17,7 +17,12 @@ func (w *World) SetNotifier(n Notifier) {
 	w.notifier = LogEvent(n)
 }
 
-func (w *World) CreateRegion(name, mapName string) (*Region, error) {
+type NamedCity struct {
+	Name string
+	ID   uint64
+}
+
+func (w *World) CreateRegion(name, mapName string, cities []NamedCity) (*Region, error) {
 	if w.Regions.Has(name) {
 		return nil, errRegionExists
 	}
@@ -27,6 +32,13 @@ func (w *World) CreateRegion(name, mapName string) (*Region, error) {
 		Cities:  make(SetOfCities, 0),
 		Fights:  make(SetOfFights, 0),
 		world:   w,
+	}
+	for _, x := range cities {
+		city, err := r.CityCreate(x.ID)
+		if err != nil {
+			return nil, err
+		}
+		city.Name = x.Name
 	}
 	w.Regions.Add(r)
 	return r, nil

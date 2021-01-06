@@ -1,4 +1,4 @@
-// Copyright (C) 2018-2020 Hegemonie's AUTHORS
+// Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -20,6 +20,39 @@ import (
 // ClientCLI gathers the command line interface actions related to the Map API service.
 // It wraps the main gRPC client calls and dumps all the output as JSON on os.Stdout.
 type ClientCLI struct{}
+
+// ListMaps produces to os.Stdout a JSON stream of objects, each object describing
+// a Map registered in the repository.
+func (c *ClientCLI) ListMaps(ctx context.Context, args PathArgs) error {
+	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
+		client := proto.NewMapClient(cnx)
+
+		rep, err := client.Maps(ctx, &proto.ListMapsReq{
+			Marker: args.MapName,
+		})
+		if err != nil {
+			return err
+		}
+
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "")
+
+		for {
+			x, err := rep.Recv()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return err
+			}
+			err = encoder.Encode(x)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
 
 // GetCities produces to os.Stdout a JSON array of cities, where each City is an <id,name> tuple.
 func (c *ClientCLI) GetCities(ctx context.Context, args PathArgs) error {
