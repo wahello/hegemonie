@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jfsmig/hegemonie/pkg/discovery"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
@@ -57,7 +56,7 @@ func (cfg *Config) Run(_ context.Context) error {
 	}
 
 	var eventEndpoint string
-	eventEndpoint, err = discovery.DefaultDiscovery.Event()
+	eventEndpoint, err = utils.DefaultDiscovery.Event()
 	if err != nil {
 		return fmt.Errorf("Invalid Event service configured [%s]: %v", eventEndpoint, err)
 	}

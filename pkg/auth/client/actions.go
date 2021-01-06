@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/jfsmig/hegemonie/pkg/discovery"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	keto "github.com/ory/keto-client-go/client"
 	keto_engines "github.com/ory/keto-client-go/client/engines"
 	kratos "github.com/ory/kratos-client-go/client"
@@ -22,7 +22,7 @@ import (
 type ClientCLI struct{}
 
 func (cfg *ClientCLI) doKratos(action func(cli *kratos.OryKratos) error) error {
-	endpoint, err := discovery.DefaultDiscovery.Kratos()
+	endpoint, err := utils.DefaultDiscovery.Kratos()
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (cfg *ClientCLI) doKratos(action func(cli *kratos.OryKratos) error) error {
 }
 
 func (cfg *ClientCLI) doKeto(action func(cli *keto.OryKeto) error) error {
-	endpoint, err := discovery.DefaultDiscovery.Keto()
+	endpoint, err := utils.DefaultDiscovery.Keto()
 	if err != nil {
 		return err
 	}

@@ -8,8 +8,8 @@ package regclient
 import (
 	"context"
 	"encoding/json"
-	"github.com/jfsmig/hegemonie/pkg/discovery"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
 	"io"
 	"os"
@@ -108,17 +108,10 @@ func (cli *ClientCLI) DoRegionProduction(ctx context.Context, args []string) err
 	})
 }
 
-type actionFunc func(ctx context.Context, cli *grpc.ClientConn) error
-
-func (cli *ClientCLI) connect(ctx context.Context, action actionFunc) error {
-	endpoint, err := discovery.DefaultDiscovery.Region()
+func (cli *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) error {
+	endpoint, err := utils.DefaultDiscovery.Region()
 	if err != nil {
 		return err
 	}
-	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	return action(ctx, cnx)
+	return utils.Connect(ctx, endpoint, action)
 }

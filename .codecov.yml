@@ -1,4 +1,4 @@
-exclude_paths:
+ignore:
   - "attic/**"      # obsolete code
   - "vendor/**"     # third-party code
   - "**/*.pb.go"    # grpc auto generated files

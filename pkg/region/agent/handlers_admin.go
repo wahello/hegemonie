@@ -7,10 +7,10 @@ package regagent
 
 import (
 	"context"
-	"github.com/jfsmig/hegemonie/pkg/discovery"
 	mproto "github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -60,7 +60,7 @@ func (sa *srvAdmin) Move(ctx context.Context, req *proto.RegionId) (*proto.None,
 
 func (sa *srvAdmin) CreateRegion(ctx context.Context, req *proto.RegionCreateReq) (*proto.None, error) {
 	//  first, load the cities from the maps repository
-	endpoint, err := discovery.DefaultDiscovery.Map()
+	endpoint, err := utils.DefaultDiscovery.Map()
 	if err != nil {
 		return none, err
 	}

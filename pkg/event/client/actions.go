@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/jfsmig/hegemonie/pkg/discovery"
 	proto "github.com/jfsmig/hegemonie/pkg/event/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
@@ -19,19 +18,12 @@ import (
 // ClientCLI gathers the event-related client actions available at the command line.
 type ClientCLI struct{}
 
-type actionFunc func(ctx context.Context, conn *grpc.ClientConn) error
-
-func (cfg *ClientCLI) connect(ctx context.Context, action actionFunc) error {
-	endpoint, err := discovery.DefaultDiscovery.Event()
+func (cfg *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) error {
+	endpoint, err := utils.DefaultDiscovery.Event()
 	if err != nil {
 		return err
 	}
-	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	return action(ctx, cnx)
+	return utils.Connect(ctx, endpoint, action)
 }
 
 // DoPush insert an event whose content and target are described on the command line.

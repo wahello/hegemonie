@@ -9,8 +9,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/jfsmig/hegemonie/pkg/discovery"
 	"github.com/jfsmig/hegemonie/pkg/map/proto"
+	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
 	"io"
 	"os"
@@ -195,19 +195,12 @@ func (c *ClientCLI) getPath(ctx context.Context, args PathArgs) error {
 	})
 }
 
-type actionFunc func(ctx context.Context, cli *grpc.ClientConn) error
-
-func (c *ClientCLI) connect(ctx context.Context, action actionFunc) error {
-	endpoint, err := discovery.DefaultDiscovery.Map()
+func (c *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) error {
+	endpoint, err := utils.DefaultDiscovery.Map()
 	if err != nil {
 		return err
 	}
-	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		return err
-	}
-	defer cnx.Close()
-	return action(ctx, cnx)
+	return utils.Connect(ctx, endpoint, action)
 }
 
 // PathArgs gathers the possible arguments for the map-related calls.
