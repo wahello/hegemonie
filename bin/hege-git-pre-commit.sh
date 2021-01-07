@@ -20,7 +20,7 @@ rc=0
 Y=$(date +%Y)
 
 files_without_proper_copyright() {
-	grep -rnIL "Copyright (c) 2018-$Y Contributors as noted in the AUTHORS file" * \
+	grep -rnIL "Copyright (c) 2018-$Y Contributors as noted in the AUTHORS file" -- * \
 		| egrep -e '.(go|py|sh)$' \
 		| egrep -v -e '.pb.(go|py|sh)'
 }

@@ -53,10 +53,10 @@ func (mr *MapRaw) extractMemMap() (mapMem, error) {
 	}
 	for _, r := range mr.Roads {
 		if src, ok := memMap.Sites[r.Src]; !ok {
-			err = fmt.Errorf("No such site [%v]", r.Src)
+			err = fmt.Errorf("no such source %v", r.Src)
 			break
 		} else if dst, ok := memMap.Sites[r.Dst]; !ok {
-			err = fmt.Errorf("No such site [%v]", r.Dst)
+			err = fmt.Errorf("no such destination %v", r.Dst)
 			break
 		} else {
 			// raw maps are digraphs, mem maps are digraphs... no need to duplicate any road

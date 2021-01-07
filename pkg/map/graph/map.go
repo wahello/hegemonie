@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// A Edge is ... an edge of the transportation directed graph
+// Edge is ... an edge of the transportation directed graph
 type Edge struct {
 	// Unique identifier of the source Cell
 	S uint64 `json:"src"`
@@ -22,13 +22,10 @@ type Edge struct {
 	D uint64 `json:"dst"`
 }
 
-// A Vertex is a vertex in the transportation directed graph
+// Vertex is a vertex in the transportation directed graph
 type Vertex struct {
 	// The unique identifier of the current cell.
 	ID uint64 `json:"id"`
-
-	// // Biome in which the cell is
-	// Biome uint64
 
 	// Location of the Cell on the map. Used for rendering
 	X uint64 `json:"x"`
@@ -39,7 +36,7 @@ type Vertex struct {
 	City string `json:"city,omitempty"`
 }
 
-// A Map is a directed graph destined to be used as a transport network,
+// Map is a directed graph destined to be used as a transport network,
 // organised as an adjacency list.
 type Map struct {
 	// The unique name of the map
@@ -55,6 +52,7 @@ type Map struct {
 
 //go:generate go run github.com/jfsmig/hegemonie/pkg/gen-set ./map_auto.go mapgraph:SetOfMaps:*Map ID:string
 
+// EmptyMap builds a graph with no edge and no vertex.
 func EmptyMap() Map {
 	return Map{
 		ID:    "",
@@ -64,11 +62,14 @@ func EmptyMap() Map {
 	}
 }
 
+// NewMap returns a pointer to an EmptyMap
 func NewMap() *Map {
 	m := EmptyMap()
 	return &m
 }
 
+// Load consumes a mapclient.MapRaw from os.Stdin and populates the current
+// Map accordingly.
 func (m *Map) Load(in io.Reader) error {
 	decoder := json.NewDecoder(in)
 	err := decoder.Decode(m)
@@ -83,23 +84,29 @@ func (m *Map) Load(in io.Reader) error {
 	return m.check()
 }
 
-// Initially for testing purpose
+// LoadJSON is for testing purpose.
 func (m *Map) LoadJSON(in string) error {
 	return m.Load(strings.NewReader(in))
 }
 
+// CellGet is a shortcut to get a node / vertex given its ID
 func (m *Map) CellGet(id uint64) *Vertex {
 	return m.Cells.Get(id)
 }
 
+// CellGet is a shortcut to check the presence of a node / vertex given its ID
 func (m *Map) CellHas(id uint64) bool {
 	return m.Cells.Has(id)
 }
 
+// RoadHas is a shortcut to check the presence of an edge given its source
+// and destination.
 func (m *Map) RoadHas(src, dst uint64) bool {
 	return m.Roads.Has(src, dst)
 }
 
+// PathNextStep computes the next step on the path from the source (given by src)
+// to the destination (given by dst).
 func (m *Map) PathNextStep(src, dst uint64) (uint64, error) {
 	if src == dst || src == 0 || dst == 0 {
 		return 0, errors.New("EINVAL")
@@ -109,7 +116,7 @@ func (m *Map) PathNextStep(src, dst uint64) (uint64, error) {
 	if ok {
 		return next, nil
 	}
-	return 0, errors.New("No route")
+	return 0, errors.New("no route")
 }
 
 func (m *Map) CellAdjacency(id uint64) []uint64 {
@@ -139,7 +146,7 @@ func (m *Map) canonize() {
 // Validate the invariants of a Map, on the current map
 func (m *Map) check() error {
 	if m.ID == "" {
-		return errors.New("Map name not set")
+		return errors.New("bad name")
 	}
 	if err := m.Cells.Check(); err != nil {
 		return err
@@ -157,7 +164,7 @@ func (m *Map) check() error {
 
 	for idx, c := range m.Cells {
 		if idx > 0 && c.equals(*m.Cells[idx-1]) {
-			return errors.New("Duplicated Site")
+			return errors.New("duplicated Site")
 		}
 	}
 
@@ -165,7 +172,7 @@ func (m *Map) check() error {
 		for _, s0 := range m.Cells {
 			for _, s1 := range m.Cells {
 				if _, ok := m.steps[vector{s0.ID, s1.ID}]; !ok {
-					return errors.New("Reachability error")
+					return errors.New("unreachable error")
 				}
 			}
 		}
@@ -173,22 +180,22 @@ func (m *Map) check() error {
 
 	for idx, r := range m.Roads {
 		if r.S <= 0 {
-			return errors.New("Invalid source")
+			return errors.New("bad source")
 		}
 		if r.D <= 0 {
-			return errors.New("Invalid destination")
+			return errors.New("bad destination")
 		}
 		if !m.Cells.Has(r.S) {
-			return errors.New("Dangling source")
+			return errors.New("dangling source")
 		}
 		if !m.Cells.Has(r.D) {
-			return errors.New("Dangling destination")
+			return errors.New("dangling destination")
 		}
 		if r.D == r.S {
-			return errors.New("No loop allowed")
+			return errors.New("loop detected")
 		}
 		if idx > 0 && r.equals(*m.Roads[idx-1]) {
-			return errors.New("Duplicated road")
+			return errors.New("duplicated road")
 		}
 	}
 	return nil
@@ -231,7 +238,7 @@ func (m *Map) rehash() {
 				if !already[next] {
 					// Avoid passing again in the neighbor
 					already[next] = true
-					// Tell to contine at that neighbor
+					// Tell to continue at that neighbor
 					q.push(next, first)
 					// We already learned the shortest path to that neighbor
 					add(cell.ID, next, first)

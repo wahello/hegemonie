@@ -7,13 +7,10 @@ package mapclient
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
-	"io"
-	"os"
 	"strconv"
 )
 
@@ -25,74 +22,35 @@ type ClientCLI struct{}
 // a Map registered in the repository.
 func (c *ClientCLI) ListMaps(ctx context.Context, args PathArgs) error {
 	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		client := proto.NewMapClient(cnx)
-
-		rep, err := client.Maps(ctx, &proto.ListMapsReq{
+		rep, err := proto.NewMapClient(cnx).Maps(ctx, &proto.ListMapsReq{
 			Marker: args.MapName,
 		})
 		if err != nil {
 			return err
 		}
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "")
-
-		for {
-			x, err := rep.Recv()
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return err
-			}
-			err = encoder.Encode(x)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return utils.EncodeStream(func() (interface{}, error) { return rep.Recv() })
 	})
 }
 
 // GetCities produces to os.Stdout a JSON array of cities, where each City is an <id,name> tuple.
 func (c *ClientCLI) GetCities(ctx context.Context, args PathArgs) error {
 	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		client := proto.NewMapClient(cnx)
-
-		rep, err := client.Cities(ctx, &proto.ListCitiesReq{
+		rep, err := proto.NewMapClient(cnx).Cities(ctx, &proto.ListCitiesReq{
 			MapName: args.MapName,
 			Marker:  args.Src,
 		})
 		if err != nil {
 			return err
 		}
-
-		out := make([]uint64, 0)
-		for {
-			x, err := rep.Recv()
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return err
-			}
-			out = append(out, x.GetId())
-		}
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.Encode(out)
-		return nil
+		return utils.EncodeWhole(func() (interface{}, error) { return rep.Recv() })
 	})
 }
 
-// GetRoads produces to os.Stdout a JSON array of <int,int> pairs, with one pair
+// GetRoads produces to os.Stdout a JSON stream of <int,int> pairs objects, with one pair
 // for a road in place on the given map.
 func (c *ClientCLI) GetRoads(ctx context.Context, args PathArgs) error {
 	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		client := proto.NewMapClient(cnx)
-
-		rep, err := client.Edges(ctx, &proto.ListEdgesReq{
+		rep, err := proto.NewMapClient(cnx).Edges(ctx, &proto.ListEdgesReq{
 			MapName:   args.MapName,
 			MarkerSrc: args.Src,
 			MarkerDst: args.Dst,
@@ -100,24 +58,7 @@ func (c *ClientCLI) GetRoads(ctx context.Context, args PathArgs) error {
 		if err != nil {
 			return err
 		}
-
-		type Pair struct{ Src, Dst uint64 }
-		out := make([]Pair, 0)
-		for {
-			x, err := rep.Recv()
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return err
-			}
-			out = append(out, Pair{x.GetSrc(), x.GetDst()})
-		}
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.Encode(out)
-		return nil
+		return utils.EncodeStream(func() (interface{}, error) { return rep.Recv() })
 	})
 }
 
@@ -125,33 +66,14 @@ func (c *ClientCLI) GetRoads(ctx context.Context, args PathArgs) error {
 // with one tuple for each position on the map, i.e. one tuple per vertex in the graph.
 func (c *ClientCLI) GetPositions(ctx context.Context, args PathArgs) error {
 	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		client := proto.NewMapClient(cnx)
-
-		rep, err := client.Vertices(ctx, &proto.ListVerticesReq{
+		rep, err := proto.NewMapClient(cnx).Vertices(ctx, &proto.ListVerticesReq{
 			MapName: args.MapName,
 			Marker:  args.Src,
 		})
 		if err != nil {
 			return err
 		}
-
-		type V struct{ ID, X, Y uint64 }
-		out := make([]V, 0)
-		for {
-			x, err := rep.Recv()
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return err
-			}
-			out = append(out, V{ID: x.GetId(), X: x.GetX(), Y: x.GetY()})
-		}
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.Encode(out)
-		return nil
+		return utils.EncodeWhole(func() (interface{}, error) { return rep.Recv() })
 	})
 }
 
@@ -171,27 +93,11 @@ func (c *ClientCLI) GetStep(ctx context.Context, args PathArgs) error {
 
 func (c *ClientCLI) getPath(ctx context.Context, args PathArgs) error {
 	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		client := proto.NewMapClient(cnx)
-		rep, err := client.GetPath(ctx, &proto.PathRequest{MapName: args.MapName, Src: args.Src, Dst: args.Dst})
+		rep, err := proto.NewMapClient(cnx).GetPath(ctx, &proto.PathRequest{MapName: args.MapName, Src: args.Src, Dst: args.Dst})
 		if err != nil {
 			return err
 		}
-
-		var out []uint64
-		for i := uint32(0); i < args.Max; i++ {
-			x, err := rep.Recv()
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return err
-			}
-			out = append(out, x.GetId())
-		}
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.Encode(out)
-		return nil
+		return utils.EncodeWhole(func() (interface{}, error) { return rep.Recv() })
 	})
 }
 
@@ -227,12 +133,12 @@ func (pa *PathArgs) Parse(args []string) (err error) {
 					return err
 				}
 				if len(args) >= 4 {
-					return errors.New("Maximum 3 arguments expected: MAPNAME [INT [INT]]")
+					return errors.New("max 3 arguments expected: MAPNAME [INT [INT]]")
 				}
 			}
 		}
 	} else {
-		return errors.New("Minimum 1 argument expected: MAPNAME [INT [INT]]")
+		return errors.New("min 1 argument expected: MAPNAME [INT [INT]]")
 	}
 	return nil
 }

@@ -11,6 +11,8 @@ import (
 	"os"
 )
 
+// ToolNoise consumes a MapRaw on os.Stdin, parses it then alter each node position
+// (with a configurable statistical noise) and the dumps the new MapRaw on os.Stdout.
 func ToolNoise(noise float64) error {
 	decoder := json.NewDecoder(os.Stdin)
 	encoder := json.NewEncoder(os.Stdout)
@@ -37,6 +39,8 @@ func ToolNoise(noise float64) error {
 	return encoder.Encode(&raw)
 }
 
+// ToolSplit consumes a MapRaw on os.Stdin, parses it then adds nodes until each road (edge)
+// is shorter than a threshold (given by maxDist)
 func ToolSplit(maxDist float64) error {
 	decoder := json.NewDecoder(os.Stdin)
 	encoder := json.NewEncoder(os.Stdout)
@@ -62,6 +66,8 @@ func ToolSplit(maxDist float64) error {
 	return encoder.Encode(&raw)
 }
 
+// ToolNormalize consumes a MapRaw on os.Stdin, parses it a remap each node position
+// (keeping the same aspect ratio to fit the whole map into a given bounded box.
 func ToolNormalize() error {
 	decoder := json.NewDecoder(os.Stdin)
 
@@ -87,6 +93,8 @@ func ToolNormalize() error {
 	return encoder.Encode(&raw)
 }
 
+// ToolDot consumes a MapRaw on os.Stdin, parses it and dumps to os.Stdout a
+// dot representation (cf. graphviz.org) of it.
 func ToolDot() error {
 	decoder := json.NewDecoder(os.Stdin)
 
@@ -110,6 +118,8 @@ func ToolDot() error {
 	return nil
 }
 
+// ToolInit consumes a MapRaw on os.Stdin, parses it and dumps a SVG representation
+// of it to os.Stdout.
 func ToolFmt() error {
 	decoder := json.NewDecoder(os.Stdin)
 
@@ -162,6 +172,8 @@ func ToolFmt() error {
 	return nil
 }
 
+// ToolInit consumes a MapSeed on os.Stdin, parses it, extrapolates the MapRaw from it
+// and then dumps that MapRaw to os.Stdout.
 func ToolInit() error {
 	decoder := json.NewDecoder(os.Stdin)
 

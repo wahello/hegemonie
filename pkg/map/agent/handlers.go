@@ -9,9 +9,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	grpc_health_v1 "github.com/jfsmig/hegemonie/pkg/healthcheck"
+	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	mapgraph "github.com/jfsmig/hegemonie/pkg/map/graph"
-	proto "github.com/jfsmig/hegemonie/pkg/map/proto"
+	"github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
 	"net"
@@ -35,7 +35,7 @@ type srvMap struct {
 
 // Run starts an Map API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(ctx context.Context) error {
+func (cfg *Config) Run(_ context.Context) error {
 	srv := &srvMap{config: cfg, maps: make(mapgraph.SetOfMaps, 0)}
 	if err := srv.LoadDirectory(cfg.PathRepository); err != nil {
 		return err
@@ -71,7 +71,7 @@ func (cfg *Config) Run(ctx context.Context) error {
 }
 
 // Check implements the one-shot healthcheck of the gRPC service
-func (s *srvMap) Check(ctx context.Context, req *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+func (s *srvMap) Check(_ context.Context, _ *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
 	// FIXME(jfs): check the service ID
 	return &grpc_health_v1.HealthCheckResponse{
 		Status: grpc_health_v1.HealthCheckResponse_SERVING,
@@ -79,7 +79,7 @@ func (s *srvMap) Check(ctx context.Context, req *grpc_health_v1.HealthCheckReque
 }
 
 // Watch implements the long polling healthcheck of the gRPC service
-func (s *srvMap) Watch(req *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.Health_WatchServer) error {
+func (s *srvMap) Watch(_ *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.Health_WatchServer) error {
 	// FIXME(jfs): check the service ID
 	for {
 		err := srv.Send(&grpc_health_v1.HealthCheckResponse{
@@ -98,7 +98,7 @@ func (s *srvMap) Vertices(req *proto.ListVerticesReq, stream proto.Map_VerticesS
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("No Such Map")
+		return errors.New("no such map")
 	}
 
 	next := req.Marker
@@ -124,7 +124,7 @@ func (s *srvMap) Edges(req *proto.ListEdgesReq, stream proto.Map_EdgesServer) er
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("No Such Map")
+		return errors.New("no such map")
 	}
 
 	src, dst := req.MarkerSrc, req.MarkerDst
@@ -150,7 +150,7 @@ func (s *srvMap) GetPath(req *proto.PathRequest, stream proto.Map_GetPathServer)
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("No Such Map")
+		return errors.New("no such map")
 	}
 
 	src := req.Src
@@ -177,7 +177,7 @@ func (s *srvMap) Cities(req *proto.ListCitiesReq, stream proto.Map_CitiesServer)
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("No Such Map")
+		return errors.New("no such map")
 	}
 
 	next := req.Marker

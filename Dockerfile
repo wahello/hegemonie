@@ -10,7 +10,9 @@ RUN set -x \
   make \
   protobuf-compiler \
   librocksdb-dev \
-  librocksdb5.17
+  librocksdb5.17 \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 ENTRYPOINT ["/bin/bash"]

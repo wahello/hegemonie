@@ -10,6 +10,7 @@ import (
 	"sort"
 )
 
+// SiteSeed is the minimal representation of a graph node in a map for Hegemonie.
 type SiteSeed struct {
 	ID   string `json:"id"`
 	X    uint64 `json:"x"`
@@ -17,12 +18,13 @@ type SiteSeed struct {
 	City bool   `json:"city"`
 }
 
+// RoadSeed is the minimal representation of a diriectional graph edge in a map for Hegemonie.
 type RoadSeed struct {
 	Src string `json:"src"`
 	Dst string `json:"dst"`
 }
 
-// Handy representation of a map where nearly each node of the graph carries a city.
+// MapSeed is a handy representation of a map where nearly each node of the graph carries a city.
 // - The sites are identified by a textual name, typically decided by a content creator
 // that will name the cities in a meaningful way.
 // - Each site name MUST be unique

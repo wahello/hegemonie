@@ -269,6 +269,8 @@ type Building struct {
 	Ticks uint32 `json:",omitempty"`
 }
 
+// City is the central point of a game instance.
+// It is also the locking granularity for most actions.
 type City struct {
 	// The unique ID of the current City/
 	// It is identical to the ID of the location (Vertex) on the Map.
@@ -367,6 +369,8 @@ type City struct {
 	lieges SetOfCities
 }
 
+// UnitType gathers the core statistics of a kind of Unit. It actually dictates the
+// behavior of the Unit.
 type UnitType struct {
 	// Unique ID of the Unit Type
 	ID uint64 `json:"Id"`
@@ -420,7 +424,8 @@ type UnitType struct {
 	RequiredBuilding uint64
 }
 
-// Both Cell and City must not be 0, and have a non-0 value
+// Unit is the part of an Army that can participate to a Fight.
+// A Unit is owned after a training period. It has a regular cost.
 type Unit struct {
 	// Unique ID of the Unit
 	ID string `json:"Id"`
@@ -435,7 +440,7 @@ type Unit struct {
 	Health uint32 `json:"H,omitempty"`
 }
 
-// A queued order for a specific Army.
+// Command is a queued order for a specific Army.
 type Command struct {
 	// The unique ID of the Cell to target
 	Cell uint64
@@ -447,7 +452,7 @@ type Command struct {
 	Args string `json:"args"`
 }
 
-// Additional actions to be performed when the Army reaches its destination.
+// ActionArgMove gives additional actions to be performed when the Army reaches its destination.
 type ActionArgMove struct {
 	// Resources to be transferred
 	Amount Resources `json:"amount,omitempty"`
@@ -459,7 +464,7 @@ type ActionArgMove struct {
 	Units []uint64 `json:"units,omitempty"`
 }
 
-// What to do if the army is victorious
+// ActionArgAssault tells what to do if the army is victorious
 type ActionArgAssault struct {
 	// Become the overlord of the City.
 	Overlord bool `json:"overlord,omitempty"`
@@ -471,7 +476,7 @@ type ActionArgAssault struct {
 	Massacre bool `json:"massacre,omitempty"`
 }
 
-// An army is the entity able to act on a map.
+// Army is the entity able to act on a map.
 // The actions are produced in a queued (fielf :Targets:) and the queue
 // is consumed by a periodical task.
 type Army struct {

@@ -198,8 +198,7 @@ func (m *mapMem) splitOneRoad(src, dst *siteMem, nbSegments uint) {
 	segments = append(segments, src)
 	for i := uint(0); i < nbSegments-1; i++ {
 		last := segments[len(segments)-1]
-		x := last.Raw.X + xinc
-		y := last.Raw.Y + yinc
+		x, y := last.Raw.X+xinc, last.Raw.Y+yinc
 		id := atomic.AddUint64(&m.nextID, 1)
 		raw := SiteRaw{ID: id, City: "", X: x, Y: y}
 		middle := makeSite(raw)
@@ -241,7 +240,6 @@ func (m *mapMem) applyNoiseOnPositions(xjitter, yjitter float64) {
 }
 
 func distance(src, dst *siteMem) float64 {
-	dx := (dst.Raw.X - src.Raw.X)
-	dy := (dst.Raw.Y - src.Raw.Y)
+	dx, dy := dst.Raw.X-src.Raw.X, dst.Raw.Y-src.Raw.Y
 	return math.Sqrt(float64(dx*dx) + float64(dy*dy))
 }

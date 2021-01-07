@@ -60,12 +60,12 @@ DNS.1 = hostname.domain.tld
 DNS.2 = hostname
 IP.1 = 127.0.0.1
 EOF
-openssl genrsa -out $D/proxy/ca.key 4096
-openssl req    -new -x509 -key $D/proxy/ca.key -sha256 -subj "/C=FR/ST=Nord/O=CA, Inc./CN=localhost" -days 365 -out $D/proxy/ca.cert
-openssl genrsa -out $D/proxy/service.key 4096
-openssl req    -new -key $D/proxy/service.key -out $D/proxy/service.csr -config $D/proxy/certificate.conf
-openssl x509   -req -in $D/proxy/service.csr -CA $D/proxy/ca.cert -CAkey $D/proxy/ca.key -CAcreateserial -out $D/proxy/service.pem -days 365 -sha256 -extfile $D/proxy/certificate.conf -extensions req_ext
-openssl x509   -in $D/proxy/service.pem -text -noout
+openssl genrsa -out "$D/proxy/ca.key" 4096
+openssl req    -new -x509 -key "$D/proxy/ca.key" -sha256 -subj "/C=FR/ST=Nord/O=CA, Inc./CN=localhost" -days 365 -out "$D/proxy/ca.cert"
+openssl genrsa -out "$D/proxy/service.key" 4096
+openssl req    -new -key "$D/proxy/service.key" -out "$D/proxy/service.csr" -config "$D/proxy/certificate.conf"
+openssl x509   -req -in "$D/proxy/service.csr" -CA "$D/proxy/ca.cert" -CAkey "$D/proxy/ca.key" -CAcreateserial -out "$D/proxy/service.pem" -days 365 -sha256 -extfile "$D/proxy/certificate.conf" -extensions req_ext
+openssl x509   -in "$D/proxy/service.pem" -text -noout
 
 cat >>proxy/haproxy.cfg <<EOF
 defaults
@@ -99,7 +99,7 @@ backend grpc_reg
 	server server1 localhost:8083  ssl  verify none  alpn h2,http/1.1  check  maxconn 20
 EOF
 
-haproxy -- "$D/proxy/haproxy.cfg"
+#haproxy -- "$D/proxy/haproxy.cfg"
 
 #-----------------------------------------------------------------------------#
 
