@@ -38,42 +38,57 @@ type StatelessDiscovery interface {
 // localhost and serving default ports.
 var DefaultDiscovery StatelessDiscovery = TestEnv()
 
-// AllOnHost is the simplest implementation of a StatelessDiscovery ever.
-// It locates all the services on a given host at their default port value.
-type AllOnHost struct {
+type singleHost struct {
 	endpoint string
 }
 
-// TestEnv creates a AllOnHost implementation based on localhost.
-func TestEnv() StatelessDiscovery {
-	return &AllOnHost{"localhost"}
+type singleEndpoint struct {
+	endpoint string
 }
 
-func (d *AllOnHost) makeEndpoint(p uint) (string, error) {
+// TestEnv forwards to SingleHost on localhost
+func TestEnv() StatelessDiscovery { return SingleHost("localhost") }
+
+// TestEnv creates a singleHost implementation.
+// singleHost is the simplest implementation of a StatelessDiscovery ever.
+// It locates all the services on a given host at their default port value.
+func SingleHost(h string) StatelessDiscovery { return &singleHost{h} }
+
+// TestEnv creates a singleEndpoint implementation.
+// singleHost is the proxyed implementation of a StatelessDiscovery.
+// It locates all the services on a given host, all with the same port.
+func SingleEndpoint(e string) StatelessDiscovery { return &singleEndpoint{e} }
+
+func (d *singleHost) makeEndpoint(p uint) (string, error) {
 	return fmt.Sprintf("%s:%d", d.endpoint, p), nil
 }
 
-// see StatelessDiscovery.Kratos
-func (d *AllOnHost) Kratos() (string, error) {
-	return d.makeEndpoint(DefaultPortKratos)
-}
+// Kratos ... see StatelessDiscovery.Kratos
+func (d *singleHost) Kratos() (string, error) { return d.makeEndpoint(DefaultPortKratos) }
 
-// see StatelessDiscovery.Keto
-func (d *AllOnHost) Keto() (string, error) {
-	return d.makeEndpoint(DefaultPortKeto)
-}
+// Keto ... see StatelessDiscovery.Keto
+func (d *singleHost) Keto() (string, error) { return d.makeEndpoint(DefaultPortKeto) }
 
-// see StatelessDiscovery.Map
-func (d *AllOnHost) Map() (string, error) {
-	return d.makeEndpoint(DefaultPortMap)
-}
+// Map ... see StatelessDiscovery.Map
+func (d *singleHost) Map() (string, error) { return d.makeEndpoint(DefaultPortMap) }
 
-// see StatelessDiscovery.Region
-func (d *AllOnHost) Region() (string, error) {
-	return d.makeEndpoint(DefaultPortRegion)
-}
+// Region ... see StatelessDiscovery.Region
+func (d *singleHost) Region() (string, error) { return d.makeEndpoint(DefaultPortRegion) }
 
-// see StatelessDiscovery.Event
-func (d *AllOnHost) Event() (string, error) {
-	return d.makeEndpoint(DefaultPortEvent)
-}
+// Event ... see StatelessDiscovery.Event
+func (d *singleHost) Event() (string, error) { return d.makeEndpoint(DefaultPortEvent) }
+
+// Kratos ... see StatelessDiscovery.Kratos
+func (d *singleEndpoint) Kratos() (string, error) { return d.endpoint, nil }
+
+// Keto ... see StatelessDiscovery.Keto
+func (d *singleEndpoint) Keto() (string, error) { return d.endpoint, nil }
+
+// Map ... see StatelessDiscovery.Map
+func (d *singleEndpoint) Map() (string, error) { return d.endpoint, nil }
+
+// Region ... see StatelessDiscovery.Region
+func (d *singleEndpoint) Region() (string, error) { return d.endpoint, nil }
+
+// Event ... see StatelessDiscovery.Event
+func (d *singleEndpoint) Event() (string, error) { return d.endpoint, nil }

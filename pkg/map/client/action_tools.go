@@ -118,7 +118,7 @@ func ToolDot() error {
 	return nil
 }
 
-// ToolInit consumes a MapRaw on os.Stdin, parses it and dumps a SVG representation
+// ToolFmt consumes a MapRaw on os.Stdin, parses it and dumps a SVG representation
 // of it to os.Stdout.
 func ToolFmt() error {
 	decoder := json.NewDecoder(os.Stdin)

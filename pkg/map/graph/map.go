@@ -94,7 +94,7 @@ func (m *Map) CellGet(id uint64) *Vertex {
 	return m.Cells.Get(id)
 }
 
-// CellGet is a shortcut to check the presence of a node / vertex given its ID
+// CellHas is a shortcut to check the presence of a node / vertex given its ID
 func (m *Map) CellHas(id uint64) bool {
 	return m.Cells.Has(id)
 }
@@ -119,6 +119,9 @@ func (m *Map) PathNextStep(src, dst uint64) (uint64, error) {
 	return 0, errors.New("no route")
 }
 
+// CellAdjacency returns the adjacency list of the cell with the given ID,
+// in other words, an array of the ID of the target of the roads leaving
+// the given cell.
 func (m *Map) CellAdjacency(id uint64) []uint64 {
 	adj := make([]uint64, 0)
 

@@ -53,6 +53,8 @@ func servers(ctx context.Context) *cobra.Command {
 }
 
 func clients(ctx context.Context) *cobra.Command {
+	var proxy string
+
 	cmd := &cobra.Command{
 		Use:   "client",
 		Short: "Client tool for various Hegemonie services",
@@ -67,6 +69,16 @@ func clients(ctx context.Context) *cobra.Command {
 	}
 	ctx = metadata.AppendToOutgoingContext(ctx, "session-id", sessionID)
 
+	cmd.PersistentFlags().StringVar(&proxy,
+		"proxy", "", "IP:PORT endpoint for the gRPC proxy")
+
+	// Override the discovery if a proxy is configured
+	cmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
+		if proxy != "" {
+			utils.DefaultDiscovery = utils.SingleEndpoint(proxy)
+		}
+		return nil
+	}
 	cmd.AddCommand(clientMap(ctx), clientEvent(ctx), clientAuth(ctx), clientRegion(ctx))
 	return cmd
 }
