@@ -15,7 +15,7 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/map/agent"
 	"github.com/jfsmig/hegemonie/pkg/map/client"
 	"github.com/jfsmig/hegemonie/pkg/region/agent"
-	regclient "github.com/jfsmig/hegemonie/pkg/region/client"
+	"github.com/jfsmig/hegemonie/pkg/region/client"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
@@ -41,14 +41,22 @@ func main() {
 	}
 }
 
+type srvCommons struct {
+	pathKey string
+	pathCrt string
+}
+
 func servers(ctx context.Context) *cobra.Command {
+	var srv srvCommons
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "Run Hegemonie services",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
-	cmd.AddCommand(serverMap(ctx), serverEvent(ctx), serverRegion(ctx))
+	cmd.PersistentFlags().StringVar(&srv.pathKey, "key", "", "Path to the X509 key file")
+	cmd.PersistentFlags().StringVar(&srv.pathCrt, "crt", "", "Path to the X509 cert file")
+	cmd.AddCommand(srv.maps(ctx), srv.event(ctx), srv.region(ctx))
 	return cmd
 }
 
@@ -62,23 +70,27 @@ func clients(ctx context.Context) *cobra.Command {
 		RunE:  nonLeaf,
 	}
 
-	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+	// Set a common reasonable timeout to all client RPC
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	sessionID := os.Getenv("HEGE_CLI_SESSIONID")
 	if sessionID == "" {
 		sessionID = "cli/" + uuid.New().String()
 	}
+
+	// Inherit a session-id from the env
 	ctx = metadata.AppendToOutgoingContext(ctx, "session-id", sessionID)
 
+	// Override the discovery if a proxy is configured
 	cmd.PersistentFlags().StringVar(&proxy,
 		"proxy", "", "IP:PORT endpoint for the gRPC proxy")
-
-	// Override the discovery if a proxy is configured
 	cmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
 		if proxy != "" {
 			utils.DefaultDiscovery = utils.SingleEndpoint(proxy)
 		}
 		return nil
 	}
+	cmd.PersistentPostRun = func(_ *cobra.Command, _ []string) { cancel() }
+
 	cmd.AddCommand(clientMap(ctx), clientEvent(ctx), clientAuth(ctx), clientRegion(ctx))
 	return cmd
 }
@@ -278,7 +290,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 	push := &cobra.Command{
 		Use:     "push",
 		Short:   "Push events in the Character's log",
-		Example: `event push "${CHARACTER}" "${MSG0}" "${MSG1}"`,
+		Example: `server event push "${CHARACTER}" "${MSG0}" "${MSG1}"`,
 		Args:    cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cfg.DoPush(ctx, args[0], args[1:]...)
@@ -288,7 +300,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 	list := &cobra.Command{
 		Use:     "list",
 		Short:   "List the events",
-		Example: `event list "${CHARACTER}" "${EVENT_TIMESTAMP}" [${EVENT_MARKER}]`,
+		Example: `server event list "${CHARACTER}" "${EVENT_TIMESTAMP}" [${EVENT_MARKER}]`,
 		Args:    cobra.RangeArgs(1, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var when uint64
@@ -311,7 +323,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 	ack := &cobra.Command{
 		Use:     "ack",
 		Short:   "Acknowledge an event",
-		Example: `event ack "${CHARACTER}" "${EVENT_UUID}" "${EVENT_TIMESTAMP}"`,
+		Example: `server event ack "${CHARACTER}" "${EVENT_UUID}" "${EVENT_TIMESTAMP}"`,
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var when uint64
@@ -450,7 +462,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
-func serverEvent(ctx context.Context) *cobra.Command {
+func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
 	cfg := evtagent.Config{}
 
 	agent := &cobra.Command{
@@ -460,7 +472,11 @@ func serverEvent(ctx context.Context) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathBase = args[0]
-			return cfg.Run(ctx)
+			grpcSrv, err := utils.ServerTLS(srv.pathKey, srv.pathCrt)
+			if err != nil {
+				return err
+			}
+			return cfg.Run(ctx, grpcSrv)
 		},
 	}
 
@@ -469,7 +485,7 @@ func serverEvent(ctx context.Context) *cobra.Command {
 	return agent
 }
 
-func serverMap(ctx context.Context) *cobra.Command {
+func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
 	cfg := mapagent.Config{}
 
 	agent := &cobra.Command{
@@ -479,7 +495,11 @@ func serverMap(ctx context.Context) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathRepository = args[0]
-			return cfg.Run(ctx)
+			grpcSrv, err := utils.ServerTLS(srv.pathKey, srv.pathCrt)
+			if err != nil {
+				return err
+			}
+			return cfg.Run(ctx, grpcSrv)
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
@@ -488,7 +508,7 @@ func serverMap(ctx context.Context) *cobra.Command {
 	return agent
 }
 
-func serverRegion(ctx context.Context) *cobra.Command {
+func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
 	cfg := regagent.Config{}
 
 	agent := &cobra.Command{
@@ -499,7 +519,11 @@ func serverRegion(ctx context.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathDefs = args[0]
 			cfg.PathLive = args[1]
-			return cfg.Run(ctx)
+			grpcSrv, err := utils.ServerTLS(srv.pathKey, srv.pathCrt)
+			if err != nil {
+				return err
+			}
+			return cfg.Run(ctx, grpcSrv)
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
@@ -508,6 +532,6 @@ func serverRegion(ctx context.Context) *cobra.Command {
 	return agent
 }
 
-func nonLeaf(cmd *cobra.Command, args []string) error {
-	return errors.New("Missing subcommand")
+func nonLeaf(_ *cobra.Command, _ []string) error {
+	return errors.New("missing subcommand")
 }

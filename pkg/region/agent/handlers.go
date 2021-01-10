@@ -26,7 +26,7 @@ type Config struct {
 
 // Run starts a Region API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(_ context.Context) error {
+func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	var err error
 	var w region.World
 
@@ -68,14 +68,11 @@ func (cfg *Config) Run(_ context.Context) error {
 	defer cnxEvent.Close()
 	w.SetNotifier(&EventStore{cnx: cnxEvent})
 
-	srv := grpc.NewServer(
-		utils.ServerUnaryInterceptorZerolog(),
-		utils.ServerStreamInterceptorZerolog())
-	proto.RegisterCityServer(srv, &srvCity{cfg: cfg, w: &w})
-	proto.RegisterDefinitionsServer(srv, &srvDefinitions{cfg: cfg, w: &w})
-	proto.RegisterAdminServer(srv, &srvAdmin{cfg: cfg, w: &w})
-	proto.RegisterArmyServer(srv, &srvArmy{cfg: cfg, w: &w})
-	grpc_health_v1.RegisterHealthServer(srv, &srvHealth{w: &w})
+	grpc_health_v1.RegisterHealthServer(grpcSrv, &srvHealth{w: &w})
+	proto.RegisterCityServer(grpcSrv, &srvCity{cfg: cfg, w: &w})
+	proto.RegisterDefinitionsServer(grpcSrv, &srvDefinitions{cfg: cfg, w: &w})
+	proto.RegisterAdminServer(grpcSrv, &srvAdmin{cfg: cfg, w: &w})
+	proto.RegisterArmyServer(grpcSrv, &srvArmy{cfg: cfg, w: &w})
 
 	utils.Logger.Info().
 		Str("defs", cfg.PathDefs).
@@ -83,5 +80,5 @@ func (cfg *Config) Run(_ context.Context) error {
 		Str("endpoint", cfg.Endpoint).
 		Msg("starting")
 
-	return srv.Serve(lis)
+	return grpcSrv.Serve(lis)
 }

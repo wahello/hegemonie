@@ -7,9 +7,15 @@ package utils
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -19,12 +25,56 @@ type ActionFunc func(ctx context.Context, cli *grpc.ClientConn) error
 
 // Connect establishes a connection to the given service and then call the action.
 func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
-	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
+	config := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	creds := credentials.NewTLS(config)
+
+	cnx, err := grpc.DialContext(ctx, endpoint,
+		grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return err
 	}
 	defer cnx.Close()
 	return action(ctx, cnx)
+}
+
+func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
+	if len(pathCrt) <= 0 {
+		return nil, fmt.Errorf("invalid TLS/x509 certificate path [%s]", pathCrt)
+	}
+	if len(pathKey) <= 0 {
+		return nil, fmt.Errorf("invalid TLS/x509 key path [%s]", pathKey)
+	}
+	var certBytes, keyBytes []byte
+	var err error
+
+	Logger.Info().Str("key", pathKey).Str("crt", pathCrt).Msg("TLS config")
+
+	if certBytes, err = ioutil.ReadFile(pathCrt); err != nil {
+		return nil, err
+	}
+	if keyBytes, err = ioutil.ReadFile(pathKey); err != nil {
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	ok := certPool.AppendCertsFromPEM(certBytes)
+	if !ok {
+		return nil, errors.New("invalid certificates")
+	}
+
+	cert, err := tls.X509KeyPair(certBytes, keyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	creds := credentials.NewServerTLSFromCert(&cert)
+	srv := grpc.NewServer(
+		grpc.Creds(creds),
+		grpc.StreamInterceptor(newStreamServerInterceptorZerolog()),
+		grpc.UnaryInterceptor(newUnaryServerInterceptorZerolog()))
+	return srv, nil
 }
 
 // RecvFunc names the signature of the hook that consumes an input and returns an

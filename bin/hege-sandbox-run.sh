@@ -21,26 +21,12 @@ function finish() {
 trap finish SIGTERM SIGINT EXIT
 
 cd "$D"
+mkdir maps events live proxy
+mkdir pki
 
-
-#-----------------------------------------------------------------------------#
-
-mkdir maps
-"$REPO/bin/hege-map-transform.sh" "$REPO/docs/maps/" ./maps
-hege server map --endpoint=localhost:8083 ./maps &
-
-
-mkdir ./events
-hege server event --endpoint=localhost:8082 ./events &
-
-
-mkdir ./live
-cp -rp "$REPO/docs/definitions/hegeIV" ./defs
-hege server region --endpoint=localhost:8081 ./defs ./live &
-
-mkdir ./proxy
-
-cat >>proxy/certificate.conf <<EOF
+#-----------------------------------------------------------------------------
+# Generate a self-signed certificate
+cat >>"$D/pki/certificate.conf" <<EOF
 [ req ]
 prompt = no
 default_bits = 4096
@@ -49,79 +35,110 @@ req_extensions = req_ext
 [ req_distinguished_name ]
 C=FR
 ST=Nord
-L=Hem
-O=OpenIO
+L=Flines-lez-Mortagne
+O=Hegemonie
 OU=R&D
 CN=localhost
 [ req_ext ]
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = hostname.domain.tld
-DNS.2 = hostname
+DNS.1 = localhost.localdomain
+DNS.2 = localhost
 IP.1 = 127.0.0.1
 EOF
 openssl genrsa \
-	-out "$D/proxy/ca.key" 4096
+	-out "$D/pki/ca.key" 4096
 openssl req \
 	-new -x509 \
-	-key "$D/proxy/ca.key" \
+	-key "$D/pki/ca.key" \
 	-sha256 \
-	-subj "/C=FR/ST=Nord/O=CA, Inc./CN=localhost" \
+	-subj "/C=FR/ST=Nord/O=Hegemonie/CN=localhost" \
 	-days 365 \
-	-out "$D/proxy/ca.cert"
-openssl genrsa \
-	-out "$D/proxy/service.key" 4096
-openssl req \
-	-new \
-	-key "$D/proxy/service.key" \
-	-config "$D/proxy/certificate.conf" \
-	-out "$D/proxy/service.csr"
-openssl x509 \
-	-req \
-	-in "$D/proxy/service.csr" \
-	-CA "$D/proxy/ca.cert" \
-	-CAkey "$D/proxy/ca.key" \
-	-CAcreateserial \
-	-out "$D/proxy/service.pem" \
-	-days 365 \
-	-sha256 \
-	-extfile "$D/proxy/certificate.conf" \
-	-extensions req_ext
+	-out "$D/pki/ca.cert"
 
-# debug
-openssl x509 \
-	-in "$D/proxy/service.pem" \
-	-text \
-	-noout
+function service_certificate() {
+	local srv
+	srv=$1 ; shift
+	openssl genrsa \
+		-out "$D/pki/$srv.key" 4096
+	openssl req \
+		-new \
+		-key "$D/pki/$srv.key" \
+		-config "$D/pki/certificate.conf" \
+		-out "$D/pki/$srv.csr"
+	openssl x509 \
+		-req \
+		-in "$D/pki/$srv.csr" \
+		-CA "$D/pki/ca.cert" \
+		-CAkey "$D/pki/ca.key" \
+		-CAcreateserial \
+		-out "$D/pki/$srv.crt" \
+		-days 365 \
+		-sha256 \
+		-extfile "$D/pki/certificate.conf" \
+		-extensions req_ext
+	rm "$D/pki/$srv.csr"
+	cat "$D/pki/$srv.crt" "$D/pki/$srv.key" > "$D/pki/$srv.pem"
+	chmod 0400 "$D/pki/$srv.key" "$D/pki/$srv.crt"
+	echo "$D/pki/$srv.pem" "$D/pki/$srv.key"
+}
 
-( cd "$D/proxy" && chmod 400 -- * )
+function tls_opts() {
+	local srv
+	srv=$1 ; shift
+	echo "--key=$D/pki/$srv.key" "--crt=$D/pki/$srv.crt"
+}
 
-cat >>proxy/haproxy.cfg <<EOF
+#-----------------------------------------------------------------------------
+#
+"$REPO/bin/hege-map-transform.sh" "$REPO/docs/maps/" "$D/maps"
+service_certificate maps
+hege server $(tls_opts maps) map --endpoint=localhost:8083 "$D/maps" &
+
+
+#-----------------------------------------------------------------------------
+# 
+service_certificate events
+hege server $(tls_opts events) event --endpoint=localhost:8082 "$D/events" &
+
+
+#-----------------------------------------------------------------------------
+# 
+cp -rp "$REPO/docs/definitions/hegeIV" "$D/defs"
+service_certificate region
+hege server $(tls_opts region) region --endpoint=localhost:8081 "$D/defs" "$D/live" &
+
+
+#-----------------------------------------------------------------------------
+# Generate a per-service certificate
+
+
+cat >>"$D/proxy/haproxy.cfg" <<EOF
 global
 	log stdout local0
-	stats socket $D/proxy/admin.sock mode 660 level admin expose-fd listeners
+	stats socket $D/pki/admin.sock mode 660 level admin expose-fd listeners
 	stats timeout 30s
-	# Default SSL material locations
 	ca-base /etc/ssl/certs
 	crt-base /etc/ssl/private
 	# See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
-	ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
-	ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-	ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+	#ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+	#ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+	#ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+	debug
 
 defaults
-	log	global
+	log global
+	maxconn 1024
 	mode http
-	option httplog
-	option logasap
-	option http-use-htx
-	timeout connect 2s
+	timeout connect 10s
 	timeout client  30s
 	timeout server  30s
+	option logasap
+	option httplog
+	option http-use-htx
 
 frontend grpc
-	#bind :8080  alpn h2,h2c
-	bind 127.0.0.1:8080  ssl  verify none  crt $D/proxy/service.pem alpn h2
+	bind :8080  ssl  verify none  crt $D/pki/proxy.pem alpn h2
 	http-request deny unless { req.hdr(content-type) -m str "application/grpc" }
 	acl ismap  path_beg "/hege.map."
 	acl isevt  path_beg "/hege.evt."
@@ -130,21 +147,22 @@ frontend grpc
 	use_backend grpc_evt  if isevt
 	use_backend grpc_reg  if isreg
 
-backend grpc_map
+backend grpc_reg
 	balance roundrobin
-	server map1 localhost:8081  ssl verify none  alpn h2  check
+	server reg1 localhost:8081  ssl  alpn h2  check  maxconn 32  verify none
 
 backend grpc_evt
 	balance roundrobin
-	server evt1 localhost:8082  ssl verify none  alpn h2  check
+	server evt1 localhost:8082  ssl  alpn h2  check  maxconn 32  verify none
 
-backend grpc_reg
+backend grpc_map
 	balance roundrobin
-	server reg1 localhost:8083  ssl verify none  alpn h2  check
+	server map1 localhost:8083  ssl  alpn h2  check  maxconn 32  verify none
 
 EOF
 
-haproxy -d -V -- "$D/proxy/haproxy.cfg"
+service_certificate proxy
+haproxy -- "$D/proxy/haproxy.cfg"
 
 #-----------------------------------------------------------------------------#
 

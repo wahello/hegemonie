@@ -35,9 +35,9 @@ type srvMap struct {
 
 // Run starts an Map API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(_ context.Context) error {
-	srv := &srvMap{config: cfg, maps: make(mapgraph.SetOfMaps, 0)}
-	if err := srv.LoadDirectory(cfg.PathRepository); err != nil {
+func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
+	app := &srvMap{config: cfg, maps: make(mapgraph.SetOfMaps, 0)}
+	if err := app.LoadDirectory(cfg.PathRepository); err != nil {
 		return err
 	}
 
@@ -46,24 +46,21 @@ func (cfg *Config) Run(_ context.Context) error {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer(
-		utils.ServerUnaryInterceptorZerolog(),
-		utils.ServerStreamInterceptorZerolog())
-	grpc_health_v1.RegisterHealthServer(grpcServer, srv)
-	proto.RegisterMapServer(grpcServer, srv)
+	grpc_health_v1.RegisterHealthServer(grpcSrv, app)
+	proto.RegisterMapServer(grpcSrv, app)
 
 	utils.Logger.Info().
-		Int("maps", srv.maps.Len()).
+		Int("maps", app.maps.Len()).
 		Str("endpoint", cfg.Endpoint).
 		Msg("Starting")
-	for _, m := range srv.maps {
+	for _, m := range app.maps {
 		utils.Logger.Debug().
 			Str("name", m.ID).
 			Int("sites", m.Cells.Len()).
 			Int("roads", m.Roads.Len()).
 			Msg("map>")
 	}
-	if err := grpcServer.Serve(lis); err != nil {
+	if err := grpcSrv.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %v", err)
 	}
 

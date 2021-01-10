@@ -31,17 +31,16 @@ type eventService struct {
 
 // Run starts an Event API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg Config) Run(_ context.Context) error {
+func (cfg Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	if cfg.PathBase == "" {
 		return errors.New("missing path to the event data directory")
 	}
 
-	var srv eventService
 	var lis net.Listener
 	var err error
 
-	srv.cfg = cfg
-	srv.backend, err = back.Open(srv.cfg.PathBase)
+	app := eventService{cfg: cfg}
+	app.backend, err = back.Open(app.cfg.PathBase)
 	if err != nil {
 		return err
 	}
@@ -51,18 +50,15 @@ func (cfg Config) Run(_ context.Context) error {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
 
-	server := grpc.NewServer(
-		utils.ServerUnaryInterceptorZerolog(),
-		utils.ServerStreamInterceptorZerolog())
-	grpc_health_v1.RegisterHealthServer(server, &srv)
-	proto.RegisterProducerServer(server, &srv)
-	proto.RegisterConsumerServer(server, &srv)
+	grpc_health_v1.RegisterHealthServer(grpcSrv, &app)
+	proto.RegisterProducerServer(grpcSrv, &app)
+	proto.RegisterConsumerServer(grpcSrv, &app)
 
 	utils.Logger.Info().
-		Str("base", srv.cfg.PathBase).
-		Str("endpoint", srv.cfg.Endpoint).
+		Str("base", app.cfg.PathBase).
+		Str("endpoint", app.cfg.Endpoint).
 		Msg("starting")
-	return server.Serve(lis)
+	return grpcSrv.Serve(lis)
 }
 
 // Ack1 marks an event as read so that it won't be listed again.
