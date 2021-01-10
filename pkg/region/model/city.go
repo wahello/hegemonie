@@ -410,12 +410,12 @@ func (c *City) UnitFrontier(w *World) []*UnitType {
 
 // check the current City has all the requirements to train a Unti of the
 // given UnitType.
-func (c *City) UnitAllowed(pType *UnitType) bool {
-	if pType.RequiredBuilding == 0 {
+func (c *City) UnitAllowed(t *UnitType) bool {
+	if t.RequiredBuilding == 0 {
 		return true
 	}
 	for _, b := range c.Buildings {
-		if b.Type == pType.RequiredBuilding {
+		if b.Type == t.RequiredBuilding {
 			return true
 		}
 	}
@@ -434,21 +434,21 @@ func (c *City) UnitCreate(w *Region, pType *UnitType) *Unit {
 // Start the training of a Unit of the given UnitType (id).
 // The whole chain of requirements will be checked.
 func (c *City) Train(w *Region, typeID uint64) (string, error) {
-	pType := w.world.UnitTypeGet(typeID)
-	if pType == nil {
+	t := w.world.UnitTypeGet(typeID)
+	if t == nil {
 		return "", errors.New("Unit Type not found")
 	}
-	if !c.UnitAllowed(pType) {
+	if !c.UnitAllowed(t) {
 		return "", errors.New("Precondition Failed: no suitable building")
 	}
 
-	u := c.UnitCreate(w, pType)
+	u := c.UnitCreate(w, t)
 	return u.ID, nil
 }
 
 func (c *City) Study(w *Region, typeID uint64) (string, error) {
-	kType := w.world.KnowledgeTypeGet(typeID)
-	if kType == nil {
+	t := w.world.KnowledgeTypeGet(typeID)
+	if t == nil {
 		return "", errors.New("Knowledge Type not found")
 	}
 	for _, k := range c.Knowledges {
@@ -456,12 +456,12 @@ func (c *City) Study(w *Region, typeID uint64) (string, error) {
 			return "", errors.New("Already started")
 		}
 	}
-	if !CheckKnowledgeDependencies(c.ownedKnowledgeTypes(w), kType.Requires, kType.Conflicts) {
+	if !CheckKnowledgeDependencies(c.ownedKnowledgeTypes(w), t.Requires, t.Conflicts) {
 		return "", errors.New("Conflict")
 	}
 
 	id := uuid.New().String()
-	c.Knowledges.Add(&Knowledge{ID: id, Type: typeID, Ticks: kType.Ticks})
+	c.Knowledges.Add(&Knowledge{ID: id, Type: typeID, Ticks: t.Ticks})
 	return id, nil
 }
 
@@ -474,26 +474,26 @@ func (c *City) ownedKnowledgeTypes(reg *Region) SetOfKnowledgeTypes {
 }
 
 func (c *City) Build(w *Region, bID uint64) (string, error) {
-	bType := w.world.BuildingTypeGet(bID)
-	if bType == nil {
+	t := w.world.BuildingTypeGet(bID)
+	if t == nil {
 		return "", errors.New("Building Type not found")
 	}
-	if !bType.MultipleAllowed {
+	if !t.MultipleAllowed {
 		for _, b := range c.Buildings {
 			if b.Type == bID {
 				return "", errors.New("Building already present")
 			}
 		}
 	}
-	if !CheckKnowledgeDependencies(c.ownedKnowledgeTypes(w), bType.Requires, bType.Conflicts) {
+	if !CheckKnowledgeDependencies(c.ownedKnowledgeTypes(w), t.Requires, t.Conflicts) {
 		return "", errors.New("Conflict")
 	}
-	if !c.Stock.GreaterOrEqualTo(bType.Cost0) {
+	if !c.Stock.GreaterOrEqualTo(t.Cost0) {
 		return "", errors.New("Not enough ressources")
 	}
 
 	id := uuid.New().String()
-	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: bType.Ticks})
+	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: t.Ticks})
 	return id, nil
 }
 

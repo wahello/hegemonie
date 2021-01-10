@@ -29,7 +29,7 @@ func (defs *DefinitionsBase) Check() error {
 	return nil
 }
 
-func walkJson(path string, hook func(path string, decoder *json.Decoder) error) error {
+func walkJSON(path string, hook func(path string, decoder *json.Decoder) error) error {
 	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if !strings.HasSuffix(path, ".json") {
 			return nil
@@ -48,7 +48,7 @@ func walkJson(path string, hook func(path string, decoder *json.Decoder) error) 
 }
 
 func (defs *DefinitionsBase) loadUnits(basedir string) error {
-	return walkJson(basedir, func(_ string, decoder *json.Decoder) error {
+	return walkJSON(basedir, func(_ string, decoder *json.Decoder) error {
 		tmp := make([]*UnitType, 0)
 		if err := decoder.Decode(&tmp); err != nil {
 			return err
@@ -59,7 +59,7 @@ func (defs *DefinitionsBase) loadUnits(basedir string) error {
 }
 
 func (defs *DefinitionsBase) loadKnowledge(basedir string) (err error) {
-	return walkJson(basedir, func(_ string, decoder *json.Decoder) error {
+	return walkJSON(basedir, func(_ string, decoder *json.Decoder) error {
 		tmp := make([]*KnowledgeType, 0)
 		if err = decoder.Decode(&tmp); err != nil {
 			return err
@@ -70,7 +70,7 @@ func (defs *DefinitionsBase) loadKnowledge(basedir string) (err error) {
 }
 
 func (defs *DefinitionsBase) loadBuildings(basedir string) (err error) {
-	return walkJson(basedir, func(_ string, decoder *json.Decoder) error {
+	return walkJSON(basedir, func(_ string, decoder *json.Decoder) error {
 		tmp := make([]*BuildingType, 0)
 		if err = decoder.Decode(&tmp); err != nil {
 			return err
@@ -222,7 +222,7 @@ func (w *World) LoadDefinitions(basedir string) (err error) {
 }
 
 func (w *World) LoadRegions(basedir string) error {
-	return walkJson(basedir, func(path string, decoder *json.Decoder) error {
+	return walkJSON(basedir, func(path string, decoder *json.Decoder) error {
 		reg := &Region{}
 		err := decoder.Decode(&reg)
 		if err != nil {

@@ -18,6 +18,7 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/region/client"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"os"
@@ -44,6 +45,7 @@ func main() {
 type srvCommons struct {
 	pathKey string
 	pathCrt string
+	grpcSrv *grpc.Server
 }
 
 func servers(ctx context.Context) *cobra.Command {
@@ -56,6 +58,11 @@ func servers(ctx context.Context) *cobra.Command {
 	}
 	cmd.PersistentFlags().StringVar(&srv.pathKey, "key", "", "Path to the X509 key file")
 	cmd.PersistentFlags().StringVar(&srv.pathCrt, "crt", "", "Path to the X509 cert file")
+	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		var err error
+		srv.grpcSrv, err = utils.ServerTLS(srv.pathKey, srv.pathCrt)
+		return err
+	}
 	cmd.AddCommand(srv.maps(ctx), srv.event(ctx), srv.region(ctx))
 	return cmd
 }
@@ -98,12 +105,11 @@ func clients(ctx context.Context) *cobra.Command {
 func tools(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tools",
-		Short: "Miscellanous tools to help the operations",
+		Short: "Miscellaneous tools to help the operations",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
-	cmd.AddCommand(
-		toolsMap(ctx))
+	cmd.AddCommand(toolsMap(ctx))
 	return cmd
 }
 
@@ -116,10 +122,9 @@ func toolsMap(_ context.Context) *cobra.Command {
 	}
 
 	normalize := &cobra.Command{
-		Use:     "normalize",
-		Aliases: []string{"check", "prepare", "sanitize"},
-		Short:   "Normalize the positions in a map (stdin/stdout)",
-		Long:    `Read the map description on the standard input, remap the positions of the vertices in the map graph so that they fit in the given boundaries and dump it to the standard output.`,
+		Use:   "normalize",
+		Short: "Normalize the positions in a map (stdin/stdout)",
+		Long:  `Read the map description on the standard input, remap the positions of the vertices in the map graph so that they fit in the given boundaries and dump it to the standard output.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return mapclient.ToolNormalize()
 		},
@@ -127,10 +132,9 @@ func toolsMap(_ context.Context) *cobra.Command {
 
 	var maxDist float64
 	split := &cobra.Command{
-		Use:     "split",
-		Aliases: []string{},
-		Short:   "Split the long edges of a map (stdin/stdout)",
-		Long:    `Read the map on the standard input, split all the edges that are longer to the given value and dump the new graph on the standard output.`,
+		Use:   "split",
+		Short: "Split the long edges of a map (stdin/stdout)",
+		Long:  `Read the map on the standard input, split all the edges that are longer to the given value and dump the new graph on the standard output.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return mapclient.ToolSplit(maxDist)
 		},
@@ -139,10 +143,9 @@ func toolsMap(_ context.Context) *cobra.Command {
 
 	var noise float64
 	noisify := &cobra.Command{
-		Use:     "split",
-		Aliases: []string{},
-		Short:   "Split the long edges of a map (stdin/stdout)",
-		Long:    `Read the map on the standard input, split all the edges that are longer to the given value and dump the new graph on the standard output.`,
+		Use:   "noise",
+		Short: "Apply a noise on the positon of the nodes (stdin/stdout)",
+		Long:  `Read the map on the standard input, randomly alter the positions of the nodes and dump the new graph on the standard output.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return mapclient.ToolNoise(noise)
 		},
@@ -150,20 +153,18 @@ func toolsMap(_ context.Context) *cobra.Command {
 	noisify.Flags().Float64VarP(&noise, "noise", "n", 15, "Percent of the image dimension used as max noise variation on non-city nodes positions")
 
 	drawDot := &cobra.Command{
-		Use:     "dot",
-		Aliases: []string{},
-		Short:   "Convert the JSON map to DOT (stdin/stdout)",
+		Use:   "dot",
+		Short: "Convert the JSON map to DOT (stdin/stdout)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return mapclient.ToolDot()
 		},
 	}
 
 	drawSvg := &cobra.Command{
-		Use:     "svg",
-		Aliases: []string{},
-		Short:   "Convert the JSON map to SVG  (stdin/stdout)",
+		Use:   "svg",
+		Short: "Convert the JSON map to SVG  (stdin/stdout)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolFmt()
+			return mapclient.ToolSvg()
 		},
 	}
 
@@ -242,9 +243,8 @@ func clientMap(ctx context.Context) *cobra.Command {
 	}
 	cities.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N cities")
 
-	edges := &cobra.Command{
+	roads := &cobra.Command{
 		Use:     "roads",
-		Aliases: []string{"edges"},
 		Short:   "List of the roads of the map",
 		Example: "map roads $REGION [$MARKER_SRC [$MARKER_DST]]",
 		Args:    cobra.RangeArgs(1, 3),
@@ -255,12 +255,11 @@ func clientMap(ctx context.Context) *cobra.Command {
 			return cfg.GetRoads(ctx, pathArgs)
 		},
 	}
-	edges.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N roads")
+	roads.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N roads")
 
-	vertices := &cobra.Command{
+	positions := &cobra.Command{
 		Use:     "positions",
-		Aliases: []string{"vertices"},
-		Short:   "List the vertices of the map",
+		Short:   "List the positions of the map",
 		Example: "map positions $REGION [$MARKER]",
 		Args:    cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -270,9 +269,9 @@ func clientMap(ctx context.Context) *cobra.Command {
 			return cfg.GetPositions(ctx, pathArgs)
 		},
 	}
-	vertices.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N positions")
+	positions.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N positions")
 
-	cmd.AddCommand(list, path, step, cities, edges, vertices)
+	cmd.AddCommand(list, path, step, cities, roads, positions)
 	return cmd
 }
 
@@ -472,11 +471,7 @@ func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathBase = args[0]
-			grpcSrv, err := utils.ServerTLS(srv.pathKey, srv.pathCrt)
-			if err != nil {
-				return err
-			}
-			return cfg.Run(ctx, grpcSrv)
+			return cfg.Run(ctx, srv.grpcSrv)
 		},
 	}
 
@@ -495,11 +490,7 @@ func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathRepository = args[0]
-			grpcSrv, err := utils.ServerTLS(srv.pathKey, srv.pathCrt)
-			if err != nil {
-				return err
-			}
-			return cfg.Run(ctx, grpcSrv)
+			return cfg.Run(ctx, srv.grpcSrv)
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
@@ -519,11 +510,7 @@ func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathDefs = args[0]
 			cfg.PathLive = args[1]
-			grpcSrv, err := utils.ServerTLS(srv.pathKey, srv.pathCrt)
-			if err != nil {
-				return err
-			}
-			return cfg.Run(ctx, grpcSrv)
+			return cfg.Run(ctx, srv.grpcSrv)
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
