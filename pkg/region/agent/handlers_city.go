@@ -43,11 +43,9 @@ func (s *srvCity) _cityLock(mode rune, regID, charID string, cityID uint64, acti
 	return s._regLock('r', regID, func(r *region.Region) error {
 		switch mode {
 		case 'r':
-			s.w.RLock()
-			defer s.w.RUnlock()
+			// TODO(jfs) NYI
 		case 'w':
-			s.w.WLock()
-			defer s.w.WUnlock()
+			// TODO(jfs) NYI
 		default:
 			panic("wtf!?")
 		}
