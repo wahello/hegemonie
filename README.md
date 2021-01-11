@@ -28,9 +28,13 @@ Contributions are what make the open source community such an amazing place. Any
 contributions you make are greatly appreciated.
 
 1. Fork the Project
+   
 2. Create your Feature Branch (git checkout -b feature/MyFeature)
+   
 3. Commit your Changes (git commit -m 'Add some MyFeature')
+   
 4. Push to the Branch (git push origin feature/MyFeature)
+   
 5. Open a Pull Request... and if it takes to long to get a feedback, that's
    probably because the maintainers didn't notice it. Do not hesitate to pig
    them :).
@@ -45,8 +49,10 @@ reasons:
   and opening the code is the best way to let a skilled user find it as soon as
   possible. The value of a game instance definitely is in its players and in the
   description of the world.
+  
 * For transparency purposes, so that there is no doubt that anything odd is done
   with your data.
+  
 * For an easy adoption, we deliberately chose a liberal license so that there
   cannot be any legal concern in using the code. We would appreciate you
   upstream your changes to the code, but you should not be forced to. It is

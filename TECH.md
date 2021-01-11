@@ -66,19 +66,24 @@ scaling oppotunities:
 
 * The **API gateway**, whatever nginx or haproxy, acts as a stateless ingress
   proxy and can ensure HA in an active/active fashion.
+  
 * The **event server** is currently stateful because it relies on a local
   storage. Further scaling plans exist, based on a stateless service in front of
   a relatively scalabale KV backend (TiKV), plus a partitioning/sharding of the
   users if necessary. ``TiKV`` services have their own scalability model.
+  
 * The **region server** is stateful: it manages all the entities in-game.
   Distinct region services (i.e. processes) will host distinct datasets. So
   there is a limit in size for a region, but a de facto natural sharding
   opportunity of the users among the regions (i.e. services).
+  
 * The **map server** keeps a cache (loaded from a read-only reference) but
   serves stateless requests on read-only content. It can be multiplied _ad lib_.
+  
 * The services of the **ORY suite** are stateless and can be multiplied as much
   as required. Their underlying ``PostgreSQL`` instances have their own
   scalability model.
+  
 * The services of the **OpenTelemetry stack** are mostly stateless, and the
   storage solutions have their own scalability measures.
 
