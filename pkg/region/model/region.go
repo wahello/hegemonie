@@ -46,19 +46,6 @@ func (reg *Region) CityCreate(loc uint64) (*City, error) {
 	return reg.CityCreateModel(loc, nil)
 }
 
-func (reg *Region) CityGetAndCheck(charID string, cityID uint64) (*City, error) {
-	// Fetch + sanity checks about the city
-	pCity := reg.CityGet(cityID)
-	if pCity == nil {
-		return nil, errCityNotFound
-	}
-	if pCity.Deputy != charID && pCity.Owner != charID {
-		return nil, errForbidden
-	}
-
-	return pCity, nil
-}
-
 func (reg *Region) CitiesList(idChar string) []*City {
 	rep := make([]*City, 0)
 	for _, c := range reg.Cities {

@@ -17,52 +17,29 @@ import (
 	"io"
 )
 
-type srvAdmin struct {
-	cfg *Config
-	w   *region.World
+type adminApp struct {
+	regionApp
 }
 
-var none = &proto.None{}
-
-func (sa *srvAdmin) rlockDo(action func() error) error {
-	sa.w.RLock()
-	defer sa.w.RUnlock()
-	return action()
-}
-
-func (sa *srvAdmin) wlockDo(action func() error) error {
-	sa.w.WLock()
-	defer sa.w.WUnlock()
-	return action()
-}
-
-func (sa *srvAdmin) Produce(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
-	return none, sa.rlockDo(func() error {
-		r := sa.w.Regions.Get(req.Region)
-		if r == nil {
-			return status.Error(codes.NotFound, "No such region")
-		}
+func (app *regionApp) Produce(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
+	return none, app._regLock('w', req.Region, func(r *region.Region) error {
 		r.Produce()
 		return nil
 	})
 }
 
-func (sa *srvAdmin) Move(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
-	return none, sa.rlockDo(func() error {
-		r := sa.w.Regions.Get(req.Region)
-		if r == nil {
-			return status.Error(codes.NotFound, "No such region")
-		}
+func (app *regionApp) Move(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
+	return none, app._regLock('w', req.Region, func(r *region.Region) error {
 		r.Move()
 		return nil
 	})
 }
 
-func (sa *srvAdmin) CreateRegion(ctx context.Context, req *proto.RegionCreateReq) (*proto.None, error) {
+func (app *regionApp) CreateRegion(ctx context.Context, req *proto.RegionCreateReq) (*proto.None, error) {
 	//  first, load the cities from the maps repository
 	endpoint, err := utils.DefaultDiscovery.Map()
 	if err != nil {
-		return none, err
+		return none, status.Errorf(codes.Internal, "config error", err)
 	}
 	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
@@ -94,19 +71,18 @@ func (sa *srvAdmin) CreateRegion(ctx context.Context, req *proto.RegionCreateReq
 		out = append(out, region.NamedCity{Name: x.GetName(), ID: x.GetId()})
 	}
 
-	return none, sa.wlockDo(func() error {
-		_, err := sa.w.CreateRegion(req.Name, req.MapName, out)
+	return none, app._worldLock('w', func() error {
+		_, err := app.w.CreateRegion(req.Name, req.MapName, out)
 		return err
 	})
 }
 
-func (sa *srvAdmin) ListRegions(req *proto.RegionListReq, stream proto.Admin_ListRegionsServer) error {
-	marker := req.NameMarker
-	return sa.rlockDo(func() error {
-		for {
-			tab := sa.w.Regions.Slice(marker, 100)
+func (app *regionApp) ListRegions(req *proto.RegionListReq, stream proto.Admin_ListRegionsServer) error {
+	return app._worldLock('r', func() error {
+		for marker := req.NameMarker; ; {
+			tab := app.w.Regions.Slice(marker, 100)
 			if len(tab) <= 0 {
-				break
+				return nil
 			}
 			for _, x := range tab {
 				marker = x.Name
@@ -119,24 +95,19 @@ func (sa *srvAdmin) ListRegions(req *proto.RegionListReq, stream proto.Admin_Lis
 				err := stream.Send(summary)
 				if err != nil {
 					if err == io.EOF {
-						break
+						return nil
 					}
 					return err
 				}
 			}
 		}
-		return nil
 	})
 }
 
-func (sa *srvAdmin) GetScores(req *proto.RegionId, stream proto.Admin_GetScoresServer) error {
-	return sa.rlockDo(func() error {
-		r := sa.w.Regions.Get(req.Region)
-		if r == nil {
-			return status.Error(codes.NotFound, "No such region")
-		}
+func (app *regionApp) GetScores(req *proto.RegionId, stream proto.Admin_GetScoresServer) error {
+	return app._regLock('r', req.Region, func(r *region.Region) error {
 		for _, c := range r.Cities {
-			err := stream.Send(ShowCityPublic(sa.w, c, true))
+			err := stream.Send(ShowCityPublic(app.w, c, true))
 			if err == io.EOF {
 				return nil
 			}

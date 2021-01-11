@@ -14,6 +14,8 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net"
 )
 
@@ -23,6 +25,13 @@ type Config struct {
 	PathDefs string
 	PathLive string
 }
+
+type regionApp struct {
+	cfg *Config
+	w   *region.World
+}
+
+var none = &proto.None{}
 
 // Run starts a Region API service bond to Endpoint
 // ctx is used for a clean stop of the service.
@@ -68,11 +77,11 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	defer cnxEvent.Close()
 	w.SetNotifier(&EventStore{cnx: cnxEvent})
 
-	grpc_health_v1.RegisterHealthServer(grpcSrv, &srvHealth{w: &w})
-	proto.RegisterCityServer(grpcSrv, &srvCity{cfg: cfg, w: &w})
-	proto.RegisterDefinitionsServer(grpcSrv, &srvDefinitions{cfg: cfg, w: &w})
-	proto.RegisterAdminServer(grpcSrv, &srvAdmin{cfg: cfg, w: &w})
-	proto.RegisterArmyServer(grpcSrv, &srvArmy{cfg: cfg, w: &w})
+	grpc_health_v1.RegisterHealthServer(grpcSrv, &regionApp{w: &w, cfg: cfg})
+	proto.RegisterCityServer(grpcSrv, &cityApp{regionApp{w: &w, cfg: cfg}})
+	proto.RegisterDefinitionsServer(grpcSrv, &defsApp{regionApp{w: &w, cfg: cfg}})
+	proto.RegisterAdminServer(grpcSrv, &adminApp{regionApp{w: &w, cfg: cfg}})
+	proto.RegisterArmyServer(grpcSrv, &armyApp{regionApp{w: &w, cfg: cfg}})
 
 	utils.Logger.Info().
 		Str("defs", cfg.PathDefs).
@@ -81,4 +90,70 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 		Msg("starting")
 
 	return grpcSrv.Serve(lis)
+}
+
+func (app *regionApp) _worldLock(mode rune, action func() error) error {
+	switch mode {
+	case 'r':
+		app.w.RLock()
+		defer app.w.RUnlock()
+	case 'w':
+		app.w.WLock()
+		defer app.w.WUnlock()
+	default:
+		return status.Error(codes.Internal, "invalid lock type")
+	}
+	return action()
+}
+
+func (app *regionApp) _regLock(mode rune, regID string, action func(*region.Region) error) error {
+	switch mode {
+	case 'r':
+		app.w.RLock()
+		defer app.w.RUnlock()
+	case 'w':
+		app.w.WLock()
+		defer app.w.WUnlock()
+	default:
+		return status.Error(codes.Internal, "invalid lock type")
+	}
+	r := app.w.Regions.Get(regID)
+	if r == nil {
+		return status.Error(codes.NotFound, "no such region")
+	}
+	return action(r)
+}
+
+func (app *regionApp) cityLock(mode rune, req *proto.CityId, action func(*region.Region, *region.City) error) error {
+	return app._regLock('r', req.Region, func(r *region.Region) error {
+		switch mode {
+		case 'r':
+			// TODO(jfs) NYI
+		case 'w':
+			// TODO(jfs) NYI
+		default:
+			return status.Error(codes.Internal, "invalid lock type")
+		}
+
+		c := r.CityGet(req.City)
+		if c == nil {
+			return status.Error(codes.NotFound, "no such city")
+		}
+		if c.Deputy != req.Character && c.Owner != req.Character {
+			return status.Error(codes.PermissionDenied, "permission denied")
+		}
+
+		return action(r, c)
+	})
+}
+
+func (app *regionApp) armyLock(mode rune, req *proto.ArmyId, action func(*region.Region, *region.City, *region.Army) error) error {
+	cID := proto.CityId{Region: req.Region, City: req.City, Character: req.Character}
+	return app.cityLock(mode, &cID, func(r *region.Region, c *region.City) error {
+		a := c.Armies.Get(req.Army)
+		if a == nil {
+			return status.Error(codes.NotFound, "no such army")
+		}
+		return action(r, c, a)
+	})
 }

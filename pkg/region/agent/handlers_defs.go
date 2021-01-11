@@ -6,84 +6,77 @@
 package regagent
 
 import (
-	"github.com/jfsmig/hegemonie/pkg/region/model"
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 	"io"
 )
 
-type srvDefinitions struct {
-	cfg *Config
-	w   *region.World
+type defsApp struct {
+	regionApp
 }
 
-func (s *srvDefinitions) ListUnits(req *proto.PaginatedQuery, stream proto.Definitions_ListUnitsServer) error {
-	s.w.RLock()
-	defer s.w.RUnlock()
-
-	last := req.GetMarker()
-	for {
-		tab := s.w.Definitions.Units.Slice(last, 100)
-		if len(tab) <= 0 {
-			return nil
-		}
-		for _, i := range tab {
-			last = i.ID
-			err := stream.Send(&proto.UnitTypeView{
-				Id: i.ID, Name: i.Name, Ticks: i.Ticks, Health: i.Health})
-			if err == io.EOF {
+func (app *defsApp) ListUnits(req *proto.PaginatedQuery, stream proto.Definitions_ListUnitsServer) error {
+	return app._worldLock('r', func() error {
+		last := req.GetMarker()
+		for {
+			tab := app.w.Definitions.Units.Slice(last, 100)
+			if len(tab) <= 0 {
 				return nil
 			}
-			if err != nil {
-				return err
+			for _, i := range tab {
+				last = i.ID
+				err := stream.Send(&proto.UnitTypeView{
+					Id: i.ID, Name: i.Name, Ticks: i.Ticks, Health: i.Health})
+				if err == io.EOF {
+					return nil
+				}
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
+	})
 }
 
-func (s *srvDefinitions) ListBuildings(req *proto.PaginatedQuery, stream proto.Definitions_ListBuildingsServer) error {
-	s.w.RLock()
-	defer s.w.RUnlock()
-
-	last := req.GetMarker()
-	for {
-		tab := s.w.Definitions.Buildings.Slice(last, 100)
-		if len(tab) <= 0 {
-			return nil
-		}
-		for _, i := range tab {
-			last = i.ID
-			err := stream.Send(&proto.BuildingTypeView{
-				Id: i.ID, Name: i.Name, Ticks: i.Ticks})
-			if err == io.EOF {
+func (app *defsApp) ListBuildings(req *proto.PaginatedQuery, stream proto.Definitions_ListBuildingsServer) error {
+	return app._worldLock('r', func() error {
+		for last := req.GetMarker(); ; {
+			tab := app.w.Definitions.Buildings.Slice(last, 100)
+			if len(tab) <= 0 {
 				return nil
 			}
-			if err != nil {
-				return err
+			for _, i := range tab {
+				last = i.ID
+				err := stream.Send(&proto.BuildingTypeView{
+					Id: i.ID, Name: i.Name, Ticks: i.Ticks})
+				if err == io.EOF {
+					return nil
+				}
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
+	})
 }
 
-func (s *srvDefinitions) ListKnowledges(req *proto.PaginatedQuery, stream proto.Definitions_ListKnowledgesServer) error {
-	s.w.RLock()
-	defer s.w.RUnlock()
-
-	last := req.GetMarker()
-	for {
-		tab := s.w.Definitions.Knowledges.Slice(last, 100)
-		if len(tab) <= 0 {
-			return nil
-		}
-		for _, i := range tab {
-			last = i.ID
-			err := stream.Send(&proto.KnowledgeTypeView{
-				Id: i.ID, Name: i.Name, Ticks: i.Ticks})
-			if err == io.EOF {
+func (app *defsApp) ListKnowledges(req *proto.PaginatedQuery, stream proto.Definitions_ListKnowledgesServer) error {
+	return app._worldLock('r', func() error {
+		for last := req.GetMarker(); ; {
+			tab := app.w.Definitions.Knowledges.Slice(last, 100)
+			if len(tab) <= 0 {
 				return nil
 			}
-			if err != nil {
-				return err
+			for _, i := range tab {
+				last = i.ID
+				err := stream.Send(&proto.KnowledgeTypeView{
+					Id: i.ID, Name: i.Name, Ticks: i.Ticks})
+				if err == io.EOF {
+					return nil
+				}
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
+	})
 }
