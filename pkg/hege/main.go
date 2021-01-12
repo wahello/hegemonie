@@ -387,7 +387,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 		Short:   "List the existing regions",
 		Example: "region list [$REGION_ID_MARKER]",
 		Args:    cobra.MaximumNArgs(1),
-		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoListRegions(ctx, args) },
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoListRegions(ctx, first(args)) },
 	}
 
 	roundMovement := &cobra.Command{
@@ -470,4 +470,10 @@ func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
 
 func nonLeaf(_ *cobra.Command, _ []string) error {
 	return errors.New("missing subcommand")
+}
+func first(args []string) string {
+	if len(args) <= 0 {
+		return ""
+	}
+	return args[0]
 }

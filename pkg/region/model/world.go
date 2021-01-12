@@ -5,6 +5,8 @@
 
 package region
 
+import "github.com/juju/errors"
+
 func (w *World) WLock() { w.rw.Lock() }
 
 func (w *World) WUnlock() { w.rw.Unlock() }
@@ -24,7 +26,7 @@ type NamedCity struct {
 
 func (w *World) CreateRegion(name, mapName string, cities []NamedCity) (*Region, error) {
 	if w.Regions.Has(name) {
-		return nil, errRegionExists
+		return nil, errors.AlreadyExistsf("region found with id [%s]", name)
 	}
 	r := &Region{
 		Name:    name,

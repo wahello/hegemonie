@@ -90,122 +90,99 @@ func (s *srvMap) Watch(_ *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.
 
 // Vertices streams Vertice objects, sorted by ID.
 func (s *srvMap) Vertices(req *proto.ListVerticesReq, stream proto.Map_VerticesServer) error {
-	s.rw.RLock()
-	defer s.rw.RUnlock()
-
-	m := s.maps.Get(req.MapName)
-	if m == nil {
-		return errors.NotFoundf("no such map")
-	}
-
-	next := req.Marker
-	for {
-		vertices := m.Cells.Slice(next, 100)
-		if len(vertices) <= 0 {
-			return nil
-		}
-		for _, x := range vertices {
-			err := stream.Send(&proto.Vertex{Id: x.ID, X: x.X, Y: x.Y})
-			if err != nil {
-				return errors.Trace(err)
+	return s._get('r', req.MapName, func(m *mapgraph.Map) error {
+		next := req.Marker
+		for {
+			vertices := m.Cells.Slice(next, 100)
+			if len(vertices) <= 0 {
+				return nil
 			}
-			next = x.ID
+			for _, x := range vertices {
+				err := stream.Send(&proto.Vertex{Id: x.ID, X: x.X, Y: x.Y})
+				if err != nil {
+					return errors.Trace(err)
+				}
+				next = x.ID
+			}
 		}
-	}
+	})
 }
 
 // Edges streams Edge objects, sorted by source then by destination.
 func (s *srvMap) Edges(req *proto.ListEdgesReq, stream proto.Map_EdgesServer) error {
-	s.rw.RLock()
-	defer s.rw.RUnlock()
-
-	m := s.maps.Get(req.MapName)
-	if m == nil {
-		return errors.NotFoundf("no such map")
-	}
-
-	src, dst := req.MarkerSrc, req.MarkerDst
-	for {
-		edges := m.Roads.Slice(src, dst, 100)
-		if len(edges) <= 0 {
-			return nil
-		}
-		for _, x := range edges {
-			err := stream.Send(&proto.Edge{Src: x.S, Dst: x.D})
-			if err != nil {
-				return errors.Trace(err)
+	return s._get('r', req.MapName, func(m *mapgraph.Map) error {
+		src, dst := req.MarkerSrc, req.MarkerDst
+		for {
+			edges := m.Roads.Slice(src, dst, 100)
+			if len(edges) <= 0 {
+				return nil
 			}
-			src, dst = x.S, x.D
+			for _, x := range edges {
+				err := stream.Send(&proto.Edge{Src: x.S, Dst: x.D})
+				if err != nil {
+					return errors.Trace(err)
+				}
+				src, dst = x.S, x.D
+			}
 		}
-	}
+	})
 }
 
 // GetPath streams the Vertice elements of the path from the source to the destination.
 func (s *srvMap) GetPath(req *proto.PathRequest, stream proto.Map_GetPathServer) error {
-	s.rw.RLock()
-	defer s.rw.RUnlock()
-
-	m := s.maps.Get(req.MapName)
-	if m == nil {
-		return errors.NotFoundf("no such map")
-	}
-
-	src := req.Src
-	for {
-		next, err := m.PathNextStep(src, req.Dst)
-		if err != nil {
-			return errors.Trace(err)
+	return s._get('r', req.MapName, func(m *mapgraph.Map) error {
+		src := req.Src
+		for {
+			next, err := m.PathNextStep(src, req.Dst)
+			if err != nil {
+				return errors.Trace(err)
+			}
+			err = stream.Send(&proto.PathElement{Id: src})
+			if err != nil {
+				return errors.Trace(err)
+			}
+			if next == req.Dst {
+				return nil
+			}
+			src = next
 		}
-		err = stream.Send(&proto.PathElement{Id: src})
-		if err != nil {
-			return errors.Trace(err)
-		}
-		if next == req.Dst {
-			return nil
-		}
-		src = next
-	}
+	})
 }
 
 // Cities streams City <ID,name> pair objects
 func (s *srvMap) Cities(req *proto.ListCitiesReq, stream proto.Map_CitiesServer) error {
-	s.rw.RLock()
-	defer s.rw.RUnlock()
-
-	m := s.maps.Get(req.MapName)
-	if m == nil {
-		return errors.NotFoundf("no such map")
-	}
-
-	next := req.Marker
-	for {
-		cities := m.Cells.Slice(next, 100)
-		if len(cities) <= 0 {
-			return nil
-		}
-		for _, v := range cities {
-			if v.City != "" {
-				err := stream.Send(&proto.CityLocation{
-					Id: v.ID, Name: v.City,
-				})
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return errors.Trace(err)
-				}
+	return s._get('r', req.MapName, func(m *mapgraph.Map) error {
+		next := req.Marker
+		for {
+			cities := m.Cells.Slice(next, 100)
+			if len(cities) <= 0 {
+				return nil
 			}
-			next = v.ID
+			for _, v := range cities {
+				if v.City != "" {
+					err := stream.Send(&proto.CityLocation{
+						Id: v.ID, Name: v.City,
+					})
+					if err == io.EOF {
+						return nil
+					}
+					if err != nil {
+						return errors.Trace(err)
+					}
+				}
+				next = v.ID
+			}
 		}
-	}
+	})
 }
 
 // Maps streams the name of the maps registered in the current service
 func (s *srvMap) Maps(req *proto.ListMapsReq, stream proto.Map_MapsServer) error {
+	// Extract stats on a slice of the array of cities, under the umbrella of 	a read-lock
 	slice := func(marker string) []proto.MapName {
+		out := make([]proto.MapName, 0)
 		s.rw.RLock()
 		defer s.rw.RUnlock()
-		out := make([]proto.MapName, 0)
 		for _, m := range s.maps.Slice(marker, 100) {
 			out = append(out, proto.MapName{
 				Name:          m.ID,
@@ -263,17 +240,42 @@ func (s *srvMap) LoadDirectory(path string) error {
 			return nil
 		}
 
-		m := mapgraph.NewMap()
-		f, err := os.Open(path)
+		var f *os.File
+		f, err = os.Open(path)
 		if err != nil {
 			return errors.NewNotValid(err, "fs error")
 		}
 		defer f.Close()
+
+		m := mapgraph.NewMap()
 		if err = m.Load(f); err != nil {
 			return errors.NewNotValid(err, "format error")
 		}
-
 		s.maps.Add(m)
 		return nil
+	})
+}
+
+func (s *srvMap) _lock(mode rune, action func() error) error {
+	switch mode {
+	case 'r':
+		s.rw.RLock()
+		defer s.rw.RUnlock()
+	case 'w':
+		s.rw.Lock()
+		defer s.rw.Unlock()
+	default:
+		panic("unexpected lock mode")
+	}
+	return action()
+}
+
+func (s *srvMap) _get(mode rune, name string, action func(*mapgraph.Map) error) error {
+	return s._lock(mode, func() error {
+		m := s.maps.Get(name)
+		if m == nil {
+			return errors.NotFoundf("no such map")
+		}
+		return action(m)
 	})
 }

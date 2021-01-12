@@ -5,6 +5,8 @@
 
 package region
 
+import "github.com/juju/errors"
+
 func (reg *Region) Produce() {
 	for _, c := range reg.Cities {
 		c.Produce(reg)
@@ -33,7 +35,7 @@ func (reg *Region) CityCheck(id uint64) bool {
 
 func (reg *Region) CityCreateModel(loc uint64, model *City) (*City, error) {
 	if reg.Cities.Has(loc) {
-		return nil, errCityExists
+		return nil, errors.AlreadyExistsf("city found at [%v]", loc)
 	}
 	city := CopyCity(model)
 	city.ID = loc

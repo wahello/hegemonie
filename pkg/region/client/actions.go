@@ -15,6 +15,7 @@ import (
 
 type ClientCLI struct{}
 
+// DoCreateRegion triggers the synchronous creation of a region with the given name, modeled on the named map.
 func (cli *ClientCLI) DoCreateRegion(ctx context.Context, regID, mapID string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
 		_, err := proto.NewAdminClient(cnx).CreateRegion(ctx, &proto.RegionCreateReq{MapName: mapID, Name: regID})
@@ -25,12 +26,9 @@ func (cli *ClientCLI) DoCreateRegion(ctx context.Context, regID, mapID string) e
 	})
 }
 
-func (cli *ClientCLI) DoListRegions(ctx context.Context, args []string) error {
+// DoListRegions dumps to os.Stdout a JSON stream of the known regions, sorted by name
+func (cli *ClientCLI) DoListRegions(ctx context.Context, marker string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		marker := ""
-		if len(args) > 0 {
-			marker = args[0]
-		}
 		rep, err := proto.NewAdminClient(cnx).ListRegions(ctx, &proto.RegionListReq{NameMarker: marker})
 		if err != nil {
 			return errors.Trace(err)
@@ -39,6 +37,7 @@ func (cli *ClientCLI) DoListRegions(ctx context.Context, args []string) error {
 	})
 }
 
+// DoRegionMovement triggers one round of armies movement on all the cities of the named region
 func (cli *ClientCLI) DoRegionMovement(ctx context.Context, reg string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
 		_, err := proto.NewAdminClient(cnx).Move(ctx, &proto.RegionId{Region: reg})
@@ -49,6 +48,7 @@ func (cli *ClientCLI) DoRegionMovement(ctx context.Context, reg string) error {
 	})
 }
 
+// DoRegionProduction triggers the production of resources on all the cities of the named region
 func (cli *ClientCLI) DoRegionProduction(ctx context.Context, reg string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
 		_, err := proto.NewAdminClient(cnx).Produce(ctx, &proto.RegionId{Region: reg})

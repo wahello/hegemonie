@@ -177,7 +177,7 @@ func (c *City) CreateArmyFromIds(w *Region, ids ...string) (*Army, error) {
 func (c *City) CreateArmyDefence(w *Region) (*Army, error) {
 	ids := unitsToIDs(unitsFilterIdle(c.Units))
 	if len(ids) <= 0 {
-		return nil, ErrNoSuchUnit
+		return nil, errors.NotFoundf("unit not found")
 	}
 	return c.CreateArmyFromIds(w, ids...)
 }
@@ -185,7 +185,7 @@ func (c *City) CreateArmyDefence(w *Region) (*Army, error) {
 // Create an Army carrying resources you own
 func (c *City) CreateTransport(w *Region, r Resources) (*Army, error) {
 	if !c.Stock.GreaterOrEqualTo(r) {
-		return nil, ErrNotEnoughResources
+		return nil, errors.Forbiddenf("insufficient resources")
 	}
 
 	a := c.CreateEmptyArmy(w)
@@ -355,7 +355,7 @@ func (c *City) TransferOwnResources(a *Army, r Resources) error {
 		return errors.Forbiddenf("army not controlled by the city")
 	}
 	if !c.Stock.GreaterOrEqualTo(r) {
-		return ErrNotEnoughResources
+		return errors.Forbiddenf("insufficient resources")
 	}
 
 	c.Stock.Remove(r)
@@ -489,7 +489,7 @@ func (c *City) Build(w *Region, bID uint64) (string, error) {
 		return "", errors.Forbiddenf("dependencies unmet")
 	}
 	if !c.Stock.GreaterOrEqualTo(t.Cost0) {
-		return "", ErrNotEnoughResources
+		return "", errors.Forbiddenf("insufficient resources")
 	}
 
 	id := uuid.New().String()

@@ -189,11 +189,11 @@ func (a *Army) Flea(w *Region) error {
 // If the Army was defending, it becomes an attacker, if it was an attacker
 // it becomes a defender.
 func (a *Army) Flip(w *Region) error {
-	return errNotImplemented
+	return errors.NotImplementedf("NYI")
 }
 
 func (a *Army) Cancel(w *Region) error {
-	return errNotImplemented
+	return errors.NotImplementedf("NYI")
 }
 
 func (a *Army) DeferAttack(w *Region, loc uint64, args ActionArgAssault) error {
