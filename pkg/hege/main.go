@@ -60,7 +60,7 @@ func servers(ctx context.Context) *cobra.Command {
 	cmd.PersistentFlags().StringVar(&srv.pathCrt, "crt", "", "Path to the X509 cert file")
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) (err error) {
 		srv.grpcSrv, err = utils.ServerTLS(srv.pathKey, srv.pathCrt)
-		return err
+		return errors.Annotate(err, "TLS server error")
 	}
 	cmd.AddCommand(srv.maps(ctx), srv.event(ctx), srv.region(ctx))
 	return cmd
@@ -175,7 +175,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 	hook := func(action func() error) func(cmd *cobra.Command, args []string) error {
 		return func(cmd *cobra.Command, args []string) error {
 			if err := pathArgs.Parse(args); err != nil {
-				return err
+				return errors.Trace(err)
 			}
 			return action()
 		}
@@ -275,7 +275,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 				var err error
 				when, err = strconv.ParseUint(args[1], 10, 63)
 				if err != nil {
-					return err
+					return errors.Trace(err)
 				}
 				if len(args) > 2 {
 					marker = args[2]
@@ -297,7 +297,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 				var err error
 				when, err = strconv.ParseUint(args[1], 10, 63)
 				if err != nil {
-					return err
+					return errors.Trace(err)
 				}
 			}
 			return cfg.DoAck(ctx, args[0], args[1], when)

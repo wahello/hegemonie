@@ -149,10 +149,10 @@ func (m *Map) check() error {
 		return errors.BadRequestf("bad name")
 	}
 	if err := m.Cells.Check(); err != nil {
-		return err
+		return errors.Annotate(err, "error on cells")
 	}
 	if err := m.Roads.Check(); err != nil {
-		return err
+		return errors.Annotate(err, "error of roads")
 	}
 
 	if !sort.IsSorted(&m.Cells) {

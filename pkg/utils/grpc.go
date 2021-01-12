@@ -93,7 +93,7 @@ func EncodeWhole(recv RecvFunc) error {
 			if err == io.EOF {
 				break
 			}
-			return err
+			return errors.Annotate(err, "json encoding error")
 		}
 		out = append(out, x)
 	}
@@ -115,7 +115,7 @@ func EncodeStream(recv RecvFunc) error {
 		}
 		err = encoder.Encode(x)
 		if err != nil {
-			return err
+			return errors.Annotate(err, "json encoding error")
 		}
 	}
 	return nil

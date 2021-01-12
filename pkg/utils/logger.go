@@ -8,6 +8,7 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"github.com/juju/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -94,7 +95,7 @@ func newStreamServerInterceptorZerolog() grpc.StreamServerInterceptor {
 			z.Str("peer", addr)
 		}
 		z.Send()
-		return err
+		return errors.Trace(err)
 	}
 }
 
