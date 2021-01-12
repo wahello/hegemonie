@@ -26,7 +26,7 @@ package {{.Package}}
 
 import (
 	"sort"
-	"errors"
+	"github.com/juju/errors"
 )
 
 `
@@ -65,12 +65,12 @@ func (s {{.SetName}}) Less(i, j int) bool {
 
 func (s {{.SetName}}) Check() error {
 	if !sort.IsSorted(s) {	
-		return errors.New("Unsorted")
+		return errors.NotValidf("unsorted")
 	}
 	var lastId {{.T0}}
 	for _, a := range s {
 		if lastId == a{{.F0}} {
-			return errors.New("Duplicate ID")
+			return errors.NotValidf("duplicate ID")
 		}
 		lastId = a{{.F0}}
 	}
@@ -147,13 +147,13 @@ func (s {{.SetName}}) First(at {{.T0}}) int {
 
 func (s {{.SetName}}) Check() error {
 	if !sort.IsSorted(s) {
-		return errors.New("Unsorted")
+		return errors.NotValidf("unsorted")
 	}
 	var l0 {{.T0}}
 	var l1 {{.T1}}
 	for _, a := range s {
 		if l0 == a{{.F0}} && l1 == a{{.F1}} {
-			return errors.New("Duplicate ID")
+			return errors.NotValidf("duplicate ID")
 		}
 		l0 = a{{.F0}}
 	}

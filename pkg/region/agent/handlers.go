@@ -7,12 +7,11 @@ package regagent
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -42,37 +41,42 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	w.Init()
 
 	if cfg.PathDefs == "" {
-		return errors.New("Missing path for definition data directory")
+		return errors.NotValidf("Missing path for definition data directory")
 	}
 
 	if cfg.PathLive == "" {
-		return errors.New("Missing path for live data directory")
+		return errors.NotValidf("Missing path for live data directory")
 	}
 
 	err = w.LoadDefinitions(cfg.PathDefs)
 	if err != nil {
-		return err
+		return errors.Annotate(err, "pathDefs error")
 	}
 
 	err = w.LoadRegions(cfg.PathLive)
 	if err != nil {
-		return err
+		return errors.Annotate(err, "pathLive error")
+	}
+
+	err = w.Check()
+	if err != nil {
+		return errors.Annotate(err, "inconsistent world")
 	}
 
 	lis, err := net.Listen("tcp", cfg.Endpoint)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
+		return errors.Annotate(err, "listen error")
 	}
 
 	var eventEndpoint string
 	eventEndpoint, err = utils.DefaultDiscovery.Event()
 	if err != nil {
-		return fmt.Errorf("Invalid Event service configured [%s]: %v", eventEndpoint, err)
+		return errors.Annotatef(err, "Invalid Event service configured [%s]", eventEndpoint)
 	}
 	var cnxEvent *grpc.ClientConn
 	cnxEvent, err = grpc.Dial(eventEndpoint, grpc.WithInsecure())
 	if err != nil {
-		return err
+		return errors.Annotate(err, "dial error")
 	}
 	defer cnxEvent.Close()
 	w.SetNotifier(&EventStore{cnx: cnxEvent})

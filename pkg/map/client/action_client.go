@@ -7,9 +7,9 @@ package mapclient
 
 import (
 	"context"
-	"errors"
 	"github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"strconv"
 )
@@ -26,7 +26,7 @@ func (c *ClientCLI) ListMaps(ctx context.Context, args PathArgs) error {
 			Marker: args.MapName,
 		})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		return utils.EncodeStream(func() (interface{}, error) { return rep.Recv() })
 	})
@@ -40,7 +40,7 @@ func (c *ClientCLI) GetCities(ctx context.Context, args PathArgs) error {
 			Marker:  args.Src,
 		})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		return utils.EncodeWhole(func() (interface{}, error) { return rep.Recv() })
 	})
@@ -56,7 +56,7 @@ func (c *ClientCLI) GetRoads(ctx context.Context, args PathArgs) error {
 			MarkerDst: args.Dst,
 		})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		return utils.EncodeStream(func() (interface{}, error) { return rep.Recv() })
 	})
@@ -71,7 +71,7 @@ func (c *ClientCLI) GetPositions(ctx context.Context, args PathArgs) error {
 			Marker:  args.Src,
 		})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		return utils.EncodeWhole(func() (interface{}, error) { return rep.Recv() })
 	})
@@ -95,7 +95,7 @@ func (c *ClientCLI) getPath(ctx context.Context, args PathArgs) error {
 	return c.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
 		rep, err := proto.NewMapClient(cnx).GetPath(ctx, &proto.PathRequest{MapName: args.MapName, Src: args.Src, Dst: args.Dst})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		return utils.EncodeWhole(func() (interface{}, error) { return rep.Recv() })
 	})
@@ -104,7 +104,7 @@ func (c *ClientCLI) getPath(ctx context.Context, args PathArgs) error {
 func (c *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) error {
 	endpoint, err := utils.DefaultDiscovery.Map()
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	return utils.Connect(ctx, endpoint, action)
 }
@@ -125,20 +125,20 @@ func (pa *PathArgs) Parse(args []string) (err error) {
 		if len(args) >= 2 {
 			pa.Src, err = strconv.ParseUint(args[1], 10, 63)
 			if err != nil {
-				return err
+				return errors.Trace(err)
 			}
 			if len(args) >= 3 {
 				pa.Dst, err = strconv.ParseUint(args[2], 10, 63)
 				if err != nil {
-					return err
+					return errors.Trace(err)
 				}
 				if len(args) >= 4 {
-					return errors.New("max 3 arguments expected: MAPNAME [INT [INT]]")
+					return errors.BadRequestf("max 3 arguments expected: MAPNAME [INT [INT]]")
 				}
 			}
 		}
 	} else {
-		return errors.New("min 1 argument expected: MAPNAME [INT [INT]]")
+		return errors.BadRequestf("min 1 argument expected: MAPNAME [INT [INT]]")
 	}
 	return nil
 }

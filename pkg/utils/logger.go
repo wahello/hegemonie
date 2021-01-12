@@ -7,6 +7,7 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -130,4 +131,21 @@ func newUnaryServerInterceptorZerolog() grpc.UnaryServerInterceptor {
 		z.Send()
 		return resp, err
 	}
+}
+
+// DumpJSON encodes the argument in JSON and writes the output on os.Stdout
+func DumpJSON(x interface{}) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", " ")
+	return encoder.Encode(x)
+}
+
+// StatusJSON encodes a standard error structure and then forwards it to DumpJSON
+func StatusJSON(code int, ID, msg string) error {
+	type status struct {
+		Msg  string
+		Code int
+		ID   string
+	}
+	return DumpJSON(status{Msg: "Create", Code: 200, ID: ID})
 }

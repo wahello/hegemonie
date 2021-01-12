@@ -7,7 +7,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/jfsmig/hegemonie/pkg/auth/client"
 	"github.com/jfsmig/hegemonie/pkg/event/agent"
@@ -17,6 +16,7 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/region/agent"
 	"github.com/jfsmig/hegemonie/pkg/region/client"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -58,8 +58,7 @@ func servers(ctx context.Context) *cobra.Command {
 	}
 	cmd.PersistentFlags().StringVar(&srv.pathKey, "key", "", "Path to the X509 key file")
 	cmd.PersistentFlags().StringVar(&srv.pathCrt, "crt", "", "Path to the X509 cert file")
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		var err error
+	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) (err error) {
 		srv.grpcSrv, err = utils.ServerTLS(srv.pathKey, srv.pathCrt)
 		return err
 	}
@@ -125,9 +124,7 @@ func toolsMap(_ context.Context) *cobra.Command {
 		Use:   "normalize",
 		Short: "Normalize the positions in a map (stdin/stdout)",
 		Long:  `Read the map description on the standard input, remap the positions of the vertices in the map graph so that they fit in the given boundaries and dump it to the standard output.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolNormalize()
-		},
+		RunE:  func(cmd *cobra.Command, args []string) error { return mapclient.ToolNormalize() },
 	}
 
 	var maxDist float64
@@ -135,9 +132,7 @@ func toolsMap(_ context.Context) *cobra.Command {
 		Use:   "split",
 		Short: "Split the long edges of a map (stdin/stdout)",
 		Long:  `Read the map on the standard input, split all the edges that are longer to the given value and dump the new graph on the standard output.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolSplit(maxDist)
-		},
+		RunE:  func(cmd *cobra.Command, args []string) error { return mapclient.ToolSplit(maxDist) },
 	}
 	split.Flags().Float64VarP(&maxDist, "dist", "d", 60, "Max road length")
 
@@ -146,35 +141,27 @@ func toolsMap(_ context.Context) *cobra.Command {
 		Use:   "noise",
 		Short: "Apply a noise on the positon of the nodes (stdin/stdout)",
 		Long:  `Read the map on the standard input, randomly alter the positions of the nodes and dump the new graph on the standard output.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolNoise(noise)
-		},
+		RunE:  func(cmd *cobra.Command, args []string) error { return mapclient.ToolNoise(noise) },
 	}
 	noisify.Flags().Float64VarP(&noise, "noise", "n", 15, "Percent of the image dimension used as max noise variation on non-city nodes positions")
 
 	drawDot := &cobra.Command{
 		Use:   "dot",
 		Short: "Convert the JSON map to DOT (stdin/stdout)",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolDot()
-		},
+		RunE:  func(cmd *cobra.Command, args []string) error { return mapclient.ToolDot() },
 	}
 
 	drawSvg := &cobra.Command{
 		Use:   "svg",
 		Short: "Convert the JSON map to SVG  (stdin/stdout)",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolSvg()
-		},
+		RunE:  func(cmd *cobra.Command, args []string) error { return mapclient.ToolSvg() },
 	}
 
 	seedInit := &cobra.Command{
 		Use:     "init",
 		Aliases: []string{"seed"},
 		Short:   "Convert the JSON map seed to a JSON raw map (stdin/stdout)",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mapclient.ToolInit()
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return mapclient.ToolInit() },
 	}
 
 	cmd.AddCommand(normalize, split, noisify, drawDot, drawSvg, seedInit)
@@ -182,8 +169,17 @@ func toolsMap(_ context.Context) *cobra.Command {
 }
 
 func clientMap(ctx context.Context) *cobra.Command {
-	cfg := mapclient.ClientCLI{}
+	var cfg mapclient.ClientCLI
 	var pathArgs mapclient.PathArgs
+
+	hook := func(action func() error) func(cmd *cobra.Command, args []string) error {
+		return func(cmd *cobra.Command, args []string) error {
+			if err := pathArgs.Parse(args); err != nil {
+				return err
+			}
+			return action()
+		}
+	}
 
 	cmd := &cobra.Command{
 		Use:   "map",
@@ -197,9 +193,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "List all the maps registered",
 		Example: "map list [$MAPID_MARKER]",
 		Args:    cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.ListMaps(ctx, pathArgs)
-		},
+		RunE:    hook(func() error { return cfg.ListMaps(ctx, pathArgs) }),
 	}
 
 	path := &cobra.Command{
@@ -207,12 +201,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "Compute the path between two nodes",
 		Example: "map path $MAPID $SRC $DST",
 		Args:    cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := pathArgs.Parse(args); err != nil {
-				return err
-			}
-			return cfg.GetPath(ctx, pathArgs)
-		},
+		RunE:    hook(func() error { return cfg.GetPath(ctx, pathArgs) }),
 	}
 	path.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "Max path length")
 
@@ -221,12 +210,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "Get the next step of the path between two nodes",
 		Example: "map step $REGION $SRC $DST",
 		Args:    cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := pathArgs.Parse(args); err != nil {
-				return err
-			}
-			return cfg.GetStep(ctx, pathArgs)
-		},
+		RunE:    hook(func() error { return cfg.GetStep(ctx, pathArgs) }),
 	}
 
 	cities := &cobra.Command{
@@ -234,12 +218,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "List the Cities when the map is instantiated",
 		Example: "map cities $REGION [$MARKER]",
 		Args:    cobra.RangeArgs(1, 2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := pathArgs.Parse(args); err != nil {
-				return err
-			}
-			return cfg.GetCities(ctx, pathArgs)
-		},
+		RunE:    hook(func() error { return cfg.GetCities(ctx, pathArgs) }),
 	}
 	cities.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N cities")
 
@@ -248,12 +227,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "List of the roads of the map",
 		Example: "map roads $REGION [$MARKER_SRC [$MARKER_DST]]",
 		Args:    cobra.RangeArgs(1, 3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := pathArgs.Parse(args); err != nil {
-				return err
-			}
-			return cfg.GetRoads(ctx, pathArgs)
-		},
+		RunE:    hook(func() error { return cfg.GetRoads(ctx, pathArgs) }),
 	}
 	roads.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N roads")
 
@@ -262,12 +236,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "List the positions of the map",
 		Example: "map positions $REGION [$MARKER]",
 		Args:    cobra.RangeArgs(1, 2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := pathArgs.Parse(args); err != nil {
-				return err
-			}
-			return cfg.GetPositions(ctx, pathArgs)
-		},
+		RunE:    hook(func() error { return cfg.GetPositions(ctx, pathArgs) }),
 	}
 	positions.Flags().Uint32VarP(&pathArgs.Max, "max", "m", 0, "List max N positions")
 
@@ -277,7 +246,7 @@ func clientMap(ctx context.Context) *cobra.Command {
 
 func clientEvent(ctx context.Context) *cobra.Command {
 	var max uint32
-	cfg := evtclient.ClientCLI{}
+	var cfg evtclient.ClientCLI
 
 	cmd := &cobra.Command{
 		Use:   "event",
@@ -291,9 +260,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 		Short:   "Push events in the Character's log",
 		Example: `server event push "${CHARACTER}" "${MSG0}" "${MSG1}"`,
 		Args:    cobra.MinimumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoPush(ctx, args[0], args[1:]...)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoPush(ctx, args[0], args[1:]...) },
 	}
 
 	list := &cobra.Command{
@@ -343,7 +310,7 @@ func clientEvent(ctx context.Context) *cobra.Command {
 }
 
 func clientAuth(ctx context.Context) *cobra.Command {
-	cfg := authclient.ClientCLI{}
+	var cfg authclient.ClientCLI
 
 	cmd := &cobra.Command{
 		Use:     "auth",
@@ -358,9 +325,7 @@ func clientAuth(ctx context.Context) *cobra.Command {
 		Short:   "List the registered USERS",
 		Example: "auth list",
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoList(ctx, args)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoList(ctx, args) },
 	}
 
 	details := &cobra.Command{
@@ -369,9 +334,7 @@ func clientAuth(ctx context.Context) *cobra.Command {
 		Long:    "Print a detailed JSON representation of the information and permissions for each user specified as a positional argument",
 		Example: "show a4ddeee6-b72a-4a27-8e2d-35c3cc62c7d3 ab2bca77-efdb-4dc2-b80a-fc03e0fc5226 ...",
 		Args:    cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoShow(ctx, args)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoShow(ctx, args) },
 	}
 
 	create := &cobra.Command{
@@ -379,9 +342,7 @@ func clientAuth(ctx context.Context) *cobra.Command {
 		Short:   "Create a User",
 		Example: "auth create forced.user@example.com",
 		Args:    cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoCreate(ctx, args)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoCreate(ctx, args) },
 	}
 
 	invite := &cobra.Command{
@@ -389,17 +350,13 @@ func clientAuth(ctx context.Context) *cobra.Command {
 		Short:   "Invite a user identified by its email",
 		Example: "auth invite invited.user@example.com",
 		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoInvite(ctx, args)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoInvite(ctx, args) },
 	}
 
 	affect := &cobra.Command{
 		Use:   "affect",
 		Short: "Invite a user identified by its email",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoInvite(ctx, args)
-		},
+		RunE:  func(cmd *cobra.Command, args []string) error { return cfg.DoInvite(ctx, args) },
 	}
 
 	cmd.AddCommand(users, details, create, invite, affect)
@@ -407,7 +364,7 @@ func clientAuth(ctx context.Context) *cobra.Command {
 }
 
 func clientRegion(ctx context.Context) *cobra.Command {
-	cfg := regclient.ClientCLI{}
+	var cfg regclient.ClientCLI
 
 	cmd := &cobra.Command{
 		Use:     "region",
@@ -422,9 +379,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 		Short:   "Create a new region",
 		Example: "region create $REGION_ID $MAP_ID",
 		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoCreateRegion(ctx, args)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoCreateRegion(ctx, args[0], args[1]) },
 	}
 
 	listRegions := &cobra.Command{
@@ -432,29 +387,23 @@ func clientRegion(ctx context.Context) *cobra.Command {
 		Short:   "List the existing regions",
 		Example: "region list [$REGION_ID_MARKER]",
 		Args:    cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoListRegions(ctx, args)
-		},
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoListRegions(ctx, args) },
 	}
 
 	roundMovement := &cobra.Command{
 		Use:     "move",
 		Short:   "Execute a movement round on the region",
-		Example: "region move $REGION_ID_MARKER...",
-		Args:    cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoRegionMovement(ctx, args)
-		},
+		Example: "region move $REGION_ID",
+		Args:    cobra.ExactArgs(1),
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoRegionMovement(ctx, args[0]) },
 	}
 
 	roundProduction := &cobra.Command{
 		Use:     "produce",
 		Short:   "Execute a movement round on the region",
-		Example: "region move $REGION_ID_MARKER...",
-		Args:    cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cfg.DoRegionProduction(ctx, args)
-		},
+		Example: "region move $REGION_ID",
+		Args:    cobra.ExactArgs(1),
+		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoRegionProduction(ctx, args[0]) },
 	}
 
 	cmd.AddCommand(createRegion, listRegions, roundMovement, roundProduction)
@@ -462,7 +411,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 }
 
 func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
-	cfg := evtagent.Config{}
+	var cfg evtagent.Config
 
 	agent := &cobra.Command{
 		Use:     "event",
@@ -481,7 +430,7 @@ func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
 }
 
 func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
-	cfg := mapagent.Config{}
+	var cfg mapagent.Config
 
 	agent := &cobra.Command{
 		Use:     "map",
@@ -500,7 +449,7 @@ func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
 }
 
 func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
-	cfg := regagent.Config{}
+	var cfg regagent.Config
 
 	agent := &cobra.Command{
 		Use:     "region",

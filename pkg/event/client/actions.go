@@ -7,11 +7,11 @@ package evtclient
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	proto "github.com/jfsmig/hegemonie/pkg/event/proto"
+	"github.com/jfsmig/hegemonie/pkg/event/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +21,7 @@ type ClientCLI struct{}
 func (cfg *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) error {
 	endpoint, err := utils.DefaultDiscovery.Event()
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	return utils.Connect(ctx, endpoint, action)
 }
@@ -31,22 +31,26 @@ func (cfg *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) erro
 // FIXME(jfsmig): no retry is performed upon error
 func (cfg *ClientCLI) DoPush(ctx context.Context, charID string, msg ...string) error {
 	return cfg.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		var anyError bool
+		var err error
 		client := proto.NewProducerClient(cnx)
 		for _, a := range msg {
 			id := uuid.New().String()
-			_, err := client.Push1(ctx, &proto.Push1Req{CharId: charID, EvtId: id, Payload: []byte(a)})
-			if err != nil {
-				anyError = true
+			_, e := client.Push1(ctx, &proto.Push1Req{CharId: charID, EvtId: id, Payload: []byte(a)})
+			if e != nil {
+				if err == nil {
+					err = errors.Trace(e)
+				} else {
+					oldE := err
+					err = errors.New("errors occured")
+					err = errors.Annotate(err, oldE.Error())
+					err = errors.Annotate(err, e.Error())
+				}
 				utils.Logger.Error().Str("char", charID).Str("msg", a).Str("uuid", id).Err(err).Msg("PUSH")
 			} else {
 				utils.Logger.Info().Str("char", charID).Str("msg", a).Str("uuid", id).Msg("PUSH")
 			}
 		}
-		if !anyError {
-			return nil
-		}
-		return errors.New("Errors occured")
+		return err
 	})
 }
 
@@ -57,7 +61,7 @@ func (cfg *ClientCLI) DoAck(ctx context.Context, charID, evtID string, when uint
 		client := proto.NewConsumerClient(cnx)
 		_, err := client.Ack1(ctx, &proto.Ack1Req{CharId: charID, When: when, EvtId: evtID})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		utils.Logger.Info().
 			Str("char", charID).
@@ -76,7 +80,7 @@ func (cfg *ClientCLI) DoList(ctx context.Context, charID string, when uint64, ma
 		client := proto.NewConsumerClient(cnx)
 		rep, err := client.List(ctx, &proto.ListReq{CharId: charID, Marker: when, Max: 100})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		anyError := false
 		for _, x := range rep.Items {

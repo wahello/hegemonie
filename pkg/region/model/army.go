@@ -7,10 +7,9 @@ package region
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"math/rand"
 	"sort"
 	"strings"
@@ -201,7 +200,7 @@ func (a *Army) DeferAttack(w *Region, loc uint64, args ActionArgAssault) error {
 	var sb strings.Builder
 	err := json.NewEncoder(&sb).Encode(&args)
 	if err != nil {
-		return fmt.Errorf("Invalid action argument: %v", err.Error())
+		return errors.NewBadRequest(err, "invalid action argument")
 	}
 	a.Targets = append(a.Targets, Command{Action: CmdCityAttack, Cell: loc, Args: sb.String()})
 	return nil
@@ -221,7 +220,7 @@ func (a *Army) DeferMove(w *Region, loc uint64, args ActionArgMove) error {
 	var sb strings.Builder
 	err := json.NewEncoder(&sb).Encode(&args)
 	if err != nil {
-		return fmt.Errorf("Invalid action argument: %v", err.Error())
+		return errors.NewBadRequest(err, "invalid action argument")
 	}
 	a.Targets = append(a.Targets, Command{Action: CmdMove, Cell: loc, Args: sb.String()})
 	return nil

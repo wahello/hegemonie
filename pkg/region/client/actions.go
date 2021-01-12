@@ -7,34 +7,21 @@ package regclient
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
-	"io"
-	"os"
 )
 
 type ClientCLI struct{}
 
-func (cli *ClientCLI) DoCreateRegion(ctx context.Context, args []string) error {
+func (cli *ClientCLI) DoCreateRegion(ctx context.Context, regID, mapID string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		client := proto.NewAdminClient(cnx)
-		_, err := client.CreateRegion(ctx, &proto.RegionCreateReq{MapName: args[1], Name: args[0]})
+		_, err := proto.NewAdminClient(cnx).CreateRegion(ctx, &proto.RegionCreateReq{MapName: mapID, Name: regID})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
-
-		type status struct {
-			Msg  string
-			Code int
-			ID   string
-		}
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.Encode(status{Msg: "Create", Code: 200, ID: args[0]})
-		return nil
-
+		return utils.StatusJSON(200, regID, "created")
 	})
 }
 
@@ -44,74 +31,38 @@ func (cli *ClientCLI) DoListRegions(ctx context.Context, args []string) error {
 		if len(args) > 0 {
 			marker = args[0]
 		}
-		client := proto.NewAdminClient(cnx)
-		rep, err := client.ListRegions(ctx, &proto.RegionListReq{NameMarker: marker})
+		rep, err := proto.NewAdminClient(cnx).ListRegions(ctx, &proto.RegionListReq{NameMarker: marker})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "")
-		for {
-			x, err := rep.Recv()
-			if err != nil {
-				if err != io.EOF {
-					return err
-				}
-				break
-			}
-			err = encoder.Encode(x)
-			if err != nil {
-				panic(err)
-			}
-		}
-		return nil
-
+		return utils.EncodeStream(func() (interface{}, error) { return rep.Recv() })
 	})
 }
 
-func (cli *ClientCLI) DoRegionMovement(ctx context.Context, args []string) error {
+func (cli *ClientCLI) DoRegionMovement(ctx context.Context, reg string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "")
-		client := proto.NewAdminClient(cnx)
-		for _, reg := range args {
-			rep, err := client.Move(ctx, &proto.RegionId{Region: reg})
-			if err != nil {
-				return err
-			}
-			err = encoder.Encode(rep)
-			if err != nil {
-				panic(err)
-			}
+		_, err := proto.NewAdminClient(cnx).Move(ctx, &proto.RegionId{Region: reg})
+		if err != nil {
+			return errors.Trace(err)
 		}
-		return nil
+		return utils.StatusJSON(200, reg, "Moved")
 	})
 }
 
-func (cli *ClientCLI) DoRegionProduction(ctx context.Context, args []string) error {
+func (cli *ClientCLI) DoRegionProduction(ctx context.Context, reg string) error {
 	return cli.connect(ctx, func(ctx context.Context, cnx *grpc.ClientConn) error {
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "")
-		client := proto.NewAdminClient(cnx)
-		for _, reg := range args {
-			rep, err := client.Produce(ctx, &proto.RegionId{Region: reg})
-			if err != nil {
-				return err
-			}
-			err = encoder.Encode(rep)
-			if err != nil {
-				panic(err)
-			}
+		_, err := proto.NewAdminClient(cnx).Produce(ctx, &proto.RegionId{Region: reg})
+		if err != nil {
+			return errors.Trace(err)
 		}
-		return nil
+		return utils.StatusJSON(200, reg, "Produced")
 	})
 }
 
 func (cli *ClientCLI) connect(ctx context.Context, action utils.ActionFunc) error {
 	endpoint, err := utils.DefaultDiscovery.Region()
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	return utils.Connect(ctx, endpoint, action)
 }

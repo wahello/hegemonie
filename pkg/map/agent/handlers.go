@@ -7,13 +7,13 @@ package mapagent
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
-	mapgraph "github.com/jfsmig/hegemonie/pkg/map/graph"
+	"github.com/jfsmig/hegemonie/pkg/map/graph"
 	"github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -38,12 +38,12 @@ type srvMap struct {
 func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	app := &srvMap{config: cfg, maps: make(mapgraph.SetOfMaps, 0)}
 	if err := app.LoadDirectory(cfg.PathRepository); err != nil {
-		return err
+		return errors.Trace(err)
 	}
 
 	lis, err := net.Listen("tcp", cfg.Endpoint)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
+		return errors.Annotate(err, "listen error")
 	}
 
 	grpc_health_v1.RegisterHealthServer(grpcSrv, app)
@@ -61,7 +61,7 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 			Msg("map>")
 	}
 	if err := grpcSrv.Serve(lis); err != nil {
-		return fmt.Errorf("failed to serve: %v", err)
+		return errors.Trace(err)
 	}
 
 	return nil
@@ -83,7 +83,7 @@ func (s *srvMap) Watch(_ *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.
 			Status: grpc_health_v1.HealthCheckResponse_SERVING,
 		})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 	}
 }
@@ -95,7 +95,7 @@ func (s *srvMap) Vertices(req *proto.ListVerticesReq, stream proto.Map_VerticesS
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("no such map")
+		return errors.NotFoundf("no such map")
 	}
 
 	next := req.Marker
@@ -107,7 +107,7 @@ func (s *srvMap) Vertices(req *proto.ListVerticesReq, stream proto.Map_VerticesS
 		for _, x := range vertices {
 			err := stream.Send(&proto.Vertex{Id: x.ID, X: x.X, Y: x.Y})
 			if err != nil {
-				return err
+				return errors.Trace(err)
 			}
 			next = x.ID
 		}
@@ -121,7 +121,7 @@ func (s *srvMap) Edges(req *proto.ListEdgesReq, stream proto.Map_EdgesServer) er
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("no such map")
+		return errors.NotFoundf("no such map")
 	}
 
 	src, dst := req.MarkerSrc, req.MarkerDst
@@ -133,7 +133,7 @@ func (s *srvMap) Edges(req *proto.ListEdgesReq, stream proto.Map_EdgesServer) er
 		for _, x := range edges {
 			err := stream.Send(&proto.Edge{Src: x.S, Dst: x.D})
 			if err != nil {
-				return err
+				return errors.Trace(err)
 			}
 			src, dst = x.S, x.D
 		}
@@ -147,18 +147,18 @@ func (s *srvMap) GetPath(req *proto.PathRequest, stream proto.Map_GetPathServer)
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("no such map")
+		return errors.NotFoundf("no such map")
 	}
 
 	src := req.Src
 	for {
 		next, err := m.PathNextStep(src, req.Dst)
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		err = stream.Send(&proto.PathElement{Id: src})
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		if next == req.Dst {
 			return nil
@@ -174,7 +174,7 @@ func (s *srvMap) Cities(req *proto.ListCitiesReq, stream proto.Map_CitiesServer)
 
 	m := s.maps.Get(req.MapName)
 	if m == nil {
-		return errors.New("no such map")
+		return errors.NotFoundf("no such map")
 	}
 
 	next := req.Marker
@@ -188,8 +188,11 @@ func (s *srvMap) Cities(req *proto.ListCitiesReq, stream proto.Map_CitiesServer)
 				err := stream.Send(&proto.CityLocation{
 					Id: v.ID, Name: v.City,
 				})
+				if err == io.EOF {
+					return nil
+				}
 				if err != nil {
-					return err
+					return errors.Trace(err)
 				}
 			}
 			next = v.ID
@@ -228,8 +231,12 @@ func (s *srvMap) Maps(req *proto.ListMapsReq, stream proto.Map_MapsServer) error
 			return nil
 		}
 		for _, v := range names {
-			if err := stream.Send(&v); err != nil {
-				return err
+			err := stream.Send(&v)
+			if err == io.EOF {
+				return nil
+			}
+			if err != nil {
+				return errors.Trace(err)
 			}
 			next = v.Name
 		}
@@ -241,7 +248,7 @@ func (s *srvMap) Maps(req *proto.ListMapsReq, stream proto.Map_MapsServer) error
 func (s *srvMap) LoadDirectory(path string) error {
 	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 
 		// Only accept non-hidden JSON files
@@ -259,11 +266,11 @@ func (s *srvMap) LoadDirectory(path string) error {
 		m := mapgraph.NewMap()
 		f, err := os.Open(path)
 		if err != nil {
-			return err
+			return errors.NewNotValid(err, "fs error")
 		}
 		defer f.Close()
 		if err = m.Load(f); err != nil {
-			return err
+			return errors.NewNotValid(err, "format error")
 		}
 
 		s.maps.Add(m)

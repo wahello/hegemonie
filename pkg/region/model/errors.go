@@ -5,15 +5,14 @@
 
 package region
 
-import "errors"
+import "github.com/juju/errors"
 
 var (
-	errInvalidState       = errors.New("Structure not initiated")
-	errRegionExists       = errors.New("A region exists with this name")
-	errCityExists         = errors.New("City exists at that location")
-	errCityNotFound       = errors.New("No such City")
-	errForbidden          = errors.New("Insufficient permissions")
-	errNotImplemented     = errors.New("NYI")
-	ErrNoSuchUnit         = errors.New("No such Unit")
+	errRegionExists       = errors.AlreadyExistsf("A region exists with this name")
+	errCityExists         = errors.AlreadyExistsf("City exists at that location")
+	errCityNotFound       = errors.NotFoundf("No such City")
+	errForbidden          = errors.Forbiddenf("Insufficient permissions")
+	errNotImplemented     = errors.NotImplementedf("NYI")
+	ErrNoSuchUnit         = errors.NotFoundf("No such Unit")
 	ErrNotEnoughResources = errors.New("Not enough resources")
 )

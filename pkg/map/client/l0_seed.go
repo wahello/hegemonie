@@ -6,7 +6,7 @@
 package mapclient
 
 import (
-	"fmt"
+	"github.com/juju/errors"
 	"sort"
 )
 
@@ -67,10 +67,10 @@ func (ms *MapSeed) extractRawMap() (MapRaw, error) {
 	for i, r := range ms.Roads {
 		src, dst := byName[r.Src], byName[r.Dst]
 		if src <= 0 {
-			err = fmt.Errorf("No such site [%s] [%v:%v->%v]", r.Src, i, r.Src, r.Dst)
+			err = errors.NotValidf("No such site [%s] [%v:%v->%v]", r.Src, i, r.Src, r.Dst)
 			break
 		} else if dst <= 0 {
-			err = fmt.Errorf("No such site [%s] [%v:%v->%v]", r.Dst, i, r.Src, r.Dst)
+			err = errors.NotValidf("No such site [%s] [%v:%v->%v]", r.Dst, i, r.Src, r.Dst)
 			break
 		} else {
 			// map seeds are graphs, raw maps are digraphs ... we need to expand in directions

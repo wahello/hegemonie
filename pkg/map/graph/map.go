@@ -7,7 +7,7 @@ package mapgraph
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/juju/errors"
 	"io"
 	"sort"
 	"strings"
@@ -71,16 +71,13 @@ func NewMap() *Map {
 // Load consumes a mapclient.MapRaw from os.Stdin and populates the current
 // Map accordingly.
 func (m *Map) Load(in io.Reader) error {
-	decoder := json.NewDecoder(in)
-	err := decoder.Decode(m)
+	err := json.NewDecoder(in).Decode(m)
 	if err != nil {
-		return err
+		return errors.NewNotValid(err, "invalid input")
 	}
 
 	m.canonize()
 	m.rehash()
-
-	// Validate the current map
 	return m.check()
 }
 
@@ -109,7 +106,7 @@ func (m *Map) RoadHas(src, dst uint64) bool {
 // to the destination (given by dst).
 func (m *Map) PathNextStep(src, dst uint64) (uint64, error) {
 	if src == dst || src == 0 || dst == 0 {
-		return 0, errors.New("EINVAL")
+		return 0, errors.BadRequestf("EINVAL")
 	}
 
 	next, ok := m.steps[vector{src, dst}]
@@ -149,7 +146,7 @@ func (m *Map) canonize() {
 // Validate the invariants of a Map, on the current map
 func (m *Map) check() error {
 	if m.ID == "" {
-		return errors.New("bad name")
+		return errors.BadRequestf("bad name")
 	}
 	if err := m.Cells.Check(); err != nil {
 		return err
@@ -159,15 +156,15 @@ func (m *Map) check() error {
 	}
 
 	if !sort.IsSorted(&m.Cells) {
-		return errors.New("locations unsorted")
+		return errors.NotValidf("locations unsorted")
 	}
 	if !sort.IsSorted(&m.Roads) {
-		return errors.New("roads unsorted")
+		return errors.NotValidf("roads unsorted")
 	}
 
 	for idx, c := range m.Cells {
 		if idx > 0 && c.equals(*m.Cells[idx-1]) {
-			return errors.New("duplicated Site")
+			return errors.NotValidf("duplicated Site")
 		}
 	}
 
@@ -175,7 +172,7 @@ func (m *Map) check() error {
 		for _, s0 := range m.Cells {
 			for _, s1 := range m.Cells {
 				if _, ok := m.steps[vector{s0.ID, s1.ID}]; !ok {
-					return errors.New("unreachable error")
+					return errors.NotValidf("unreachability [%v][%v]", s0.ID, s1.ID)
 				}
 			}
 		}
@@ -183,22 +180,22 @@ func (m *Map) check() error {
 
 	for idx, r := range m.Roads {
 		if r.S <= 0 {
-			return errors.New("bad source")
+			return errors.NotValidf("bad source")
 		}
 		if r.D <= 0 {
-			return errors.New("bad destination")
+			return errors.NotValidf("bad destination")
 		}
 		if !m.Cells.Has(r.S) {
-			return errors.New("dangling source")
+			return errors.NotValidf("dangling source")
 		}
 		if !m.Cells.Has(r.D) {
-			return errors.New("dangling destination")
+			return errors.NotValidf("dangling destination")
 		}
 		if r.D == r.S {
-			return errors.New("loop detected")
+			return errors.NotValidf("loop detected")
 		}
 		if idx > 0 && r.equals(*m.Roads[idx-1]) {
-			return errors.New("duplicated road")
+			return errors.NotValidf("duplicated road")
 		}
 	}
 	return nil

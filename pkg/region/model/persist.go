@@ -7,8 +7,7 @@ package region
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
+	"github.com/juju/errors"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,13 +16,13 @@ import (
 
 func (defs *DefinitionsBase) Check() error {
 	if !sort.IsSorted(&defs.Knowledges) {
-		return errors.New("knowledge types unsorted")
+		return errors.NotValidf("knowledge types unsorted")
 	}
 	if !sort.IsSorted(&defs.Buildings) {
-		return errors.New("building types unsorted")
+		return errors.NotValidf("building types unsorted")
 	}
 	if !sort.IsSorted(&defs.Units) {
-		return errors.New("unit types unsorted")
+		return errors.NotValidf("unit types unsorted")
 	}
 
 	return nil
@@ -41,8 +40,7 @@ func walkJSON(path string, hook func(path string, decoder *json.Decoder) error) 
 			return nil
 		}
 		f, err := os.Open(path)
-		decoder := json.NewDecoder(f)
-		return hook(path, decoder)
+		return hook(path, json.NewDecoder(f))
 	})
 
 }
@@ -51,7 +49,7 @@ func (defs *DefinitionsBase) loadUnits(basedir string) error {
 	return walkJSON(basedir, func(_ string, decoder *json.Decoder) error {
 		tmp := make([]*UnitType, 0)
 		if err := decoder.Decode(&tmp); err != nil {
-			return err
+			return errors.NewNotValid(err, "invalid json")
 		}
 		defs.Units = append(defs.Units, tmp...)
 		return nil
@@ -62,7 +60,7 @@ func (defs *DefinitionsBase) loadKnowledge(basedir string) (err error) {
 	return walkJSON(basedir, func(_ string, decoder *json.Decoder) error {
 		tmp := make([]*KnowledgeType, 0)
 		if err = decoder.Decode(&tmp); err != nil {
-			return err
+			return errors.NewNotValid(err, "invalid json")
 		}
 		defs.Knowledges = append(defs.Knowledges, tmp...)
 		return nil
@@ -73,7 +71,7 @@ func (defs *DefinitionsBase) loadBuildings(basedir string) (err error) {
 	return walkJSON(basedir, func(_ string, decoder *json.Decoder) error {
 		tmp := make([]*BuildingType, 0)
 		if err = decoder.Decode(&tmp); err != nil {
-			return err
+			return errors.NewNotValid(err, "invalid json")
 		}
 		defs.Buildings = append(defs.Buildings, tmp...)
 		return nil
@@ -98,9 +96,6 @@ func (defs *DefinitionsBase) load(path string) (err error) {
 }
 
 func (w *World) Init() {
-	w.WLock()
-	defer w.WUnlock()
-
 	w.SetNotifier(&noEvt{})
 	w.Regions = make(SetOfRegions, 0)
 	w.Definitions.Units = make(SetOfUnitTypes, 0)
@@ -109,17 +104,18 @@ func (w *World) Init() {
 }
 
 func (w *World) Check() error {
-	w.RLock()
-	defer w.RUnlock()
-	if w.notifier == nil || w.mapView == nil {
-		return errInvalidState
+	if w.notifier == nil {
+		return errors.NotValidf("Missing notifier")
+	}
+	if w.mapView == nil {
+		return errors.NotValidf("Missing map")
 	}
 	if err := w.Definitions.Check(); err != nil {
-		return err
+		return errors.Annotate(err, "bad definitions")
 	}
 	for _, r := range w.Regions {
 		if err := r.Check(); err != nil {
-			return err
+			return errors.Annotatef(err, "bad region '%s'", r.Name)
 		}
 	}
 	return nil
@@ -127,39 +123,39 @@ func (w *World) Check() error {
 
 func (reg *Region) Check() error {
 	if !sort.IsSorted(&reg.Cities) {
-		return errors.New("cities unsorted")
+		return errors.NotValidf("cities unsorted")
 	}
 	if !sort.IsSorted(&reg.Fights) {
-		return errors.New("fights unsorted")
+		return errors.NotValidf("fights unsorted")
 	}
 
 	for _, a := range reg.Fights {
 		if !sort.IsSorted(&a.Attack) {
-			return errors.New("fight attack unsorted")
+			return errors.NotValidf("fight attack unsorted")
 		}
 		if !sort.IsSorted(&a.Defense) {
-			return errors.New("fight defense unsorted")
+			return errors.NotValidf("fight defense unsorted")
 		}
 	}
 	for _, a := range reg.Cities {
 		if !sort.IsSorted(&a.Knowledges) {
-			return errors.New("knowledge unsorted")
+			return errors.NotValidf("knowledge unsorted")
 		}
 		if !sort.IsSorted(&a.Buildings) {
-			return errors.New("building unsorted")
+			return errors.NotValidf("building unsorted")
 		}
 		if !sort.IsSorted(&a.Units) {
-			return errors.New("unit sequence: unsorted")
+			return errors.NotValidf("unit sequence: unsorted")
 		}
 		if !sort.IsSorted(&a.lieges) {
-			return errors.New("city lieges unsorted")
+			return errors.NotValidf("city lieges unsorted")
 		}
 		if !sort.IsSorted(&a.Armies) {
-			return errors.New("city armies unsorted")
+			return errors.NotValidf("city armies unsorted")
 		}
 		for _, a := range a.Armies {
 			if !sort.IsSorted(&a.Units) {
-				return errors.New("units unsorted")
+				return errors.NotValidf("units unsorted")
 			}
 		}
 	}
@@ -201,7 +197,7 @@ func (w *World) PostLoad() error {
 	sort.Sort(&w.Regions)
 	for _, r := range w.Regions {
 		if err := r.PostLoad(); err != nil {
-			return err
+			return errors.Annotate(err, "postload/link error")
 		}
 	}
 	return nil
@@ -210,12 +206,12 @@ func (w *World) PostLoad() error {
 func (w *World) LoadDefinitions(basedir string) (err error) {
 	err = w.Definitions.load(basedir)
 	if err != nil {
-		return fmt.Errorf("invalid world from [%s]: %v", basedir, err)
+		return errors.Annotatef(err, "invalid world from [%s]", basedir)
 	}
 
 	err = w.Definitions.Check()
 	if err != nil {
-		return fmt.Errorf("inconsistent world from [%s]: %v", basedir, err)
+		return errors.Annotatef(err, "inconsistent world from [%s]", basedir)
 	}
 
 	return nil
@@ -226,7 +222,7 @@ func (w *World) LoadRegions(basedir string) error {
 		reg := &Region{}
 		err := decoder.Decode(&reg)
 		if err != nil {
-			return fmt.Errorf("region decoding error [%s]: %s", path, err.Error())
+			return errors.Annotatef(err, "region decoding error [%s]", path)
 		}
 		w.Regions.Add(reg)
 		return nil

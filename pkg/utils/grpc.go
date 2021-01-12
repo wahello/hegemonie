@@ -10,8 +10,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"errors"
-	"fmt"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io"
@@ -33,7 +32,7 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 	cnx, err := grpc.DialContext(ctx, endpoint,
 		grpc.WithTransportCredentials(creds))
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 	defer cnx.Close()
 	return action(ctx, cnx)
@@ -43,10 +42,10 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 // with the proper interceptors.
 func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
 	if len(pathCrt) <= 0 {
-		return nil, fmt.Errorf("invalid TLS/x509 certificate path [%s]", pathCrt)
+		return nil, errors.NotValidf("invalid TLS/x509 certificate path [%s]", pathCrt)
 	}
 	if len(pathKey) <= 0 {
-		return nil, fmt.Errorf("invalid TLS/x509 key path [%s]", pathKey)
+		return nil, errors.NotValidf("invalid TLS/x509 key path [%s]", pathKey)
 	}
 	var certBytes, keyBytes []byte
 	var err error
@@ -54,10 +53,10 @@ func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
 	Logger.Info().Str("key", pathKey).Str("crt", pathCrt).Msg("TLS config")
 
 	if certBytes, err = ioutil.ReadFile(pathCrt); err != nil {
-		return nil, err
+		return nil, errors.Annotate(err, "certificate file error")
 	}
 	if keyBytes, err = ioutil.ReadFile(pathKey); err != nil {
-		return nil, err
+		return nil, errors.Annotate(err, "key file error")
 	}
 
 	certPool := x509.NewCertPool()
@@ -68,7 +67,7 @@ func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
 
 	cert, err := tls.X509KeyPair(certBytes, keyBytes)
 	if err != nil {
-		return nil, err
+		return nil, errors.Annotate(err, "x509 key pair error")
 	}
 
 	creds := credentials.NewServerTLSFromCert(&cert)
@@ -98,10 +97,7 @@ func EncodeWhole(recv RecvFunc) error {
 		}
 		out = append(out, x)
 	}
-
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(out)
+	return DumpJSON(out)
 }
 
 // EncodeStream dumps a JSON stream where each line is a JSON-encoded object.

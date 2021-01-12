@@ -7,12 +7,11 @@ package evtagent
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	back "github.com/jfsmig/hegemonie/pkg/event/backend-local"
 	"github.com/jfsmig/hegemonie/pkg/event/proto"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"math"
 	"net"
@@ -42,12 +41,12 @@ func (cfg Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	app := eventService{cfg: cfg}
 	app.backend, err = back.Open(app.cfg.PathBase)
 	if err != nil {
-		return err
+		return errors.NewNotValid(err, "backend error")
 	}
 
 	lis, err = net.Listen("tcp", cfg.Endpoint)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
+		return errors.NewNotValid(err, "listen error")
 	}
 
 	grpc_health_v1.RegisterHealthServer(grpcSrv, &app)

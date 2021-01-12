@@ -8,9 +8,9 @@ package authclient
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	keto "github.com/ory/keto-client-go/client"
 	keto_engines "github.com/ory/keto-client-go/client/engines"
 	kratos "github.com/ory/kratos-client-go/client"
@@ -24,7 +24,7 @@ type ClientCLI struct{}
 func (cfg *ClientCLI) doKratos(action func(cli *kratos.OryKratos) error) error {
 	endpoint, err := utils.DefaultDiscovery.Kratos()
 	if err != nil {
-		return err
+		return errors.Annotate(err, "error locating Kratos")
 	}
 	cli := kratos.NewHTTPClientWithConfig(strfmt.Default, &kratos.TransportConfig{
 		Host:     endpoint,
@@ -37,7 +37,7 @@ func (cfg *ClientCLI) doKratos(action func(cli *kratos.OryKratos) error) error {
 func (cfg *ClientCLI) doKeto(action func(cli *keto.OryKeto) error) error {
 	endpoint, err := utils.DefaultDiscovery.Keto()
 	if err != nil {
-		return err
+		return errors.Annotate(err, "error locating Keto")
 	}
 	cli := keto.NewHTTPClientWithConfig(strfmt.Default, &keto.TransportConfig{
 		Host:     endpoint,
@@ -125,10 +125,10 @@ func (cfg *ClientCLI) DoList(ctx context.Context, args []string) error {
 
 // DoCreate forces the insertion in the Kratos service of a user with the given characteristics.
 func (cfg *ClientCLI) DoCreate(ctx context.Context, args []string) error {
-	return errors.New("NYI")
+	return errors.NotImplementedf("NYI")
 }
 
 // DoInvite initiate the process of inviting a user by email, waiting for an action from him/her.
 func (cfg *ClientCLI) DoInvite(ctx context.Context, args []string) error {
-	return errors.New("NYI")
+	return errors.NotImplementedf("NYI")
 }

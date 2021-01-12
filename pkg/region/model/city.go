@@ -6,9 +6,9 @@
 package region
 
 import (
-	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/juju/errors"
 )
 
 func MakeCity() *City {
@@ -168,7 +168,7 @@ func (c *City) CreateArmyFromIds(w *Region, ids ...string) (*Army, error) {
 	err := c.TransferOwnUnit(a, ids...)
 	if err != nil { // Rollback
 		a.Disband(w, c, false)
-		return nil, err
+		return nil, errors.Annotate(err, "transfer error")
 	}
 	return a, nil
 }
@@ -352,10 +352,10 @@ func (c *City) SendResourcesTo(w *Region, overlord *City, amount Resources) erro
 
 func (c *City) TransferOwnResources(a *Army, r Resources) error {
 	if a.City != c {
-		return errors.New("Army not controlled by the City")
+		return errors.Forbiddenf("army not controlled by the city")
 	}
 	if !c.Stock.GreaterOrEqualTo(r) {
-		return errors.New("Insufficient resources")
+		return ErrNotEnoughResources
 	}
 
 	c.Stock.Remove(r)
@@ -369,7 +369,7 @@ func (c *City) TransferOwnUnit(a *Army, units ...string) error {
 	}
 
 	if a.City != c {
-		return errors.New("Army not controlled by the City")
+		return errors.Forbiddenf("army not controlled by the city")
 	}
 
 	allUnits := make(map[string]*Unit)
@@ -378,7 +378,7 @@ func (c *City) TransferOwnUnit(a *Army, units ...string) error {
 			continue
 		}
 		if u := c.Units.Get(uid); u == nil {
-			return errors.New("Unit not found")
+			return errors.NotFoundf("unit not found")
 		} else if u.Ticks > 0 || u.Health <= 0 {
 			continue
 		} else {
@@ -436,10 +436,10 @@ func (c *City) UnitCreate(w *Region, pType *UnitType) *Unit {
 func (c *City) Train(w *Region, typeID uint64) (string, error) {
 	t := w.world.UnitTypeGet(typeID)
 	if t == nil {
-		return "", errors.New("Unit Type not found")
+		return "", errors.NotFoundf("unit type not found")
 	}
 	if !c.UnitAllowed(t) {
-		return "", errors.New("Precondition Failed: no suitable building")
+		return "", errors.Forbiddenf("no suitable building")
 	}
 
 	u := c.UnitCreate(w, t)
@@ -449,15 +449,15 @@ func (c *City) Train(w *Region, typeID uint64) (string, error) {
 func (c *City) Study(w *Region, typeID uint64) (string, error) {
 	t := w.world.KnowledgeTypeGet(typeID)
 	if t == nil {
-		return "", errors.New("Knowledge Type not found")
+		return "", errors.NotFoundf("knowledge type not found")
 	}
 	for _, k := range c.Knowledges {
 		if typeID == k.Type {
-			return "", errors.New("Already started")
+			return "", errors.AlreadyExistsf("already started")
 		}
 	}
 	if !CheckKnowledgeDependencies(c.ownedKnowledgeTypes(w), t.Requires, t.Conflicts) {
-		return "", errors.New("Conflict")
+		return "", errors.Forbiddenf("dependencies unmet")
 	}
 
 	id := uuid.New().String()
@@ -476,20 +476,20 @@ func (c *City) ownedKnowledgeTypes(reg *Region) SetOfKnowledgeTypes {
 func (c *City) Build(w *Region, bID uint64) (string, error) {
 	t := w.world.BuildingTypeGet(bID)
 	if t == nil {
-		return "", errors.New("Building Type not found")
+		return "", errors.NotFoundf("Building Type not found")
 	}
 	if !t.MultipleAllowed {
 		for _, b := range c.Buildings {
 			if b.Type == bID {
-				return "", errors.New("Building already present")
+				return "", errors.AlreadyExistsf("building already present")
 			}
 		}
 	}
 	if !CheckKnowledgeDependencies(c.ownedKnowledgeTypes(w), t.Requires, t.Conflicts) {
-		return "", errors.New("Conflict")
+		return "", errors.Forbiddenf("dependencies unmet")
 	}
 	if !c.Stock.GreaterOrEqualTo(t.Cost0) {
-		return "", errors.New("Not enough ressources")
+		return "", ErrNotEnoughResources
 	}
 
 	id := uuid.New().String()
