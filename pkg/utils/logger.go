@@ -55,81 +55,68 @@ func PatchCommandLogs(cmd *cobra.Command) {
 	}
 }
 
-func ServerUnaryInterceptorZerolog() grpc.ServerOption {
-	return grpc.UnaryInterceptor(newUnaryServerInterceptorZerolog())
+type logEvt struct {
+	z     *zerolog.Event
+	start time.Time
 }
 
-func ServerStreamInterceptorZerolog() grpc.ServerOption {
-	return grpc.StreamInterceptor(newStreamServerInterceptorZerolog())
+func newEvent(method string) *logEvt {
+	return &logEvt{z: Logger.Info().Str("uri", method), start: time.Now()}
+}
+
+func (evt *logEvt) send() { evt.z.Send() }
+
+func (evt *logEvt) setResult(err error) *logEvt {
+	evt.z = evt.z.TimeDiff("t", time.Now(), evt.start)
+	if err != nil {
+		evt.z.Int("rc", 500)
+		evt.z.Err(err)
+	} else {
+		evt.z.Int("rc", 200)
+	}
+	return evt
+}
+
+func (evt *logEvt) patchWithRequest(ctx context.Context) *logEvt {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		auth := md.Get(":authority")
+		if len(auth) > 0 {
+			evt.z.Str("local", auth[0])
+		}
+		sessionID := md.Get("session-id")
+		if len(sessionID) > 0 {
+			evt.z.Str("session", sessionID[0])
+		}
+	}
+	return evt
+}
+
+func (evt *logEvt) pathWithReply(ctx context.Context) *logEvt {
+	if peer, ok := peer.FromContext(ctx); ok {
+		addr := peer.Addr.String()
+		if i := strings.LastIndex(addr, ":"); i > -1 {
+			addr = addr[:i]
+		}
+		evt.z.Str("peer", addr)
+	}
+	return evt
 }
 
 func newStreamServerInterceptorZerolog() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		start := time.Now()
+		evt := newEvent(info.FullMethod)
 		err := handler(srv, ss)
 		ctx := ss.Context()
-		z := Logger.Info().
-			Str("uri", info.FullMethod).
-			TimeDiff("t", time.Now(), start)
-		if err != nil {
-			z.Int("rc", 500)
-			z.Err(err)
-		} else {
-			z.Int("rc", 200)
-		}
-		if md, ok := metadata.FromIncomingContext(ctx); ok {
-			auth := md.Get(":authority")
-			if len(auth) > 0 {
-				z.Str("local", auth[0])
-			}
-			sessionID := md.Get("session-id")
-			if len(sessionID) > 0 {
-				z.Str("session", sessionID[0])
-			}
-		}
-		if peer, ok := peer.FromContext(ctx); ok {
-			addr := peer.Addr.String()
-			if i := strings.LastIndex(addr, ":"); i > -1 {
-				addr = addr[:i]
-			}
-			z.Str("peer", addr)
-		}
-		z.Send()
+		evt.setResult(err).patchWithRequest(ctx).pathWithReply(ctx).send()
 		return errors.Trace(err)
 	}
 }
 
 func newUnaryServerInterceptorZerolog() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		start := time.Now()
+		evt := newEvent(info.FullMethod)
 		resp, err := handler(ctx, req)
-		z := Logger.Info().
-			Str("uri", info.FullMethod).
-			TimeDiff("t", time.Now(), start)
-		if err != nil {
-			z.Int("rc", 500)
-			z.Err(err)
-		} else {
-			z.Int("rc", 200)
-		}
-		if md, ok := metadata.FromIncomingContext(ctx); ok {
-			auth := md.Get(":authority")
-			if len(auth) > 0 {
-				z.Str("local", auth[0])
-			}
-			sessionID := md.Get("session-id")
-			if len(sessionID) > 0 {
-				z.Str("session", sessionID[0])
-			}
-		}
-		if peer, ok := peer.FromContext(ctx); ok {
-			addr := peer.Addr.String()
-			if i := strings.LastIndex(addr, ":"); i > -1 {
-				addr = addr[:i]
-			}
-			z.Str("peer", addr)
-		}
-		z.Send()
+		evt.setResult(err).patchWithRequest(ctx).pathWithReply(ctx).send()
 		return resp, err
 	}
 }

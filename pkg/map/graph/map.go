@@ -155,19 +155,6 @@ func (m *Map) check() error {
 		return errors.Annotate(err, "error of roads")
 	}
 
-	if !sort.IsSorted(&m.Cells) {
-		return errors.NotValidf("locations unsorted")
-	}
-	if !sort.IsSorted(&m.Roads) {
-		return errors.NotValidf("roads unsorted")
-	}
-
-	for idx, c := range m.Cells {
-		if idx > 0 && c.equals(*m.Cells[idx-1]) {
-			return errors.NotValidf("duplicated Site")
-		}
-	}
-
 	if m.Cells.Len() > 1 {
 		for _, s0 := range m.Cells {
 			for _, s1 := range m.Cells {

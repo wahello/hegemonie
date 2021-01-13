@@ -18,6 +18,8 @@ func TestMapInitFails(t *testing.T) {
 		}
 	}
 
+	// Bad JSON
+	testFail(`@`)
 	// check missing or empty name
 	testFail(`{"sites":[{"id":1}],"roads":[{"src":1, "dst":1}]}`)
 	testFail(`{"id": "", "sites":[{"id":1}],"roads":[{"src":1, "dst":1}]}`)
@@ -33,6 +35,8 @@ func TestMapInitFails(t *testing.T) {
 	// Duplications
 	testFail(`{"id": "test map", "sites":[{"id":1},{"id":1},{"id":2}],"roads":[{"src":1, "dst":2},{"src":2, "dst":1}]}`)
 	testFail(`{"id": "test map", "sites":[{"id":1},{"id":2}],"roads":[{"src":1, "dst":2},{"src":1, "dst":2},{"src":2, "dst":1}]}`)
+	// Multiple connex components
+	testFail(`{"id": "test map", "sites":[{"id":1},{"id":2},{"id":3},{"id":4}],"roads":[{"src":1, "dst":2},{"src":3, "dst":4}]}`)
 }
 
 func TestMapInitsuccess(t *testing.T) {

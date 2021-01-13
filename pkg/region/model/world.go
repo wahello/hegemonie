@@ -7,18 +7,29 @@ package region
 
 import "github.com/juju/errors"
 
+// WLock acquires an exclusive ("writer") lock on the current world
+// The request for a writer's lock has the priority on any equest for a reader's lock.
+// It also forbid any concurrent writer or reader lock to be acquired.
 func (w *World) WLock() { w.rw.Lock() }
 
+// WUnlock releases an exclusive ("writer") lock on the current world
 func (w *World) WUnlock() { w.rw.Unlock() }
 
+// RLock acquires a shared("reader") lock on the current world
+// Several requests for a reader's lock may be granted simultaneously but they are
+// incompatible with any writer's locks. Their usage is reserved for read-nonly operations.
 func (w *World) RLock() { w.rw.RLock() }
 
+// RUnlock releases a shared("reader") lock on the current world
 func (w *World) RUnlock() { w.rw.RUnlock() }
 
+// SetNotifier changes the event notifier associated with the current World.
+// That Notifier is user for inègame notifications, to collect a per-Character log.
 func (w *World) SetNotifier(n Notifier) {
 	w.notifier = LogEvent(n)
 }
 
+// NamedCity is the information that a City with named Name should exist at the position ID on the graph map.
 type NamedCity struct {
 	Name string
 	ID   uint64

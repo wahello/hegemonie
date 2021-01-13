@@ -160,9 +160,7 @@ func (s *srvMap) Cities(req *proto.ListCitiesReq, stream proto.Map_CitiesServer)
 			}
 			for _, v := range cities {
 				if v.City != "" {
-					err := stream.Send(&proto.CityLocation{
-						Id: v.ID, Name: v.City,
-					})
+					err := stream.Send(&proto.CityLocation{Id: v.ID, Name: v.City})
 					if err == io.EOF {
 						return nil
 					}
