@@ -29,6 +29,11 @@ func (w *World) SetNotifier(n Notifier) {
 	w.notifier = LogEvent(n)
 }
 
+func (w *World) SetMapCliet(c MapView) {
+	// TODO(jfs): maybe wrap with a cache if perf is too poor
+	w.mapView = c
+}
+
 // NamedCity is the information that a City with named Name should exist at the position ID on the graph map.
 type NamedCity struct {
 	Name string

@@ -8,6 +8,7 @@ package region
 import (
 	"encoding/json"
 	"github.com/juju/errors"
+	"golang.org/x/net/context"
 	"os"
 	"path/filepath"
 	"sort"
@@ -95,20 +96,29 @@ func (defs *DefinitionsBase) load(path string) (err error) {
 	return err
 }
 
-func (w *World) Init() {
-	w.SetNotifier(&noEvt{})
-	w.Regions = make(SetOfRegions, 0)
-	w.Definitions.Units = make(SetOfUnitTypes, 0)
-	w.Definitions.Buildings = make(SetOfBuildingTypes, 0)
-	w.Definitions.Knowledges = make(SetOfKnowledgeTypes, 0)
+func NewWorld(ctx context.Context) (*World, error) {
+	mv, err := newDirectPathResolver(ctx)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return &World{
+		notifier: LogEvent(&noEvt{}),
+		mapView:  mv,
+		Regions:  make(SetOfRegions, 0),
+		Definitions: DefinitionsBase{
+			Units:      make(SetOfUnitTypes, 0),
+			Buildings:  make(SetOfBuildingTypes, 0),
+			Knowledges: make(SetOfKnowledgeTypes, 0),
+		},
+	}, nil
 }
 
 func (w *World) Check() error {
 	if w.notifier == nil {
-		return errors.NotValidf("Missing notifier")
+		return errors.NotValidf("missing an event notifier")
 	}
 	if w.mapView == nil {
-		return errors.NotValidf("Missing map")
+		return errors.NotValidf("missing a path resolution object")
 	}
 	if err := w.Definitions.Check(); err != nil {
 		return errors.Annotate(err, "bad definitions")

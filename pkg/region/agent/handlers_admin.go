@@ -23,14 +23,14 @@ type adminApp struct {
 
 func (app *regionApp) Produce(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
 	return none, app._regLock('w', req.Region, func(r *region.Region) error {
-		r.Produce()
+		r.Produce(ctx)
 		return nil
 	})
 }
 
 func (app *regionApp) Move(ctx context.Context, req *proto.RegionId) (*proto.None, error) {
 	return none, app._regLock('w', req.Region, func(r *region.Region) error {
-		r.Move()
+		r.Move(ctx)
 		return nil
 	})
 }

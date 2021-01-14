@@ -14,7 +14,7 @@ D=$(mktemp -d)
 
 function finish() {
 	set +e
-	kill %3 %2 %1
+	kill %5 %4 %3 %2 %1
 	wait
 }
 
@@ -137,15 +137,18 @@ defaults
 	option httplog
 	option http-use-htx
 
-frontend grpc
-	bind :8080  ssl  verify none  crt $D/pki/proxy.pem alpn h2
+frontend public
+	bind :8000  alpn http/1.1
+	bind :8443  ssl  verify none  crt $D/pki/proxy.pem alpn h2,http/1.1
 	http-request deny unless { req.hdr(content-type) -m str "application/grpc" }
-	acl ismap  path_beg "/hege.map."
-	acl isevt  path_beg "/hege.evt."
-	acl isreg  path_beg "/hege.reg."
-	use_backend grpc_map  if ismap
-	use_backend grpc_evt  if isevt
-	use_backend grpc_reg  if isreg
+	acl ismap   path_beg "/hege.map."
+	acl isevt   path_beg "/hege.evt."
+	acl isreg   path_beg "/hege.reg."
+	acl isprom  path_beg "/prom"
+	use_backend grpc_map    if ismap
+	use_backend grpc_evt    if isevt
+	use_backend grpc_reg    if isreg
+	use_backend prometheus  if isprom
 
 backend grpc_reg
 	balance roundrobin
@@ -159,10 +162,22 @@ backend grpc_map
 	balance roundrobin
 	server map1 localhost:8083  ssl  alpn h2  check  maxconn 32  verify none
 
+backend prometheus
+  balance roundrobin
+  mode http
+  http-request set-path "%[path,regsub(^/prom/,/)]"
+  server prom1 localhost:9090  check
+
 EOF
 
 service_certificate proxy
-haproxy -- "$D/proxy/haproxy.cfg"
+haproxy -- "$D/proxy/haproxy.cfg" &
+
+
+#-----------------------------------------------------------------------------#
+# A reverse proxy helps use expose a single port
+docker run -p 9090:9090 prom/prometheus &
+
 
 #-----------------------------------------------------------------------------#
 

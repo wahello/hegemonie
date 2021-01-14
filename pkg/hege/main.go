@@ -38,7 +38,8 @@ func main() {
 	ctx := context.Background()
 	cmd.AddCommand(clients(ctx), servers(ctx), tools(ctx))
 	if err := cmd.Execute(); err != nil {
-		log.Fatalln("Command error:", err)
+		log.Panicln("Command error:", err)
+		log.Fatalln(errors.ErrorStack(err))
 	}
 }
 
@@ -193,7 +194,10 @@ func clientMap(ctx context.Context) *cobra.Command {
 		Short:   "List all the maps registered",
 		Example: "map list [$MAPID_MARKER]",
 		Args:    cobra.MaximumNArgs(1),
-		RunE:    hook(func() error { return cfg.ListMaps(ctx, pathArgs) }),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pathArgs.MapName = first(args)
+			return cfg.ListMaps(ctx, pathArgs)
+		},
 	}
 
 	path := &cobra.Command{
@@ -416,7 +420,7 @@ func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
 	agent := &cobra.Command{
 		Use:     "event",
 		Short:   "Event Log Service",
-		Example: "heged event --endpoint=10.0.0.1:2345 /path/to/event/rocksdb",
+		Example: "hege event --endpoint=10.0.0.1:2345 /path/to/event/rocksdb",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathBase = args[0]
@@ -435,7 +439,7 @@ func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
 	agent := &cobra.Command{
 		Use:     "map",
 		Short:   "Map Service",
-		Example: "heged map --endpoint=10.0.0.1:1234 /path/to/maps/directory",
+		Example: "hege map --endpoint=10.0.0.1:1234 /path/to/maps/directory",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathRepository = args[0]
@@ -454,7 +458,7 @@ func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
 	agent := &cobra.Command{
 		Use:     "region",
 		Short:   "Region Service",
-		Example: "heged region --Endpoint=10.0.0.1:1234 /path/to/defs/dir /path/to/live/dir",
+		Example: "hege region --Endpoint=10.0.0.1:1234 /path/to/defs/dir /path/to/live/dir",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg.PathDefs = args[0]

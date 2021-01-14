@@ -6,6 +6,7 @@
 package region
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/juju/errors"
@@ -207,7 +208,7 @@ func (c *City) ProduceLocally(w *Region, p *CityProduction) Resources {
 	return prod
 }
 
-func (c *City) Produce(w *Region) {
+func (c *City) Produce(_ context.Context, w *Region) {
 	// Pre-compute the modified values of Stock and Production.
 	// We just reuse a functon that already does it (despite it does more)
 	prod0 := c.GetProduction(w.world)

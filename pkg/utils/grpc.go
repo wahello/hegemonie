@@ -10,6 +10,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -73,8 +75,12 @@ func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
 	creds := credentials.NewServerTLSFromCert(&cert)
 	srv := grpc.NewServer(
 		grpc.Creds(creds),
-		grpc.StreamInterceptor(newStreamServerInterceptorZerolog()),
-		grpc.UnaryInterceptor(newUnaryServerInterceptorZerolog()))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_prometheus.UnaryServerInterceptor,
+			newUnaryServerInterceptorZerolog())),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_prometheus.StreamServerInterceptor,
+			newStreamServerInterceptorZerolog())))
 	return srv, nil
 }
 

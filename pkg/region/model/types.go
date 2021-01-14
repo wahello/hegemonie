@@ -121,11 +121,6 @@ type Region struct {
 	world *World
 }
 
-// Map actions that are exposed to a World
-type MapView interface {
-	Step(src, dst uint64) (uint64, error)
-}
-
 type Resources [ResourceMax]uint64
 
 type ResourcesIncrement [ResourceMax]int64

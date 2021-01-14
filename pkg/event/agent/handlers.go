@@ -7,6 +7,7 @@ package evtagent
 
 import (
 	"context"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	back "github.com/jfsmig/hegemonie/pkg/event/backend-local"
 	"github.com/jfsmig/hegemonie/pkg/event/proto"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
@@ -50,6 +51,7 @@ func (cfg Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	}
 
 	grpc_health_v1.RegisterHealthServer(grpcSrv, &app)
+	grpc_prometheus.Register(grpcSrv)
 	proto.RegisterProducerServer(grpcSrv, &app)
 	proto.RegisterConsumerServer(grpcSrv, &app)
 

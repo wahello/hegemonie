@@ -7,6 +7,7 @@ package regagent
 
 import (
 	"context"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
@@ -34,11 +35,11 @@ var none = &proto.None{}
 
 // Run starts a Region API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
-	var err error
-	var w region.World
-
-	w.Init()
+func (cfg *Config) Run(ctx context.Context, grpcSrv *grpc.Server) error {
+	w, err := region.NewWorld(ctx)
+	if err != nil {
+		return errors.Annotate(err, "")
+	}
 
 	if cfg.PathDefs == "" {
 		return errors.NotValidf("Missing path for definition data directory")
@@ -81,11 +82,12 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	defer cnxEvent.Close()
 	w.SetNotifier(&EventStore{cnx: cnxEvent})
 
-	grpc_health_v1.RegisterHealthServer(grpcSrv, &regionApp{w: &w, cfg: cfg})
-	proto.RegisterCityServer(grpcSrv, &cityApp{regionApp{w: &w, cfg: cfg}})
-	proto.RegisterDefinitionsServer(grpcSrv, &defsApp{regionApp{w: &w, cfg: cfg}})
-	proto.RegisterAdminServer(grpcSrv, &adminApp{regionApp{w: &w, cfg: cfg}})
-	proto.RegisterArmyServer(grpcSrv, &armyApp{regionApp{w: &w, cfg: cfg}})
+	grpc_health_v1.RegisterHealthServer(grpcSrv, &regionApp{w: w, cfg: cfg})
+	grpc_prometheus.Register(grpcSrv)
+	proto.RegisterCityServer(grpcSrv, &cityApp{regionApp{w: w, cfg: cfg}})
+	proto.RegisterDefinitionsServer(grpcSrv, &defsApp{regionApp{w: w, cfg: cfg}})
+	proto.RegisterAdminServer(grpcSrv, &adminApp{regionApp{w: w, cfg: cfg}})
+	proto.RegisterArmyServer(grpcSrv, &armyApp{regionApp{w: w, cfg: cfg}})
 
 	utils.Logger.Info().
 		Str("defs", cfg.PathDefs).

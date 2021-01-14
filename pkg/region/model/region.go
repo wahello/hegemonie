@@ -5,18 +5,27 @@
 
 package region
 
-import "github.com/juju/errors"
+import (
+	"context"
+	"github.com/juju/errors"
+)
 
-func (reg *Region) Produce() {
+// Produce performs a production round that involves all the cities on the map of the region.
+// The round action might take long. But there is no notion of a transaction.
+// As a consequence, the action will ignore the cancellation signal brought by the context.Context.
+func (reg *Region) Produce(ctx context.Context) {
 	for _, c := range reg.Cities {
-		c.Produce(reg)
+		c.Produce(ctx, reg)
 	}
 }
 
-func (reg *Region) Move() {
+// Move performs a movement round that involves all the armies of all the cities on the map of the region.
+// The round action might take long. But there is no notion of a transaction.
+// As a consequence, the action will ignore the cancellation signal brought by the context.Context.
+func (reg *Region) Move(ctx context.Context) {
 	for _, c := range reg.Cities {
 		for _, a := range c.Armies {
-			a.Move(reg)
+			a.Move(ctx, reg)
 		}
 	}
 }

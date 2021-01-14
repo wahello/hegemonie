@@ -6,6 +6,7 @@
 package region
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/jfsmig/hegemonie/pkg/utils"
@@ -23,7 +24,7 @@ func (a *Army) ApplyAgressivity(w *Region) {
 	// FIXME(jfs): NYI
 }
 
-func (a *Army) Move(r *Region) {
+func (a *Army) Move(ctx context.Context, r *Region) {
 	w := r.world
 
 	if a.Fight != "" {
@@ -39,7 +40,7 @@ func (a *Army) Move(r *Region) {
 
 		pLocalCity := r.CityGetAt(a.Cell)
 
-		nxt, err := w.mapView.Step(src, dst)
+		nxt, err := w.mapView.Step(ctx, r.MapName, src, dst)
 		if err != nil || nxt == 0 {
 			if err != nil {
 				utils.Logger.Warn().Err(err).Uint64("src", src).Uint64("dst", dst).Send()

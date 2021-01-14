@@ -7,6 +7,7 @@ package mapagent
 
 import (
 	"context"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/map/graph"
 	"github.com/jfsmig/hegemonie/pkg/map/proto"
@@ -47,6 +48,7 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 	}
 
 	grpc_health_v1.RegisterHealthServer(grpcSrv, app)
+	grpc_prometheus.Register(grpcSrv)
 	proto.RegisterMapServer(grpcSrv, app)
 
 	utils.Logger.Info().
