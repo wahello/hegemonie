@@ -39,7 +39,7 @@ func (app *regionApp) CreateRegion(ctx context.Context, req *proto.RegionCreateR
 	//  first, load the cities from the maps repository
 	endpoint, err := utils.DefaultDiscovery.Map()
 	if err != nil {
-		return none, status.Errorf(codes.Internal, "config error", err)
+		return none, status.Errorf(codes.Internal, "configuration error: %v", err)
 	}
 	cnx, err := grpc.DialContext(ctx, endpoint, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {

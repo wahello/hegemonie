@@ -20,17 +20,30 @@ import (
 )
 
 var (
+	// LoggerContext is the builder of a zerolog.Logger that is exposed to the application so that
+	// options at the CLI might alter the formatting and the output of the logs.
 	LoggerContext = zerolog.
 			New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
 			With().Timestamp()
+
+	// Logger is a zerolog logger, that can be safely used from any part of the application.
+	// It gathers the format and the output.
 	Logger = LoggerContext.Logger()
 
-	ServiceID   = "hege"
-	flagVerbose = 0
-	flagQuiet   = false
-	flagSyslog  = false
+	// ServiceID is used in log traces to identify the service emitting the trace.
+	// The value can be safely altered before emitting the first trace.
+	ServiceID = "hege"
 )
 
+var (
+	flagVerbose = 0
+	flagQuiet   = false
+
+	// TODO(jfs): implement a syslog output
+	flagSyslog = false
+)
+
+// PatchCommandLogs add to cmd a set of persistent flags that will alter the logging behavior of the current process.
 func PatchCommandLogs(cmd *cobra.Command) {
 	cmd.PersistentFlags().CountVarP(&flagVerbose, "verbose", "v", "Increase the verbosity level")
 	cmd.PersistentFlags().BoolVarP(&flagQuiet, "quiet", "q", flagQuiet, "Shut the logs")

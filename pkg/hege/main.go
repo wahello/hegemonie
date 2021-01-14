@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/jfsmig/hegemonie/pkg/auth/client"
 	"github.com/jfsmig/hegemonie/pkg/event/agent"
@@ -429,7 +430,7 @@ func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
 	}
 
 	agent.Flags().StringVar(&cfg.Endpoint,
-		"endpoint", utils.EndpointLocal(utils.DefaultPortEvent), "IP:PORT endpoint for the gRPC server")
+		"endpoint", endpointLocal(utils.DefaultPortEvent), "IP:PORT endpoint for the gRPC server")
 	return agent
 }
 
@@ -447,7 +448,7 @@ func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
-		"endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT endpoint for the gRPC server")
+		"endpoint", endpointLocal(utils.DefaultPortMap), "IP:PORT endpoint for the gRPC server")
 
 	return agent
 }
@@ -467,17 +468,18 @@ func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
 		},
 	}
 	agent.Flags().StringVar(&cfg.Endpoint,
-		"endpoint", utils.EndpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
+		"endpoint", endpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
 
 	return agent
 }
 
-func nonLeaf(_ *cobra.Command, _ []string) error {
-	return errors.New("missing subcommand")
-}
+func nonLeaf(_ *cobra.Command, _ []string) error { return errors.New("missing subcommand") }
+
 func first(args []string) string {
 	if len(args) <= 0 {
 		return ""
 	}
 	return args[0]
 }
+
+func endpointLocal(port uint) string { return fmt.Sprintf("localhost:%v", port) }

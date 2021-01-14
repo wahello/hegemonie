@@ -28,9 +28,15 @@ type EventArmy interface {
 	Send()
 }
 
+// EventKnowledge defines the builder of an event that informs about the progression of a knowledge
 type EventKnowledge interface {
+	// Item collects the City 'who' which progresses in the learning of the Knowledge 'k'
 	Item(who *City, k *KnowledgeType) EventKnowledge
+
+	// Step collects about the progression in the earning of the Knowledge referenced by Item
 	Step(current, max uint64) EventKnowledge
+
+	// Send emits the event to the collector.
 	Send()
 }
 

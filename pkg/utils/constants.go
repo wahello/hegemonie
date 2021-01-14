@@ -5,23 +5,18 @@
 
 package utils
 
-import "fmt"
-
 const (
-	// Authentication by ORY
+	// DefaultPortKratos is the default port of the Kratos authentication service by ORY
 	DefaultPortKratos = 4434
-	// Autorisation by ORY
+	// DefaultPortKeto is the default port of the Keto autorisation service by ORY
 	DefaultPortKeto = 4466
-	// OpenID connect by ORY
+	// DefaultPortHydra is the default port of the Hydra OpenID Connect / OAuth2 provider by ORY
 	DefaultPortHydra = 6686
 
-	// Hegemonie Region internal API
+	// DefaultPortRegion is the default port of the Hegemonie Region internal API service
 	DefaultPortRegion = 8081
-	// Hegemonie Event internal API
+	// DefaultPortEvent is the default port of the Hegemonie Event internal API service
 	DefaultPortEvent = 8082
-	// Hegemonie Map internal API
+	// DefaultPortMap is the default port of the Hegemonie Map internal API service
 	DefaultPortMap = 8083
 )
-
-func EndpointLocal(port uint) string { return fmt.Sprintf("localhost:%v", port) }
-func EndpointAny(port uint) string   { return fmt.Sprintf("0.0.0.0:%v", port) }

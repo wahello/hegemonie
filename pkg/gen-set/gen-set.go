@@ -218,7 +218,7 @@ func (s *{{.SetName}}) Remove(a {{.ItemType}}) {
 
 `
 
-type ArrayInstance struct {
+type arrayInstance struct {
 	Path string
 	Date string
 
@@ -239,7 +239,7 @@ type ArrayInstance struct {
 func main() {
 	var err error
 	var fout *os.File
-	var instance ArrayInstance
+	var instance arrayInstance
 
 	flag.Parse()
 

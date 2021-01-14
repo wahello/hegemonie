@@ -36,7 +36,7 @@ type StatelessDiscovery interface {
 // DefaultDiscovery is the default implementation of a discovery.
 // Valued by default to the discovery of test services, all located on
 // localhost and serving default ports.
-var DefaultDiscovery StatelessDiscovery = TestEnv()
+var DefaultDiscovery = TestEnv()
 
 type singleHost struct {
 	endpoint string
@@ -49,12 +49,12 @@ type singleEndpoint struct {
 // TestEnv forwards to SingleHost on localhost
 func TestEnv() StatelessDiscovery { return SingleHost("localhost") }
 
-// TestEnv creates a singleHost implementation.
+// SingleHost creates a singleHost implementation.
 // singleHost is the simplest implementation of a StatelessDiscovery ever.
 // It locates all the services on a given host at their default port value.
 func SingleHost(h string) StatelessDiscovery { return &singleHost{h} }
 
-// TestEnv creates a singleEndpoint implementation.
+// SingleEndpoint creates a singleEndpoint implementation.
 // singleHost is the proxyed implementation of a StatelessDiscovery.
 // It locates all the services on a given host, all with the same port.
 func SingleEndpoint(e string) StatelessDiscovery { return &singleEndpoint{e} }

@@ -40,7 +40,7 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 	return action(ctx, cnx)
 }
 
-// ServeTLS automates the creation of a grpc.Server over a TLS connection
+// ServerTLS automates the creation of a grpc.Server over a TLS connection
 // with the proper interceptors.
 func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
 	if len(pathCrt) <= 0 {

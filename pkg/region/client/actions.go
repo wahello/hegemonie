@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// ClientCLI gathers the actions destined to be exposed at the CLI, to manage a region service.
 type ClientCLI struct{}
 
 // DoCreateRegion triggers the synchronous creation of a region with the given name, modeled on the named map.

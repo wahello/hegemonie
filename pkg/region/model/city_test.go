@@ -5,9 +5,15 @@
 
 package region
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestCity_CreateArmyDefence(t *testing.T) {
-	w := World{}
-	w.Init()
+	ctx := context.Background()
+	_, err := NewWorld(ctx)
+	if err != nil {
+		t.Fatalf("world instanction error: %v", err)
+	}
 }

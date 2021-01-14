@@ -42,19 +42,24 @@ pkg/event/proto/%.pb.go: api/event.proto
 pkg/healthcheck/%.pb.go: api/healthcheck.proto
 	$(PROTOC) -I api api/healthcheck.proto  --go_out=plugins=grpc:pkg/healthcheck
 
-clean:
-	-rm $(AUTO)
+clean: clean-auto clean-coverage
 
-.PHONY: all prepare clean test bench fmt try gen-set
+.PHONY: all prepare clean clean-auto clean-coverage test bench fmt try gen-set
 
 fmt:
 	go list ./... | grep -v -e attic -e vendor | while read D ; do go fmt $$D ; done
 
-test: all
-	go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ; done
+clean-auto:
+	-rm $(AUTO)
 
-benchmark: all
-	go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic -bench=$$D $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ;  done
+clean-coverage:
+	-rm profile.out $(COV_OUT)
+
+test: all clean-coverage
+	set -e ; go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ; done
+
+benchmark: all clean-coverage
+	set -e ; go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic -bench=$$D $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ;  done
 
 try: all
 	sudo docker-compose up

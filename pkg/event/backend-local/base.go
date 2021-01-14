@@ -16,17 +16,24 @@ import (
 	"time"
 )
 
+// Backend implements a
 type Backend struct {
 	db *gorocksdb.DB
 }
 
+// Item is an Event record.
 type Item struct {
-	CharID  string
-	When    uint64
-	ID      string
+	// CharID the unique ID of the character the event belongs to
+	CharID string
+	// When the timestamp at which the Event occured
+	When uint64
+	// ID the unique ID of the event.
+	ID string
+	// Payload the actual data of the encoded parameters to render it.
 	Payload []byte
 }
 
+// Open returns a Backend that's ready to work or an error
 func Open(path string) (*Backend, error) {
 	options := gorocksdb.NewDefaultOptions()
 	options.SetCreateIfMissing(true)
@@ -39,6 +46,8 @@ func Open(path string) (*Backend, error) {
 	return &Backend{db: db}, nil
 }
 
+// Push1 inserts an event record in the current backend.
+// The timestamps is determined by the current backend itself.
 func (b *Backend) Push1(charID string, id string, payload []byte) error {
 	opts := gorocksdb.NewDefaultWriteOptions()
 	opts.SetSync(false)
@@ -50,6 +59,8 @@ func (b *Backend) Push1(charID string, id string, payload []byte) error {
 	return b.db.Put(opts, []byte(k), payload)
 }
 
+// Ack1 removes makes the event record cannot be listed anymore.
+// The current Backend implementation simply deletes the Item.
 func (b *Backend) Ack1(charID string, when uint64, id string) error {
 	opts := gorocksdb.NewDefaultWriteOptions()
 	opts.SetSync(false)
@@ -61,6 +72,8 @@ func (b *Backend) Ack1(charID string, when uint64, id string) error {
 	return b.db.Delete(opts, []byte(k))
 }
 
+// List returns a sorted array of event records started at the given timestamp
+// and unique ID, ut all belongng to the Character whose ID is given.
 func (b *Backend) List(charID string, when uint64, max uint32) ([]Item, error) {
 	if max <= 0 {
 		max = 100

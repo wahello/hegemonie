@@ -9,21 +9,23 @@ import (
 	"github.com/juju/errors"
 )
 
-// The presence of a City is achieved by a non-empty string in the City
-// field.
+// SiteRaw is the information of a node in the graph representation on a map by MapRaw.
 type SiteRaw struct {
-	ID   uint64 `json:"id"`
-	X    uint64 `json:"x"`
-	Y    uint64 `json:"y"`
+	ID uint64 `json:"id"`
+	X  uint64 `json:"x"`
+	Y  uint64 `json:"y"`
+	// City is the name of the city that should exist at the instanciation a region based on the current map.
+	// The presence of a City is achieved by a non-empty string in the City field, that will be the name of the city
 	City string `json:"city"`
 }
 
+// RoadRaw is a minimal repreentation of a directional road on the map.
 type RoadRaw struct {
 	Src uint64 `json:"src"`
 	Dst uint64 `json:"dst"`
 }
 
-// Human-unfriendly representation of a Map
+// MapRaw is a human-unfriendly representation of a Map
 // - The Sites are indexed by a unique number
 // - The presence of a non-empty name on the site makes it an established City when the map is instantiated.
 // - The roads are unidirectional (the MapRaw is a digraph).
