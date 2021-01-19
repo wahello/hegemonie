@@ -44,7 +44,7 @@ pkg/healthcheck/%.pb.go: api/healthcheck.proto
 
 clean: clean-auto clean-coverage
 
-.PHONY: all prepare clean clean-auto clean-coverage test bench fmt try gen-set
+.PHONY: all prepare clean clean-auto clean-coverage test bench fmt docker try gen-set
 
 fmt:
 	go list ./... | grep -v -e attic -e vendor | while read D ; do go fmt $$D ; done
@@ -64,3 +64,5 @@ benchmark: all clean-coverage
 try: all
 	sudo docker-compose up
 
+docker:
+	./bin/hege-docker-build.sh

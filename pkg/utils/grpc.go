@@ -29,10 +29,12 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	creds := credentials.NewTLS(config)
 
 	cnx, err := grpc.DialContext(ctx, endpoint,
-		grpc.WithTransportCredentials(creds))
+		grpc.WithTransportCredentials(credentials.NewTLS(config)),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(grpc_prometheus.UnaryClientInterceptor)),
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(grpc_prometheus.StreamClientInterceptor)),
+	)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -72,9 +74,8 @@ func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
 		return nil, errors.Annotate(err, "x509 key pair error")
 	}
 
-	creds := credentials.NewServerTLSFromCert(&cert)
 	srv := grpc.NewServer(
-		grpc.Creds(creds),
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_prometheus.UnaryServerInterceptor,
 			newUnaryServerInterceptorZerolog())),

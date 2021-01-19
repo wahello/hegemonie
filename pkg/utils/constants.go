@@ -13,6 +13,10 @@ const (
 	// DefaultPortHydra is the default port of the Hydra OpenID Connect / OAuth2 provider by ORY
 	DefaultPortHydra = 6686
 
+	// DefaultPortCommon is the default port used to hast the service.
+	// This is also the configuration expected by the docker image.
+	DefaultPortCommon = 6000
+
 	// DefaultPortRegion is the default port of the Hegemonie Region internal API service
 	DefaultPortRegion = 8081
 	// DefaultPortEvent is the default port of the Hegemonie Event internal API service

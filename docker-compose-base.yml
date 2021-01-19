@@ -1,0 +1,46 @@
+version: "3.3"
+
+services:
+
+  #---------------------------------------------------------------------------#
+  # HEGEMONIE
+  # core services running game instances
+  # https://www.hegemonie.be/
+  # https://github.com/jfsmig/hegemonie
+  #---------------------------------------------------------------------------#
+
+  hege_regions:
+    image: "jfsmig/hegemonie-demo"
+    #network_mode: host
+    ports:
+      - "127.0.0.1:8081:6000"
+    volumes:
+      - "/tmp/regions:/data/regions"
+    command: server -v regions /data/regions
+
+  hege_events:
+    image: "jfsmig/hegemonie-demo"
+    #network_mode: host
+    ports:
+      - "127.0.0.1:8082:6000"
+    volumes:
+      - "/tmp/events:/data/events"
+    command: server -v events /data/events
+
+  hege_maps:
+    image: "jfsmig/hegemonie-demo"
+    ports:
+      - "127.0.0.1:8083:6000"
+    command: server -v maps
+
+  #---------------------------------------------------------------------------#
+  # PROMETHEUS
+  # Collection of in-iame timeseries to report the usage of regions
+  #---------------------------------------------------------------------------#
+
+  hege_prometheus:
+    image: "jfsmig/hegemonie-demo-prometheus:latest"
+    ports:
+      - "9090:9090"
+    restart: on-failure
+

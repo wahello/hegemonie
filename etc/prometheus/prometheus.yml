@@ -1,0 +1,28 @@
+global:
+  scrape_interval:     5s
+  evaluation_interval: 5s
+
+rule_files:
+  # - "first.rules"
+  # - "second.rules"
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: reg
+    scheme: https
+    scrape_interval: 1s
+    static_configs:
+      - targets: ['hege_regions:8081']
+  - job_name: evt
+    scheme: https
+    scrape_interval: 1s
+    static_configs:
+      - targets: ['hege_events:8082']
+  - job_name: map
+    scheme: https
+    scrape_interval: 1s
+    static_configs:
+      - targets: ['hege_maps:8083']
+

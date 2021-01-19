@@ -1,0 +1,8 @@
+Dockerfile
+.git
+.gitignore
+.*.sw?
+.*.yml
+.idea
+.github
+.circleci

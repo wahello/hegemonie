@@ -9,110 +9,59 @@ set -euxo pipefail
 THIS_FILE=$(realpath "${BASH_SOURCE[0]}")
 THIS_DIR=$(dirname "${THIS_FILE}")
 REPO=$(readlink -e "${THIS_DIR}/..")
-
 D=$(mktemp -d)
 
 function finish() {
 	set +e
-	kill %5 %4 %3 %2 %1
+	kill %4 %3 %2 %1
 	wait
 }
 
 trap finish SIGTERM SIGINT EXIT
 
 cd "$D"
-mkdir maps events live proxy
-mkdir pki
+
 
 #-----------------------------------------------------------------------------
 # Generate a self-signed certificate
-cat >>"$D/pki/certificate.conf" <<EOF
-[ req ]
-prompt = no
-default_bits = 4096
-distinguished_name = req_distinguished_name
-req_extensions = req_ext
-[ req_distinguished_name ]
-C=FR
-ST=Nord
-L=Flines-lez-Mortagne
-O=Hegemonie
-OU=R&D
-CN=localhost
-[ req_ext ]
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = localhost.localdomain
-DNS.2 = localhost
-IP.1 = 127.0.0.1
-EOF
-openssl genrsa \
-	-out "$D/pki/ca.key" 4096
-openssl req \
-	-new -x509 \
-	-key "$D/pki/ca.key" \
-	-sha256 \
-	-subj "/C=FR/ST=Nord/O=Hegemonie/CN=localhost" \
-	-days 365 \
-	-out "$D/pki/ca.cert"
+mkdir pki
+$REPO/bin/hege-pki-ca.sh $D/pki
 
-function service_certificate() {
-	local srv
-	srv=$1 ; shift
-	openssl genrsa \
-		-out "$D/pki/$srv.key" 4096
-	openssl req \
-		-new \
-		-key "$D/pki/$srv.key" \
-		-config "$D/pki/certificate.conf" \
-		-out "$D/pki/$srv.csr"
-	openssl x509 \
-		-req \
-		-in "$D/pki/$srv.csr" \
-		-CA "$D/pki/ca.cert" \
-		-CAkey "$D/pki/ca.key" \
-		-CAcreateserial \
-		-out "$D/pki/$srv.crt" \
-		-days 365 \
-		-sha256 \
-		-extfile "$D/pki/certificate.conf" \
-		-extensions req_ext
-	rm "$D/pki/$srv.csr"
-	cat "$D/pki/$srv.crt" "$D/pki/$srv.key" > "$D/pki/$srv.pem"
-	chmod 0400 "$D/pki/$srv.key" "$D/pki/$srv.crt"
-	echo "$D/pki/$srv.pem" "$D/pki/$srv.key"
-}
 
 function tls_opts() {
-	local srv
+	local srv base
 	srv=$1 ; shift
-	echo "--key=$D/pki/$srv.key" "--crt=$D/pki/$srv.crt"
+	base=$D/pki
+	echo "--tls-key=$base/$srv.key" "--tls-crt=$base/$srv.crt"
 }
+
 
 #-----------------------------------------------------------------------------
 #
+mkdir maps
 "$REPO/bin/hege-map-transform.sh" "$REPO/docs/maps/" "$D/maps"
-service_certificate maps
-hege server $(tls_opts maps) map --endpoint=localhost:8083 "$D/maps" &
+"$REPO/bin/hege-pki-srv.sh" "$D/pki" maps
+hege server $(tls_opts maps) --endpoint=localhost:8083 maps --defs="$D/maps" &
 
 
 #-----------------------------------------------------------------------------
 # 
-service_certificate events
-hege server $(tls_opts events) event --endpoint=localhost:8082 "$D/events" &
+mkdir events
+"$REPO/bin/hege-pki-srv.sh" "$D/pki" events
+hege server $(tls_opts events) --endpoint=localhost:8082 events "$D/events" &
 
 
 #-----------------------------------------------------------------------------
 # 
+mkdir live 
 cp -rp "$REPO/docs/definitions/hegeIV" "$D/defs"
-service_certificate region
-hege server $(tls_opts region) region --endpoint=localhost:8081 "$D/defs" "$D/live" &
+"$REPO/bin/hege-pki-srv.sh" "$D/pki" regions
+hege server $(tls_opts regions) --endpoint=localhost:8081 regions --defs="$D/defs" "$D/live" &
 
 
 #-----------------------------------------------------------------------------
 # Generate a per-service certificate
-
-
+mkdir proxy
 cat >>"$D/proxy/haproxy.cfg" <<EOF
 global
 	log stdout local0
@@ -144,42 +93,27 @@ frontend public
 	acl ismap   path_beg "/hege.map."
 	acl isevt   path_beg "/hege.evt."
 	acl isreg   path_beg "/hege.reg."
-	acl isprom  path_beg "/prom"
 	use_backend grpc_map    if ismap
 	use_backend grpc_evt    if isevt
 	use_backend grpc_reg    if isreg
-	use_backend prometheus  if isprom
 
 backend grpc_reg
 	balance roundrobin
-	server reg1 localhost:8081  ssl  alpn h2  check  maxconn 32  verify none
+	server reg1 localhost:8081  ssl  alpn h2  maxconn 32  verify none
 
 backend grpc_evt
 	balance roundrobin
-	server evt1 localhost:8082  ssl  alpn h2  check  maxconn 32  verify none
+	server evt1 localhost:8082  ssl  alpn h2  maxconn 32  verify none
 
 backend grpc_map
 	balance roundrobin
-	server map1 localhost:8083  ssl  alpn h2  check  maxconn 32  verify none
-
-backend prometheus
-  balance roundrobin
-  mode http
-  http-request set-path "%[path,regsub(^/prom/,/)]"
-  server prom1 localhost:9090  check
+	server map1 localhost:8083  ssl  alpn h2  maxconn 32  verify none
 
 EOF
 
-service_certificate proxy
+"$REPO/bin/hege-pki-srv.sh" "$D/pki" proxy
 haproxy -- "$D/proxy/haproxy.cfg" &
 
-
-#-----------------------------------------------------------------------------#
-# A reverse proxy helps use expose a single port
-docker run -p 9090:9090 prom/prometheus &
-
-
-#-----------------------------------------------------------------------------#
 
 wait
 

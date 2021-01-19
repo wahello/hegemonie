@@ -29,10 +29,6 @@ var (
 	// Logger is a zerolog logger, that can be safely used from any part of the application.
 	// It gathers the format and the output.
 	Logger = LoggerContext.Logger()
-
-	// ServiceID is used in log traces to identify the service emitting the trace.
-	// The value can be safely altered before emitting the first trace.
-	ServiceID = "hege"
 )
 
 var (
@@ -41,29 +37,37 @@ var (
 
 	// TODO(jfs): implement a syslog output
 	flagSyslog = false
+
+	// ServiceID is used in log traces to identify the service emitting the trace.
+	// The value can be safely altered before emitting the first trace.
+	syslogID = "hege"
 )
 
-// PatchCommandLogs add to cmd a set of persistent flags that will alter the logging behavior of the current process.
-func PatchCommandLogs(cmd *cobra.Command) {
+func OverrideLogID(ID string) {
+	syslogID = ID
+}
+
+// AddLogFlagsToCommand add to cmd a set of persistent flags that will alter the logging behavior
+// of the current process.
+func AddLogFlagsToCommand(cmd *cobra.Command) {
 	cmd.PersistentFlags().CountVarP(&flagVerbose, "verbose", "v", "Increase the verbosity level")
 	cmd.PersistentFlags().BoolVarP(&flagQuiet, "quiet", "q", flagQuiet, "Shut the logs")
 	cmd.PersistentFlags().BoolVarP(&flagQuiet, "syslog", "s", flagQuiet, "Log in syslog")
-	cmd.PersistentFlags().StringVar(&ServiceID, "id", ServiceID, "Use that service ID in the logs")
+	cmd.PersistentFlags().StringVarP(&syslogID, "syslog-id", "i", syslogID, "Use that service ID in the logs")
+}
 
-	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		Logger = LoggerContext.Str("id", ServiceID).Logger()
-
-		if flagQuiet {
-			zerolog.SetGlobalLevel(zerolog.Disabled)
-		} else {
-			switch flagVerbose {
-			case 0:
-				zerolog.SetGlobalLevel(zerolog.InfoLevel)
-			case 1:
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
-			case 2:
-				zerolog.SetGlobalLevel(zerolog.TraceLevel)
-			}
+func ApplyLogModifiers() {
+	Logger = LoggerContext.Str("id", syslogID).Logger()
+	if flagQuiet {
+		zerolog.SetGlobalLevel(zerolog.Disabled)
+	} else {
+		switch flagVerbose {
+		case 0:
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		case 1:
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		case 2:
+			zerolog.SetGlobalLevel(zerolog.TraceLevel)
 		}
 	}
 }

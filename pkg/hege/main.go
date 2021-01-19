@@ -24,7 +24,21 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+)
+
+type srvCommons struct {
+	endpoint    string
+	serviceType string
+	pathKey     string
+	pathCrt     string
+	grpcSrv     *grpc.Server
+}
+
+const (
+	defaultKeyPath = "/etc/hegemonie/pki/<SRVTYPE>.key"
+	defaultCrtPath = "/etc/hegemonie/pki/<SRVTYPE>.crt"
 )
 
 func main() {
@@ -35,19 +49,27 @@ func main() {
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
-	utils.PatchCommandLogs(cmd)
+	utils.AddLogFlagsToCommand(cmd)
 	ctx := context.Background()
 	cmd.AddCommand(clients(ctx), servers(ctx), tools(ctx))
 	if err := cmd.Execute(); err != nil {
-		log.Panicln("Command error:", err)
 		log.Fatalln(errors.ErrorStack(err))
 	}
 }
 
-type srvCommons struct {
-	pathKey string
-	pathCrt string
-	grpcSrv *grpc.Server
+func (srv *srvCommons) wrapPreRun(srvtype string) func(*cobra.Command, []string) error {
+	return func(*cobra.Command, []string) (err error) {
+		srv.serviceType = srvtype
+		utils.OverrideLogID("hege," + srv.serviceType)
+		utils.ApplyLogModifiers()
+		srv.replaceTag(&srv.pathKey)
+		srv.replaceTag(&srv.pathCrt)
+		srv.grpcSrv, err = utils.ServerTLS(srv.pathKey, srv.pathCrt)
+		if err != nil {
+			return errors.Annotate(err, "TLS server error")
+		}
+		return nil
+	}
 }
 
 func servers(ctx context.Context) *cobra.Command {
@@ -58,13 +80,17 @@ func servers(ctx context.Context) *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
-	cmd.PersistentFlags().StringVar(&srv.pathKey, "key", "", "Path to the X509 key file")
-	cmd.PersistentFlags().StringVar(&srv.pathCrt, "crt", "", "Path to the X509 cert file")
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) (err error) {
-		srv.grpcSrv, err = utils.ServerTLS(srv.pathKey, srv.pathCrt)
-		return errors.Annotate(err, "TLS server error")
-	}
-	cmd.AddCommand(srv.maps(ctx), srv.event(ctx), srv.region(ctx))
+	cmd.TraverseChildren = true
+	cmd.PersistentFlags().StringVar(&srv.pathKey,
+		"tls-key", defaultKeyPath, "Path to the X509 key file")
+	cmd.PersistentFlags().StringVar(&srv.pathCrt,
+		"tls-crt", defaultCrtPath, "Path to the X509 certificate file")
+	cmd.PersistentFlags().StringVar(&srv.endpoint,
+		"endpoint", fmt.Sprintf("127.0.0.1:%v", utils.DefaultPortCommon),
+		"IP:PORT endpoint for the gRPC server")
+
+	cmd.AddCommand(srv.maps(ctx), srv.events(ctx), srv.regions(ctx))
+
 	return cmd
 }
 
@@ -79,7 +105,7 @@ func clients(ctx context.Context) *cobra.Command {
 	}
 
 	// Set a common reasonable timeout to all client RPC
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
 	sessionID := os.Getenv("HEGE_CLI_SESSIONID")
 	if sessionID == "" {
 		sessionID = "cli/" + uuid.New().String()
@@ -97,7 +123,7 @@ func clients(ctx context.Context) *cobra.Command {
 		}
 		return nil
 	}
-	cmd.PersistentPostRun = func(_ *cobra.Command, _ []string) { cancel() }
+	//cmd.PersistentPostRun = func(_ *cobra.Command, _ []string) { cancel() }
 
 	cmd.AddCommand(clientMap(ctx), clientEvent(ctx), clientAuth(ctx), clientRegion(ctx))
 	return cmd
@@ -184,8 +210,8 @@ func clientMap(ctx context.Context) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "map",
-		Short: "Map service client",
+		Use:   "maps",
+		Short: "Client of a Maps API service",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
@@ -254,8 +280,8 @@ func clientEvent(ctx context.Context) *cobra.Command {
 	var cfg evtclient.ClientCLI
 
 	cmd := &cobra.Command{
-		Use:   "event",
-		Short: "Event service client",
+		Use:   "events",
+		Short: "Client of an Events API service",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
@@ -372,8 +398,8 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	var cfg regclient.ClientCLI
 
 	cmd := &cobra.Command{
-		Use:     "region",
-		Short:   "Region API client",
+		Use:     "regions",
+		Short:   "Client of a Regions API service",
 		Example: "region (create|list) ...",
 		Args:    cobra.MinimumNArgs(1),
 		RunE:    nonLeaf,
@@ -415,62 +441,70 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
-func (srv *srvCommons) event(ctx context.Context) *cobra.Command {
-	var cfg evtagent.Config
-
-	agent := &cobra.Command{
-		Use:     "event",
-		Short:   "Event Log Service",
-		Example: "hege event --endpoint=10.0.0.1:2345 /path/to/event/rocksdb",
-		Args:    cobra.ExactArgs(1),
+func (srv *srvCommons) events(ctx context.Context) *cobra.Command {
+	return &cobra.Command{
+		Use:               "events",
+		Short:             "Event Log Service",
+		Example:           "hege server events /path/to/event/rocksdb",
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: srv.wrapPreRun("events"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var cfg evtagent.Config
+			cfg.Endpoint = srv.endpoint
 			cfg.PathBase = args[0]
 			return cfg.Run(ctx, srv.grpcSrv)
 		},
 	}
-
-	agent.Flags().StringVar(&cfg.Endpoint,
-		"endpoint", endpointLocal(utils.DefaultPortEvent), "IP:PORT endpoint for the gRPC server")
-	return agent
 }
 
 func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
-	var cfg mapagent.Config
-
-	agent := &cobra.Command{
-		Use:     "map",
-		Short:   "Map Service",
-		Example: "hege map --endpoint=10.0.0.1:1234 /path/to/maps/directory",
-		Args:    cobra.ExactArgs(1),
+	pathMaps := "/etc/hegemonie/maps"
+	cmd := &cobra.Command{
+		Use:               "maps",
+		Short:             "Map Service",
+		Example:           "hege maps",
+		Args:              cobra.NoArgs,
+		PersistentPreRunE: srv.wrapPreRun("maps"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg.PathRepository = args[0]
+			if srv.grpcSrv == nil {
+				panic("bug")
+			}
+			var cfg mapagent.Config
+			cfg.Endpoint = srv.endpoint
+			cfg.PathRepository = pathMaps
 			return cfg.Run(ctx, srv.grpcSrv)
 		},
 	}
-	agent.Flags().StringVar(&cfg.Endpoint,
-		"endpoint", endpointLocal(utils.DefaultPortMap), "IP:PORT endpoint for the gRPC server")
-
-	return agent
+	cmd.PersistentFlags().StringVarP(
+		&pathMaps, "defs", "d", pathMaps,
+		"Explicit path to the directory with the JSON definitions of the maps")
+	return cmd
 }
 
-func (srv *srvCommons) region(ctx context.Context) *cobra.Command {
-	var cfg regagent.Config
-
-	agent := &cobra.Command{
-		Use:     "region",
-		Short:   "Region Service",
-		Example: "hege region --Endpoint=10.0.0.1:1234 /path/to/defs/dir /path/to/live/dir",
-		Args:    cobra.ExactArgs(2),
+func (srv *srvCommons) regions(ctx context.Context) *cobra.Command {
+	pathDefinitions := "/etc/hegemonie/definitions"
+	cmd := &cobra.Command{
+		Use:               "regions",
+		Short:             "Region Service",
+		Example:           "hege regions /path/to/live/dir",
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: srv.wrapPreRun("regions"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg.PathDefs = args[0]
-			cfg.PathLive = args[1]
+			var cfg regagent.Config
+			cfg.Endpoint = srv.endpoint
+			cfg.PathDefs = pathDefinitions
+			cfg.PathLive = args[0]
 			return cfg.Run(ctx, srv.grpcSrv)
 		},
 	}
-	agent.Flags().StringVar(&cfg.Endpoint,
-		"endpoint", endpointLocal(utils.DefaultPortMap), "IP:PORT Endpoint for the gRPC server")
+	cmd.PersistentFlags().StringVarP(
+		&pathDefinitions, "defs", "d", pathDefinitions,
+		"Explicit path to the directory with the JSON definitions of the world")
+	return cmd
+}
 
-	return agent
+func (srv *srvCommons) replaceTag(ps *string) {
+	*ps = strings.Replace(*ps, "<SRVTYPE>", srv.serviceType, 1)
 }
 
 func nonLeaf(_ *cobra.Command, _ []string) error { return errors.New("missing subcommand") }
@@ -481,5 +515,3 @@ func first(args []string) string {
 	}
 	return args[0]
 }
-
-func endpointLocal(port uint) string { return fmt.Sprintf("localhost:%v", port) }

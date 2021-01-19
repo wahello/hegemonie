@@ -3,62 +3,6 @@ version: "3.3"
 services:
 
 #------------------------------------------------------------------------------#
-# Hegemonie: User and Policies management
-# https://www.hegemonie.be/
-# https://github.com/jfsmig/hegemonie
-#------------------------------------------------------------------------------#
-
-  hege_maps:
-    image: "jfsmig/hegemonie-runtime"
-    ports:
-      - "8084:8084"
-    volumes:
-      - "./docs/maps:/data"
-    command: server map /data
-
-# hege_evt:
-#   image: "jfsmig/hegemonie-runtime"
-#   ports:
-#     - 8083
-#   command: evt /data
-
-#------------------------------------------------------------------------------#
-# ORY KETO: User and Policies management
-# https://www.ory.sh/kratos/
-# https://github.com/ory/kratos
-# > Manages the permissions for users to manages characters
-#------------------------------------------------------------------------------#
-
-  keto:
-    image: "oryd/keto"
-    ports:
-      - "4466:4466"
-    environment:
-      DSN: "postgres://keto:secret@keto_db:5432/keto?sslmode=disable"
-    depends_on:
-      - keto_db
-      - keto_migrate
-    restart: on-failure
- 
-  keto_migrate:
-    image: "oryd/keto"
-    environment:
-      DSN: "postgres://keto:secret@keto_db:5432/keto?sslmode=disable"
-    depends_on:
-      - keto_db
-    command: migrate sql -e
-    restart: on-failure
-
-  keto_db:
-    image: "postgres:12"
-    ports:
-      - 5432
-    environment:
-      POSTGRES_PASSWORD: "secret"
-      POSTGRES_USER: "keto"
-      POSTGRES_DB: "keto"
-
-#------------------------------------------------------------------------------#
 # ORY KRATOS: Self-login infrastructure
 # https://www.ory.sh/kratos/
 # https://github.com/ory/kratos
@@ -125,4 +69,40 @@ services:
       - "4436:4436"
       - "4437:4437"
     restart: on-failure
+
+#------------------------------------------------------------------------------#
+# ORY KETO: User and Policies management
+# https://www.ory.sh/kratos/
+# https://github.com/ory/kratos
+# > Manages the permissions for users to manages characters
+#------------------------------------------------------------------------------#
+
+  keto:
+    image: "oryd/keto"
+    ports:
+      - "4466:4466"
+    environment:
+      DSN: "postgres://keto:secret@keto_db:5432/keto?sslmode=disable"
+    depends_on:
+      - keto_db
+      - keto_migrate
+    restart: on-failure
+ 
+  keto_migrate:
+    image: "oryd/keto"
+    environment:
+      DSN: "postgres://keto:secret@keto_db:5432/keto?sslmode=disable"
+    depends_on:
+      - keto_db
+    command: migrate sql -e
+    restart: on-failure
+
+  keto_db:
+    image: "postgres:12"
+    ports:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: "secret"
+      POSTGRES_USER: "keto"
+      POSTGRES_DB: "keto"
 
