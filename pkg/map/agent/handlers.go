@@ -15,7 +15,6 @@ import (
 	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"io"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,27 +23,21 @@ import (
 
 // Config gathers the configuration fields required to start a gRPC map API service.
 type Config struct {
-	Endpoint       string
 	PathRepository string
 }
 
 type srvMap struct {
-	config *Config
+	config Config
 	maps   mapgraph.SetOfMaps
 	rw     sync.RWMutex
 }
 
 // Run starts an Map API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
+func (cfg Config) Register(_ context.Context, grpcSrv *grpc.Server) error {
 	app := &srvMap{config: cfg, maps: make(mapgraph.SetOfMaps, 0)}
 	if err := app.LoadDirectory(cfg.PathRepository); err != nil {
 		return errors.Trace(err)
-	}
-
-	lis, err := net.Listen("tcp", cfg.Endpoint)
-	if err != nil {
-		return errors.Annotate(err, "listen error")
 	}
 
 	grpc_health_v1.RegisterHealthServer(grpcSrv, app)
@@ -53,8 +46,7 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 
 	utils.Logger.Info().
 		Int("maps", app.maps.Len()).
-		Str("endpoint", cfg.Endpoint).
-		Msg("Starting")
+		Msg("Ready")
 	for _, m := range app.maps {
 		utils.Logger.Debug().
 			Str("name", m.ID).
@@ -62,10 +54,6 @@ func (cfg *Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 			Int("roads", m.Roads.Len()).
 			Msg("map>")
 	}
-	if err := grpcSrv.Serve(lis); err != nil {
-		return errors.Trace(err)
-	}
-
 	return nil
 }
 

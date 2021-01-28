@@ -16,18 +16,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net"
 )
 
 // Config gathers the configuration fields required to start a gRPC region API service.
 type Config struct {
-	Endpoint string
 	PathDefs string
 	PathLive string
 }
 
 type regionApp struct {
-	cfg *Config
+	cfg Config
 	w   *region.World
 }
 
@@ -35,7 +33,7 @@ var none = &proto.None{}
 
 // Run starts a Region API service bond to Endpoint
 // ctx is used for a clean stop of the service.
-func (cfg *Config) Run(ctx context.Context, grpcSrv *grpc.Server) error {
+func (cfg Config) Register(ctx context.Context, grpcSrv *grpc.Server) error {
 	w, err := region.NewWorld(ctx)
 	if err != nil {
 		return errors.Annotate(err, "")
@@ -64,11 +62,6 @@ func (cfg *Config) Run(ctx context.Context, grpcSrv *grpc.Server) error {
 		return errors.Annotate(err, "inconsistent world")
 	}
 
-	lis, err := net.Listen("tcp", cfg.Endpoint)
-	if err != nil {
-		return errors.Annotate(err, "listen error")
-	}
-
 	var eventEndpoint string
 	eventEndpoint, err = utils.DefaultDiscovery.Event()
 	if err != nil {
@@ -92,10 +85,9 @@ func (cfg *Config) Run(ctx context.Context, grpcSrv *grpc.Server) error {
 	utils.Logger.Info().
 		Str("defs", cfg.PathDefs).
 		Str("live", cfg.PathLive).
-		Str("endpoint", cfg.Endpoint).
 		Msg("starting")
 
-	return grpcSrv.Serve(lis)
+	return nil
 }
 
 func (app *regionApp) _worldLock(mode rune, action func() error) error {

@@ -7,8 +7,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/google/uuid"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jfsmig/hegemonie/pkg/auth/client"
 	"github.com/jfsmig/hegemonie/pkg/event/agent"
 	"github.com/jfsmig/hegemonie/pkg/event/client"
@@ -18,22 +22,30 @@ import (
 	"github.com/jfsmig/hegemonie/pkg/region/client"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/juju/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 )
 
 type srvCommons struct {
-	endpoint    string
+	endpointSrv string
+	endpointMon string
 	serviceType string
 	pathKey     string
 	pathCrt     string
-	grpcSrv     *grpc.Server
 }
 
 const (
@@ -50,29 +62,13 @@ func main() {
 		RunE:  nonLeaf,
 	}
 	utils.AddLogFlagsToCommand(cmd)
-	ctx := context.Background()
-	cmd.AddCommand(clients(ctx), servers(ctx), tools(ctx))
+	cmd.AddCommand(clients(), servers(), tools())
 	if err := cmd.Execute(); err != nil {
 		log.Fatalln(errors.ErrorStack(err))
 	}
 }
 
-func (srv *srvCommons) wrapPreRun(srvtype string) func(*cobra.Command, []string) error {
-	return func(*cobra.Command, []string) (err error) {
-		srv.serviceType = srvtype
-		utils.OverrideLogID("hege," + srv.serviceType)
-		utils.ApplyLogModifiers()
-		srv.replaceTag(&srv.pathKey)
-		srv.replaceTag(&srv.pathCrt)
-		srv.grpcSrv, err = utils.ServerTLS(srv.pathKey, srv.pathCrt)
-		if err != nil {
-			return errors.Annotate(err, "TLS server error")
-		}
-		return nil
-	}
-}
-
-func servers(ctx context.Context) *cobra.Command {
+func servers() *cobra.Command {
 	var srv srvCommons
 	cmd := &cobra.Command{
 		Use:   "server",
@@ -85,16 +81,19 @@ func servers(ctx context.Context) *cobra.Command {
 		"tls-key", defaultKeyPath, "Path to the X509 key file")
 	cmd.PersistentFlags().StringVar(&srv.pathCrt,
 		"tls-crt", defaultCrtPath, "Path to the X509 certificate file")
-	cmd.PersistentFlags().StringVar(&srv.endpoint,
-		"endpoint", fmt.Sprintf("127.0.0.1:%v", utils.DefaultPortCommon),
+	cmd.PersistentFlags().StringVar(&srv.endpointSrv,
+		"endpoint", fmt.Sprintf("0.0.0.0:%v", utils.DefaultPortCommon),
 		"IP:PORT endpoint for the gRPC server")
+	cmd.PersistentFlags().StringVar(&srv.endpointMon,
+		"monitoring", fmt.Sprintf("0.0.0.0:%v", utils.DefaultPortMonitoring),
+		"IP:PORT endpoint for the HTTP/1.1 Prometheus exporter")
 
-	cmd.AddCommand(srv.maps(ctx), srv.events(ctx), srv.regions(ctx))
+	cmd.AddCommand(srv.maps(), srv.events(), srv.regions())
 
 	return cmd
 }
 
-func clients(ctx context.Context) *cobra.Command {
+func clients() *cobra.Command {
 	var proxy string
 
 	cmd := &cobra.Command{
@@ -105,7 +104,7 @@ func clients(ctx context.Context) *cobra.Command {
 	}
 
 	// Set a common reasonable timeout to all client RPC
-	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	sessionID := os.Getenv("HEGE_CLI_SESSIONID")
 	if sessionID == "" {
 		sessionID = "cli/" + uuid.New().String()
@@ -129,13 +128,14 @@ func clients(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
-func tools(ctx context.Context) *cobra.Command {
+func tools() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tools",
 		Short: "Miscellaneous tools to help the operations",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  nonLeaf,
 	}
+	ctx := context.Background()
 	cmd.AddCommand(toolsMap(ctx))
 	return cmd
 }
@@ -400,7 +400,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "regions",
 		Short:   "Client of a Regions API service",
-		Example: "region (create|list) ...",
+		Example: "hege client regions (create|list) ...",
 		Args:    cobra.MinimumNArgs(1),
 		RunE:    nonLeaf,
 	}
@@ -408,7 +408,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	createRegion := &cobra.Command{
 		Use:     "create",
 		Short:   "Create a new region",
-		Example: "region create $REGION_ID $MAP_ID",
+		Example: "hege client regions create $REGION_ID $MAP_ID",
 		Args:    cobra.ExactArgs(2),
 		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoCreateRegion(ctx, args[0], args[1]) },
 	}
@@ -416,7 +416,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	listRegions := &cobra.Command{
 		Use:     "list",
 		Short:   "List the existing regions",
-		Example: "region list [$REGION_ID_MARKER]",
+		Example: "hege client regions list [$REGION_ID_MARKER]",
 		Args:    cobra.MaximumNArgs(1),
 		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoListRegions(ctx, first(args)) },
 	}
@@ -424,7 +424,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	roundMovement := &cobra.Command{
 		Use:     "move",
 		Short:   "Execute a movement round on the region",
-		Example: "region move $REGION_ID",
+		Example: "hege client regions move $REGION_ID",
 		Args:    cobra.ExactArgs(1),
 		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoRegionMovement(ctx, args[0]) },
 	}
@@ -432,7 +432,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	roundProduction := &cobra.Command{
 		Use:     "produce",
 		Short:   "Execute a movement round on the region",
-		Example: "region move $REGION_ID",
+		Example: "hege client regions move $REGION_ID",
 		Args:    cobra.ExactArgs(1),
 		RunE:    func(cmd *cobra.Command, args []string) error { return cfg.DoRegionProduction(ctx, args[0]) },
 	}
@@ -441,7 +441,7 @@ func clientRegion(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
-func (srv *srvCommons) events(ctx context.Context) *cobra.Command {
+func (srv *srvCommons) events() *cobra.Command {
 	return &cobra.Command{
 		Use:               "events",
 		Short:             "Event Log Service",
@@ -449,30 +449,23 @@ func (srv *srvCommons) events(ctx context.Context) *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: srv.wrapPreRun("events"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var cfg evtagent.Config
-			cfg.Endpoint = srv.endpoint
-			cfg.PathBase = args[0]
-			return cfg.Run(ctx, srv.grpcSrv)
+			cfg := evtagent.Config{PathBase: args[0]}
+			return srv.runServer(cfg)
 		},
 	}
 }
 
-func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
+func (srv *srvCommons) maps() *cobra.Command {
 	pathMaps := "/etc/hegemonie/maps"
 	cmd := &cobra.Command{
 		Use:               "maps",
 		Short:             "Map Service",
-		Example:           "hege maps",
+		Example:           "hege server maps",
 		Args:              cobra.NoArgs,
 		PersistentPreRunE: srv.wrapPreRun("maps"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if srv.grpcSrv == nil {
-				panic("bug")
-			}
-			var cfg mapagent.Config
-			cfg.Endpoint = srv.endpoint
-			cfg.PathRepository = pathMaps
-			return cfg.Run(ctx, srv.grpcSrv)
+			cfg := mapagent.Config{PathRepository: pathMaps}
+			return srv.runServer(cfg)
 		},
 	}
 	cmd.PersistentFlags().StringVarP(
@@ -481,20 +474,17 @@ func (srv *srvCommons) maps(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
-func (srv *srvCommons) regions(ctx context.Context) *cobra.Command {
+func (srv *srvCommons) regions() *cobra.Command {
 	pathDefinitions := "/etc/hegemonie/definitions"
 	cmd := &cobra.Command{
 		Use:               "regions",
 		Short:             "Region Service",
-		Example:           "hege regions /path/to/live/dir",
+		Example:           "hege server regions /path/to/live/dir",
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: srv.wrapPreRun("regions"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var cfg regagent.Config
-			cfg.Endpoint = srv.endpoint
-			cfg.PathDefs = pathDefinitions
-			cfg.PathLive = args[0]
-			return cfg.Run(ctx, srv.grpcSrv)
+			cfg := regagent.Config{PathDefs: pathDefinitions, PathLive: args[0]}
+			return srv.runServer(cfg)
 		},
 	}
 	cmd.PersistentFlags().StringVarP(
@@ -514,4 +504,139 @@ func first(args []string) string {
 		return ""
 	}
 	return args[0]
+}
+
+type appRegistrator interface {
+	Register(ctx context.Context, grpcServer *grpc.Server) error
+}
+
+func (srv *srvCommons) runServer(reg appRegistrator) error {
+	var listenerSrv, listenerMon net.Listener
+	var grpcSrv *grpc.Server
+	var prometheusExporter *http.Server
+	var err error
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	grpcSrv, err = srv.ServerTLS()
+	if err != nil {
+		return errors.Annotate(err, "TLS server error")
+	}
+
+	err = reg.Register(ctx, grpcSrv)
+	if err != nil {
+		return errors.Annotate(err, "App config error")
+	}
+
+	listenerSrv, err = net.Listen("tcp", srv.endpointSrv)
+	if err != nil {
+		return errors.NewNotValid(err, "listen error")
+	}
+
+	if srv.endpointMon != "" {
+		listenerMon, err = net.Listen("tcp", srv.endpointMon)
+		if err != nil {
+			cancel()
+			return errors.NewNotValid(err, "listen error")
+		}
+
+		prometheusExporter = &http.Server{Handler: promhttp.Handler()}
+	}
+
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(stopChan)
+
+	var barrier sync.WaitGroup
+	runner := func(wg *sync.WaitGroup, cb func() error) {
+		defer wg.Done()
+		if err := cb(); err != http.ErrServerClosed {
+			utils.Logger.Error().Err(err).Msg("failed")
+		} else {
+			utils.Logger.Info().Err(err).Msg("exiting")
+		}
+		cancel()
+	}
+
+	barrier.Add(1)
+	go runner(&barrier, func() error { return grpcSrv.Serve(listenerSrv) })
+
+	if prometheusExporter != nil {
+		barrier.Add(1)
+		go runner(&barrier, func() error { return prometheusExporter.Serve(listenerMon) })
+	}
+
+	select {
+	case <-stopChan:
+		break
+	case <-ctx.Done():
+		break
+	}
+	cancel()
+
+	grpcSrv.GracefulStop()
+
+	if prometheusExporter != nil {
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
+		if err := prometheusExporter.Shutdown(shutdownCtx); err != nil {
+			utils.Logger.Warn().Err(err).Msg("shutdown error")
+		}
+	}
+
+	barrier.Wait()
+	return nil
+}
+
+// ServerTLS automates the creation of a grpc.Server over a TLS connection
+// with the proper interceptors.
+func (srv *srvCommons) ServerTLS() (*grpc.Server, error) {
+	if len(srv.pathCrt) <= 0 {
+		return nil, errors.NotValidf("invalid TLS/x509 certificate path [%s]", srv.pathCrt)
+	}
+	if len(srv.pathKey) <= 0 {
+		return nil, errors.NotValidf("invalid TLS/x509 key path [%s]", srv.pathKey)
+	}
+	var certBytes, keyBytes []byte
+	var err error
+
+	utils.Logger.Info().Str("key", srv.pathKey).Str("crt", srv.pathCrt).Msg("TLS config")
+
+	if certBytes, err = ioutil.ReadFile(srv.pathCrt); err != nil {
+		return nil, errors.Annotate(err, "certificate file error")
+	}
+	if keyBytes, err = ioutil.ReadFile(srv.pathKey); err != nil {
+		return nil, errors.Annotate(err, "key file error")
+	}
+
+	certPool := x509.NewCertPool()
+	ok := certPool.AppendCertsFromPEM(certBytes)
+	if !ok {
+		return nil, errors.New("invalid certificates")
+	}
+
+	cert, err := tls.X509KeyPair(certBytes, keyBytes)
+	if err != nil {
+		return nil, errors.Annotate(err, "x509 key pair error")
+	}
+
+	return grpc.NewServer(
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_prometheus.UnaryServerInterceptor,
+			utils.NewUnaryServerInterceptorZerolog())),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_prometheus.StreamServerInterceptor,
+			utils.NewStreamServerInterceptorZerolog()))), nil
+}
+
+func (srv *srvCommons) wrapPreRun(srvtype string) func(*cobra.Command, []string) error {
+	return func(*cobra.Command, []string) (err error) {
+		srv.serviceType = srvtype
+		utils.OverrideLogID("hege," + srv.serviceType)
+		utils.ApplyLogModifiers()
+		srv.replaceTag(&srv.pathKey)
+		srv.replaceTag(&srv.pathCrt)
+		return nil
+	}
 }

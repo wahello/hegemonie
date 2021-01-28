@@ -63,7 +63,8 @@ RUN set -ex \
 && hege-pki-ca.sh  /etc/hegemonie/pki \
 && hege-pki-srv.sh /etc/hegemonie/pki maps \
 && hege-pki-srv.sh /etc/hegemonie/pki regions \
-&& hege-pki-srv.sh /etc/hegemonie/pki events
+&& hege-pki-srv.sh /etc/hegemonie/pki events \
+&& hege-pki-srv.sh /etc/hegemonie/pki proxy
 
 
 
@@ -76,6 +77,7 @@ USER 0
 COPY --chown=0:0 --from=builder /dist /
 
 EXPOSE 6000
+EXPOSE 6001
 
 USER 0
 WORKDIR /
@@ -137,4 +139,15 @@ FROM prom/prometheus as demo-prometheus
 COPY etc/prometheus/prometheus.yml /etc/prometheus/prometheus.yml
 RUN cat /etc/prometheus/prometheus.yml
 
+
+
+#------------------------------------------------------------------------------
+# Specialize a HAProxy instance for the in-game API services that is pre-
+# configured to work with the demonstration environment.
+
+FROM haproxytech/haproxy-ubuntu as demo-haproxy
+RUN rm -f -v /etc/haproxy
+COPY --from=builder /etc/hegemonie/pki      /etc/hegemonie/pki
+COPY                etc/haproxy/haproxy.cfg /etc/haproxy/
+CMD ["/usr/sbin/haproxy", "-f", "/etc/haproxy/haproxy.cfg"]
 

@@ -8,7 +8,6 @@ package utils
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -16,7 +15,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -40,49 +38,6 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 	}
 	defer cnx.Close()
 	return action(ctx, cnx)
-}
-
-// ServerTLS automates the creation of a grpc.Server over a TLS connection
-// with the proper interceptors.
-func ServerTLS(pathKey, pathCrt string) (*grpc.Server, error) {
-	if len(pathCrt) <= 0 {
-		return nil, errors.NotValidf("invalid TLS/x509 certificate path [%s]", pathCrt)
-	}
-	if len(pathKey) <= 0 {
-		return nil, errors.NotValidf("invalid TLS/x509 key path [%s]", pathKey)
-	}
-	var certBytes, keyBytes []byte
-	var err error
-
-	Logger.Info().Str("key", pathKey).Str("crt", pathCrt).Msg("TLS config")
-
-	if certBytes, err = ioutil.ReadFile(pathCrt); err != nil {
-		return nil, errors.Annotate(err, "certificate file error")
-	}
-	if keyBytes, err = ioutil.ReadFile(pathKey); err != nil {
-		return nil, errors.Annotate(err, "key file error")
-	}
-
-	certPool := x509.NewCertPool()
-	ok := certPool.AppendCertsFromPEM(certBytes)
-	if !ok {
-		return nil, errors.New("invalid certificates")
-	}
-
-	cert, err := tls.X509KeyPair(certBytes, keyBytes)
-	if err != nil {
-		return nil, errors.Annotate(err, "x509 key pair error")
-	}
-
-	srv := grpc.NewServer(
-		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_prometheus.UnaryServerInterceptor,
-			newUnaryServerInterceptorZerolog())),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_prometheus.StreamServerInterceptor,
-			newStreamServerInterceptorZerolog())))
-	return srv, nil
 }
 
 // RecvFunc names the signature of the hook that consumes an input and returns an

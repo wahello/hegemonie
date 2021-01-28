@@ -119,7 +119,7 @@ func (evt *logEvt) pathWithReply(ctx context.Context) *logEvt {
 	return evt
 }
 
-func newStreamServerInterceptorZerolog() grpc.StreamServerInterceptor {
+func NewStreamServerInterceptorZerolog() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		evt := newEvent(info.FullMethod)
 		err := handler(srv, ss)
@@ -129,7 +129,7 @@ func newStreamServerInterceptorZerolog() grpc.StreamServerInterceptor {
 	}
 }
 
-func newUnaryServerInterceptorZerolog() grpc.UnaryServerInterceptor {
+func NewUnaryServerInterceptorZerolog() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		evt := newEvent(info.FullMethod)
 		resp, err := handler(ctx, req)

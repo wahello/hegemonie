@@ -10,18 +10,27 @@ function clean() { docker image remove "jfsmig/hegemonie-$1" ; }
 
 function build() { docker build --target="$1" --tag="jfsmig/hegemonie-$1" . ; }
 
-function foreach() { for T in dependencies runtime demo debug demo-prometheus ; do $1 $T ; done ; }
+function foreach() {
+  for T in dependencies runtime demo debug demo-prometheus demo-haproxy ; do
+    $1 $T
+  done
+}
 
-function pushall() { for T in runtime demo demo-prometheus ; do docker push "jfsmig/hegemonie-$T:latest" ; done ; }
+function pushall() {
+  for T in runtime demo demo-prometheus demo-haproxy ; do
+    docker push "jfsmig/hegemonie-$T:latest" &
+  done
+  wait
+}
 
 if [[ $# == 0 ]] ; then
-	foreach build
-	pushall
+  foreach build
+  pushall
 else
-	case $1 in
-			build) foreach build ;;
-			push) pushall ;;
-			clean) foreach clean ;;
-	esac
+  case $1 in
+      build) foreach build ;;
+      push) pushall ;;
+      clean) foreach clean ;;
+  esac
 fi
 

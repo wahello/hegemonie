@@ -9,16 +9,26 @@ PROTOC=protoc
 COV_OUT=coverage.txt
 
 AUTO=
+# gen-set
 AUTO+= pkg/map/graph/map_auto.go
+AUTO+= pkg/region/model/world_auto.go
+# grpc
 AUTO+= pkg/map/proto/map.pb.go
 AUTO+= pkg/event/proto/event.pb.go
-AUTO+= pkg/region/model/world_auto.go
 AUTO+= pkg/region/proto/region.pb.go
 AUTO+= pkg/healthcheck/healthcheck.pb.go
 
-all: prepare
+default: hege
+
+all: prepare hege docker
+
+gen-set:
 	$(GO) install $(BASE)/pkg/gen-set
+
+hege: gen-set
 	$(GO) install $(BASE)/pkg/hege
+
+.PHONY: all default prepare clean clean-auto clean-coverage test bench fmt docker try gen-set hege
 
 prepare: $(AUTO)
 
@@ -43,8 +53,6 @@ pkg/healthcheck/%.pb.go: api/healthcheck.proto
 	$(PROTOC) -I api api/healthcheck.proto  --go_out=plugins=grpc:pkg/healthcheck
 
 clean: clean-auto clean-coverage
-
-.PHONY: all prepare clean clean-auto clean-coverage test bench fmt docker try gen-set
 
 fmt:
 	go list ./... | grep -v -e attic -e vendor | while read D ; do go fmt $$D ; done

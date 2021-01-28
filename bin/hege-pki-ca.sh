@@ -30,8 +30,11 @@ CN=localhost
 [ req_ext ]
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = localhost.localdomain
-DNS.2 = localhost
+DNS.1 = localhost
+DNS.2 = localhost.localdomain
+DNS.3 = hege_regions
+DNS.4 = hege_events
+DNS.5 = hege_maps
 IP.1 = 127.0.0.1
 EOF
 

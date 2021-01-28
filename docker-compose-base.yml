@@ -3,35 +3,15 @@ version: "3.3"
 services:
 
   #---------------------------------------------------------------------------#
-  # HEGEMONIE
-  # core services running game instances
-  # https://www.hegemonie.be/
-  # https://github.com/jfsmig/hegemonie
+  # HAPROXY
+  # Reverse proxy to secure the gRPC services
   #---------------------------------------------------------------------------#
 
-  hege_regions:
-    image: "jfsmig/hegemonie-demo"
-    #network_mode: host
-    ports:
-      - "127.0.0.1:8081:6000"
-    volumes:
-      - "/tmp/regions:/data/regions"
-    command: server -v regions /data/regions
-
-  hege_events:
-    image: "jfsmig/hegemonie-demo"
-    #network_mode: host
-    ports:
-      - "127.0.0.1:8082:6000"
-    volumes:
-      - "/tmp/events:/data/events"
-    command: server -v events /data/events
-
-  hege_maps:
-    image: "jfsmig/hegemonie-demo"
-    ports:
-      - "127.0.0.1:8083:6000"
-    command: server -v maps
+  hege_proxy:
+    image: "jfsmig/hegemonie-demo-haproxy"
+    ports: 
+      - "8443:8443"
+    restart: on-failure
 
   #---------------------------------------------------------------------------#
   # PROMETHEUS
@@ -43,4 +23,36 @@ services:
     ports:
       - "9090:9090"
     restart: on-failure
+
+  #---------------------------------------------------------------------------#
+  # HEGEMONIE
+  # core services running game instances
+  # https://www.hegemonie.be/
+  # https://github.com/jfsmig/hegemonie
+  #---------------------------------------------------------------------------#
+
+  hege_regions:
+    image: "jfsmig/hegemonie-demo"
+    expose:
+      - "6000"
+      - "6001"
+    volumes:
+      - "/tmp/regions:/data/regions"
+    command: server -v regions /data/regions
+
+  hege_events:
+    image: "jfsmig/hegemonie-demo"
+    expose:
+      - "6000"
+      - "6001"
+    volumes:
+      - "/tmp/events:/data/events"
+    command: server -v events /data/events
+
+  hege_maps:
+    image: "jfsmig/hegemonie-demo"
+    expose:
+      - "6000"
+      - "6001"
+    command: server -v maps
 

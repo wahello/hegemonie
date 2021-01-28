@@ -15,12 +15,10 @@ import (
 	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"math"
-	"net"
 )
 
 // Config gathers the configuration fields required to start a gRPC Event API service.
 type Config struct {
-	Endpoint string
 	PathBase string
 }
 
@@ -29,25 +27,16 @@ type eventService struct {
 	backend *back.Backend
 }
 
-// Run starts an Event API service bond to Endpoint
-// ctx is used for a clean stop of the service.
-func (cfg Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
+func (cfg Config) Register(_ context.Context, grpcSrv *grpc.Server) error {
 	if cfg.PathBase == "" {
 		return errors.New("missing path to the event data directory")
 	}
 
-	var lis net.Listener
 	var err error
-
 	app := eventService{cfg: cfg}
 	app.backend, err = back.Open(app.cfg.PathBase)
 	if err != nil {
 		return errors.NewNotValid(err, "backend error")
-	}
-
-	lis, err = net.Listen("tcp", cfg.Endpoint)
-	if err != nil {
-		return errors.NewNotValid(err, "listen error")
 	}
 
 	grpc_health_v1.RegisterHealthServer(grpcSrv, &app)
@@ -57,9 +46,8 @@ func (cfg Config) Run(_ context.Context, grpcSrv *grpc.Server) error {
 
 	utils.Logger.Info().
 		Str("base", app.cfg.PathBase).
-		Str("endpoint", app.cfg.Endpoint).
-		Msg("starting")
-	return grpcSrv.Serve(lis)
+		Msg("ready")
+	return nil
 }
 
 // Ack1 marks an event as read so that it won't be listed again.

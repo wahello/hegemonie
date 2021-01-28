@@ -16,7 +16,7 @@ require (
 	github.com/juju/testing v0.0.0-20180920084828-472a3e8b2073 // indirect
 	github.com/ory/keto-client-go v0.5.2
 	github.com/ory/kratos-client-go v0.5.4-alpha.1
-	github.com/prometheus/client_golang v1.9.0 // indirect
+	github.com/prometheus/client_golang v1.9.0
 	github.com/rs/zerolog v1.18.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect

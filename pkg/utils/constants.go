@@ -17,6 +17,10 @@ const (
 	// This is also the configuration expected by the docker image.
 	DefaultPortCommon = 6000
 
+	// DefaultPortMonitoring is the default port used for clear-text HTTP
+	// serving the /metrics route dedicated to Prometheus exporters.
+	DefaultPortMonitoring = 6001
+
 	// DefaultPortRegion is the default port of the Hegemonie Region internal API service
 	DefaultPortRegion = 8081
 	// DefaultPortEvent is the default port of the Hegemonie Event internal API service

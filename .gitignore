@@ -7,6 +7,13 @@ docker-compose.yml
 
 docs/maps/*.final.json
 
+# Stains from the website branch
+.env/
+requirements.txt
+regen.sh
+wwwgen.py
+src/
+
 # Vim temporary files
 **/.*.sw?
 
