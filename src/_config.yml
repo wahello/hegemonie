@@ -1,0 +1,10 @@
+name: "Hegemonie"
+baseurl: https://www.hegemonie.be
+shorturl: https://hegemonie.be
+title: "Hegemonie: Diplomacy and Strategy RPG"
+site_description: |
+  Hegemonie.be is a strategy and diplomacy game engine for human-scale communities.
+keywords: online rpg, roleplay game, online game, game engine, gamemaster, NPC, non payable characters, strategy, diplomacy, strategy game diplomacy game, civilization, 4X, medfan, medieval, fantastic, golang, lightweight, self hosted
+next: index.html
+prev: index.html
+author: jfsmig

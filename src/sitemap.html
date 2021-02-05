@@ -1,0 +1,26 @@
+---
+Title: Sitemap
+Description: |
+  hegemonie, game engine, online rpg, stragey game, diplomacy game, game master,
+  sitemap, site map, site generator, feed.xml, rss, atom
+---
+<%inherit file="main"/>
+
+<article>
+  <h2>Sitemap</h2>
+
+  <h3>Static Pages</h3>
+  <ul>
+    % for k, m, _ in pages.site():
+    <li>${anchor(m['url'],k)}</li>
+    % endfor
+  </ul>
+
+  <h3>Blog Articles</h3>
+  <ul>
+    % for k, m, _ in pages.blog():
+    <li>${anchor(m['url'],k)}</li>
+    % endfor
+  </ul>
+
+</article>

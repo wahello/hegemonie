@@ -1,2 +1,6 @@
+.env/
+.build/
 .idea/
+docs/
 pkg/
+etc/

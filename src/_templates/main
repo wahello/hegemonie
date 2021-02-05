@@ -1,0 +1,3 @@
+<%include file="header"/>
+${self.body()}
+<%include file="footer"/>

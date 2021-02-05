@@ -1,0 +1,152 @@
+---
+Title: Hegemonie is Back!
+Banner: Online Diplomacy And Strategy RPG
+Date: 2020-12-30
+Description: |
+  Good ideas never die.
+  Did you like the original Hegemonie? You'll love its revival!
+---
+<%inherit file="main"/>
+
+<article>
+  <h2>Hegemonie is back!</h2>
+  <time datetime="${date}">Last Edited: ${date}</time>
+  <p>
+    I am proud to announce that your favorite RPG between 1999 and 2003 will be back soon!
+  </p>
+  <p>
+    The spirit of Hegemonie didn't vanish. As a new year's resolution for 2020, I decided
+    to reboot the game engine. I admit... it happened in a moment of nostalgia.
+    While reconnecting with old players, I noticed that nobody forgot the experience.
+    I was aware that a few of them continued the effort during one or two years after
+    the official game ended.
+    But I discovered that even 10 years after, some aficionados had rewritten an entire
+    world. And you know what? They lack the skills to write a game engine.
+  </p>
+
+  <h2>Game Masters made Hegemonie so special</h2>
+  <p>
+    Hegemonie had <em>Game Masters</em>. Each GM was in charge of a game instance and
+    its few non-player characters. He/She ensured a coarse narrative frame and stimulated
+    the instance.
+  </p>
+  <p>
+    In its history, Hegemonie had 3 kinds of instances. The first was populated with
+    players actually knowing each others in the real life. This was probably the most
+    active but also the easiest to control. The second kind of population was 40%
+    inactive, and the 60% remaining moving at a slow pace. The third instance was mostly
+    active, 100% remote and prone to declare the war against the all local NPC.
+    And the magic happened on all of those instances, sometimes with deviant behaviors,
+    sometimes with more or less success. Many lessons have been learned, many feedback
+    have been gathered.
+  </p>
+
+  <h2>A new game engine</h2>
+  <p>
+    The current effort focuses the game engine. It of the world and its internal logic.
+    It includes representing cities, learning science, raising troops, assaulting
+    or defending, trading resources.
+  </p>
+  <p>
+    The previous version of Hegemonie had major lacks that prohibited it to scale.
+
+    A general lack of tests that caused the highly flawed code to ship in production.
+    Many players silentely benefitted some bugs, others suffered.
+
+    A complete absence of reporting on the activity on a game instance made that it
+    was not possible to spot inactive zones or fake accounts. Hegemonie provided
+    no tool to the animators to trigger technical actions, spread rumors. The only
+    lever was text-based Role-Play. It was just a nice game for communities of max
+    40 players meeting in the real life. And worst of all, it was full-time job to
+    animate such a community. This is a sign: it is not sustainable and it could not
+    last long.
+  </p>
+  <p>
+    The new game engine will address these limitations. I plan to provide the meaningful
+    reporting to make unbalanced situations obvious. Representing the relationships
+    between the characters is a must-have. The stimulation of the game requires to check
+    the RP is respected. I must have only one goal in mind: make the animation becomes
+    fun and hassle-free.
+  </p>
+
+  <h2>Up to the standards of the State of the Art</h2>
+  <p>
+    The original game was all made of PHP logic entangled with HTML generation, plus
+    a burden of stored procedures in a PostreSQL database, old-style authentication
+    based on session tokens, etc etc.
+  </p>
+  <p>
+    20 years later we learned the benefit of well documennted API, the benefits of
+    test-driven development and CI/CD, micro-services architectures, the needs for
+    standard middlewares like gRPC, OpenAPI, OpenTelemetry and OpenID Connect, techniques
+    like JWT for authentication and authorization purposes, etc.
+    We also have tools like Consul, Docker and Kubernetes, as well as languages like Go
+    giving much higher expectations and shipping with a rich ecosystem, etc etc.
+  </p>
+  <p>
+    No need to say that the new game engine should encompass all this.
+  </p>
+
+  <h2>What's next?</h2>
+  <p>
+    What will happen after the development phase? Many things because there are many
+    challenges. As an example there is a high risk that the system will adopt a new
+    name because of trademark constraints. Only few items are on the roadmap. Only
+    those who are certain yet.
+  </p>
+  <h3>Step 0: Content Creation</h3>
+  <p>
+    A game engine is cool but when it pushes a valuable content, it is much better!
+    Then we will focus on creating a content like in the old days of Hegemonie.
+    It won't be possible to recreate it as is because everything has been lost.
+    Instead, we'll target the core configuration of the world and a scenario frame
+    for a few empires that could be a sequel for Hegemonie VII.
+  </p>
+  <h3>Step 1: Friendly user test (Alpha Test)</h3>
+  <p>
+    The first step will start with players already aware of Hegemonie, i.e. the old
+    players or their friends. Why? Because I am one of them, because I also do reboot
+    the game for myself. All of us were college students with plenty of idle time.
+    20 years later we turned into a workers and family guys &amp; gals. So I have to
+    check how the system must evolve to fit our current rhythm.
+  </p>
+  <p>
+    Few assumptions need a validation. I have in mind the partition of the users
+    into autonomous regions. I also think to the exchanges between compatible
+    regions, etc. And the list is not exhaustive. This is the goal of this Alpha test:
+    a technical validation of the design. The KPI is simple: do the players enjoy the
+    experience?
+  </p>
+  <h3>Step 2: (Beta Test)</h3>
+  <p>
+    It is time to test the game on a pseudo-random population of players. They should
+    be unaware of Hegemonie but simple RPG players and masters. My expectation is that
+    the population will contain inactive citizens, fake accounts, remote players,
+    etc etc.
+  </p>
+  <p>
+    The benefit I expected from the Beta is a measurement of the time spent in game
+    mastery. During the Beta we should be aware of lacks on the admin side. We should
+    know more about the expected skill of the game masters. I expect a set of guidelines
+    about how to populate game instances to ensure a constant activity. In term of number
+    of players, of variety of characters.
+  </p>
+
+  <h2>Sustainability as a long term goal</h2>
+  <p>
+    All the burden described here-above has a cost. I am happy to pay it with my idle
+    time for the initial development phase. But as soon as it is testable (a MVP),
+    Hegemonie will require resources I do not have.
+  </p>
+  <p>
+    Creative talent is my major lack. I cannot manage content creation. Here will
+    I need the help of the community. Many ways are possible. It may take the form
+    of crowd funding for well-bounded projects. It can also be a direct participation,
+    artwork produced by the community itself.
+  </p>
+  <p>
+    And there is moment when financial resources will also be required for the hosting
+    itself. Here do I imagine two options. Either a yearly fundraiser or a minimal
+    subscription. But ... honestly, I don't know. This is way too early.
+  </p>
+</article>

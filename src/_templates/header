@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hegemonie: ${title}</title>
+<meta name="robots" content="index, follow">
+<meta name="keywords" content="${keywords}">
+<meta name="author" content="Jean-Francois Smigielski">
+<meta name="theme-color" content="#FFF"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="${description}.">
+<meta name="twitter:card" content="${description}"/>
+<meta name="twitter:site" content="@JFSmigielski"/>
+<meta name="twitter:creator" content="@JFSmigielski"/>
+<meta property="og:title" content="Hegemonie"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="${baseurl}"/>
+<meta property="og:image" content="${baseurl}/static/img/blason.jpg"/>
+<meta property="og:description" content="Online diplomacy & strategy RPG. For human-scale communities."/>
+<meta property="fb:admins" content="jf.smigielski"/>
+<link rel="canonical" href="${url}">
+<link rel="preload" href="/static/style.css" as="style">
+<link rel="icon" type="image/png" href="/static/favicon.png"/>
+<link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
+<link rel="apple-touch-icon" type="image/png" href="/static/favicon-apple.png"/>
+<link rel="alternate" type="application/atom+xml" title="Hegemonie news" href="/feed.xml"/>
+<link rel="stylesheet" href="/static/style.css">
+<script type='application/ld+json'>
+{
+  "@context": "http://www.schema.org",
+  "@type": "Game",
+  "name": "${title}",
+  "url": "${baseurl}",
+  "abstract": "${site_description}",
+  "gameLocation": "https://app.hegemonie.be",
+  "audience": {
+    "@type": "PeopleAudience",
+    "suggestedMinAge": "13"
+  },
+  "numberOfPlayers": {
+    "@type": "QuantitativeValue",
+    "minValue": "10",
+    "maxValue": "500"
+  },
+  "copyrightHolder": {
+    "@type": "Person",
+    "name": "Jean-Francois Smigielski",
+    "email": "jf.smigielski@gmail.com"
+  }
+}
+</script>
+</head>
+<body>
+<!--
+${site_description}
+-->
+<header>
+  <h1>Hegemonie</h1>
+  <h2>Online Diplomacy &amp; Strategy RPG</h2>
+</header>
+<main>

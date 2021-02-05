@@ -1,0 +1,66 @@
+---
+Title: The Technical Stack
+Date: 2021-01-31
+Keywords: |
+  hegemonie, game engine, online rpg, stragey game, diplomacy game, game master,
+  golang, micro services, observability, opentelemetry, prometheus
+Description: |
+  The game engine will following the architectural best practices since day 0.
+---
+<%inherit file="main"/>
+
+<article>
+  <h2>The Technical Stack</h2>
+  <time datetime="${date}">Last Edited: ${date}</time>
+
+  <h3>Micro-services architecture</h3>
+  <p>
+  All the backend code is written in ${link("https://golang.org","Golang")}.
+  ${link("https://grpc.io","gRPC")} is the middleware shared by all our microservices.
+  ${link("https://www.openapis.org/","OpenAPI")} is also used in the AAA-related services.
+  </p>
+  <p>
+  The persistence of the data for each service currently depend on the type of service:
+  </p>
+  <ul>
+    <li>
+      maps: the local filesystem is currently used, with one file per map.
+      There are plans to locate the maps on an Object Storage platform.
+    </li>
+    <li>
+      events: a local ${link("https://github.org/jfsmig/rocksdb","RocksDB")} database is currently used.
+      There are plans for a ${link("https://tikv.org/","TiKV")} storage.
+    </li>
+    <li>
+      region: a local file system is currently used.
+      There are plans for a ${link("https://tikv.org/","TiKV")} storage.
+    </li>
+  </ul>
+
+  <h3>Observabolity at the core</h3>
+  <p>
+  The fine-grained observability of the execution of the RPC calls is allowed by ${link("https://opentelemetry.io","OpenTelemetry")}.
+  Traces are generated in a side-car agent.
+  By default, the sandbox installation proposes an all-in-one installation with its own Prometheus storage and a dashboard.
+  </p>
+
+
+  <h3>Technical enablers</h3>
+  <p>
+  The ${link("https://www.ory.sh","ORY")} suite is used at the gate.
+  OpenIO Connect is used for the Authentication via ${link("https://www.ory.sh/hydra/","ORY Hydra")}.
+  The authorization of the users on their cities is achieved with $#link("https://www.ory.sh/keto/","ORY Keto")}.
+  A local user registry is available thanks to ${link("https://www.ory.sh/kratos/","ORY Kratos")}, as a source for ORY Hydra.
+  The security is enforced at the gate, in the API micro-service that requires valid ${link("https://jwt.io","JSON Web Tokens")} for each RPC.
+  </p>
+
+  <h3>Monitoring</h3>
+  <p>
+  The monitoring of the timeseries of the platform is achieved with ${link("https://prometheus.io","Prometheus")}.
+  A set of exporters is in place for the gRPC services.
+  </p>
+  <p>
+  The monitoring of the hosts is achieved via ${link("https://www.netdata.cloud","NetData")}.
+  No data from Netdata is centralized in Prometheus.
+  </p>
+</article>

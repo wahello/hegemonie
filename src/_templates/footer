@@ -1,0 +1,29 @@
+</main>
+
+<nav>
+  ${anchor("/index.html","Home")}
+  ${anchor("https://github.com/jfsmig/hegemonie","GitHub")}
+  ${anchor("https://hub.docker.com/repository/registry-1.docker.io/jfsmig/hegemonie","Docker Hub")}
+  ${anchor("https://www.facebook.com/hegemonie.be","Facebook")}
+  <!-- ${anchor("https://app.hegemonie.be/","LogIn")} -->
+</nav>
+
+<aside>
+% for key, meta, body in pages.blog():
+	<div>
+		<h2>${anchor(meta['url'], meta['title'])}</h2>
+		<p>
+			<time datetime="${meta['date']}">${meta['date']}</time>
+			${meta['description']}
+		</p>
+	</div>
+% endfor
+</aside>
+
+<footer>
+  <p>&copy; Copyright 2019-2021 ${anchor('about.html#jfsmig', "Jean-Francois Smigielski")}
+  <br/>${anchor('/sitemap.html','Sitemap')}</p>
+</footer>
+
+</body>
+</html>
