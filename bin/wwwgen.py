@@ -156,13 +156,25 @@ class PageSet(object):
             env['banner'] = env['title']
 
         self._pages[key] = (env, content)
+        return env
 
     def load_blog(self, key, src, dst):
         env = self._load(key, src, dst)
+        # blog articles do not change often but we want them to be discovered fast
+        if 'sitemap_priority' not in env:
+            env['sitemap_priority'] = '0.8'
+        if 'sitemap_frequency' not in env:
+            env['sitemap_frequency'] = 'monthly'
         self._blog.append(key)
 
     def load_site(self, key, src, dst):
-        self._load(key, src, dst)
+        env = self._load(key, src, dst)
+        # main pages are not important, excepted the landing page that will
+        # receive special value in its frontmatter preamble.
+        if 'sitemap_priority' not in env:
+            env['sitemap_priority'] = '0.1'
+        if 'sitemap_frequency' not in env:
+            env['sitemap_frequency'] = 'yearly'
         self._site.append(key)
 
 
@@ -242,9 +254,9 @@ for key, meta, data in pages.all():
         meta['author_url'] = '/about.html#' + meta['author']
 
 for nick, meta in people.items():
-    print("\nPeople>", nick, "\n", dumps(meta, indent=' '))
+    print("\nPeople>", nick, "\n", dumps(meta, sort_keys=True, indent=' '))
 for key, meta, _ in pages.all():
-    print("\nPage>", key, "\n", dumps(meta, indent=' '))
+    print("\nPage>", key, "\n", dumps(meta, sort_keys=True, indent=' '))
 
 
 # Generate the static html files of the website
@@ -253,13 +265,13 @@ for key, meta, _ in pages.all():
 # 2/ generate the website, some pages might need the exerpt,
 #    e.g. to generate an index of the blog posts.
 for key, meta, data in pages.blog():
-    print("\nprocessing>", key, dumps(meta, indent=' '))
+    print("\nprocessing>", key, dumps(meta, sort_keys=True, indent=' '))
     with open(meta['dst'], 'wb') as fout:
         rendered = render(data, meta)
         meta['exerpt'] = extract_HTML.exerpt(rendered)
         fout.write(rendered)
 for key, meta, data in pages.site():
-    print("\nprocessing>", key, dumps(meta, indent=' '))
+    print("\nprocessing>", key, dumps(meta, sort_keys=True, indent=' '))
     with open(meta['dst'], 'wb') as fout:
         fout.write(render(data, meta))
 
@@ -268,8 +280,8 @@ for key, meta, data in pages.site():
 with open(dstdir + 'sitemap.xml', 'wb') as f:
     fmt = '''<url>
     <loc>${url}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <changefreq>${sitemap_frequency}</changefreq>
+    <priority>${sitemap_priority}</priority>
     <lastmod>${date}</lastmod>
   </url>'''
     f.write(b'''<?xml version="1.0" encoding="UTF-8"?>
