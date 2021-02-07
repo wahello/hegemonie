@@ -1,7 +1,7 @@
 <%include file="header"/>
 <article>
 <h2>${title}</h2>
-<time datetime="${date}">Last Edited: ${date}</time>
+<time datetime="${date}">Last Edited at ${date} by ${anchor(author_url, author)}</time>
 ${self.body()}
 </article>
 <%include file="footer"/>

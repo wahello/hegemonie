@@ -9,6 +9,7 @@ aside div { padding: 5px; margin-bottom: 20px; background-color: rgba(255, 255, 
 aside h2 { margin: 2px; }
 aside p { margin: 2px; }
 aside p time { display: inline; font-style: italic; }
+aside p time a { font-size: inherit;  }
 
 header { margin: 10px 0px 10px 0px; }
 header h1 { color: deeppink; }
@@ -25,6 +26,7 @@ main article h1 { display: none; }
 main article h2 { color: black; margin: 30px 0px 5px 0px; }
 main article h3 { color: black; margin: 25px 0px 5px 0px; }
 main article time { font-style: italic; }
+main article time a { font-size: inherit;  }
 
 
 /* FONTS */
@@ -59,7 +61,6 @@ main article time { font-style: italic; }
 		main article time { font-size: 14px; }
 	}
 }
-
 
 /* LAYOUT */
 @media all {
