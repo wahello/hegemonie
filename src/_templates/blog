@@ -1,0 +1,7 @@
+<%include file="header"/>
+<article>
+<h2>${title}</h2>
+<time datetime="${date}">Last Edited: ${date}</time>
+${self.body()}
+</article>
+<%include file="footer"/>

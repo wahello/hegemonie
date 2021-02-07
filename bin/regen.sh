@@ -20,9 +20,13 @@ case $1 in
 	www)
 		. .env/bin/activate
 		./bin/wwwgen.py src .build
+		find .build -type f -name '.*.sw?' -delete
+		;;
+	push)
+		tar cf - -C .build/ . | ssh gunkan 'tar xvf - -C /var/www/hegemonie'
 		;;
 	*)
-		echo "$0 (www|env)" 1>&2
+		echo "$0 (env|www|push)" 1>&2
 		exit 2
 		;;
 esac

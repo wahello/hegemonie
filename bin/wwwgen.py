@@ -190,17 +190,16 @@ if 'site_description' not in config:
     config['site_description'] = 'NOT-SET'
 if 'description' not in config:
     config['description'] = config['site_description']
-
-if 'prev' not in config:
-    config['prev'] = 'NOT-SET.html'
-if 'next' not in config:
-    config['next'] = 'NOT-SET.html'
-if 'author' not in config:
-    config['author'] = 'NOT-SET'
-if 'title' not in config:
-    config['title'] = "NOT-SET"
 if 'name' not in config:
     config['name'] = config['title']
+if 'author' not in config:
+    config['author'] = 'author-NOT-SET'
+if 'title' not in config:
+    config['title'] = "title-NOT-SET"
+if 'prev' not in config:
+    config['prev'] = 'prev-NOT-SET.html'
+if 'next' not in config:
+    config['next'] = 'next-NOT-SET.html'
 
 # Load the people involved
 for src in glob(srcdir + '_people/*.html'):

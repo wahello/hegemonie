@@ -1,18 +1,18 @@
 body { background-color: #FFFFFF; margin: 10px; padding: 0px; }
 
 * { font-family: Helvetica, Tahoma, sans-serif; color: black; }
+a { text-decoration: none; color: mediumvioletred; }
 
-nav a { font-size: 18px; text-decoration: none; padding: 0px; }
+nav a { padding: 0px; font-weight: bold; }
 
-aside div { margin-bottom: 10px; }
-aside a { font-size: 18px; text-decoration: none; }
+aside div { padding: 5px; margin-bottom: 20px; background-color: rgba(255, 255, 255, 0.9); }
 aside h2 { margin: 2px; }
-aside p { font-size: 16px; margin: 2px; }
-aside p time { font-size: 14px; display: inline; font-style: italic; }
+aside p { margin: 2px; }
+aside p time { display: inline; font-style: italic; }
 
 header { margin: 10px 0px 10px 0px; }
-header h1 { font-size: 80px; color: deeppink; }
-header h2 { font-size: 36px; color: darkorange; }
+header h1 { color: deeppink; }
+header h2 { color: darkorange; }
 header h1, header h2 {
 	padding-top: 0px;
 	padding-bottom: 0px;
@@ -22,15 +22,70 @@ header h1, header h2 {
 
 main article { background-color: rgba(255, 255, 255, 0.7); }
 main article h1 { display: none; }
-main article h2 { font-size: 24px; color: black; margin: 30px 0px 5px 0px; }
-main article h3 { font-size: 20px; color: darkslategray; margin: 25px 0px 5px 0px; }
-main article p  { font-size: 16px; color: darkslategray; }
-main article li { font-size: 16px; color: darkslategray; }
-main article a  { font-size: 16px; color: darkslategray; font-weight: bold; }
-main article time { font-size: 12px; font-style: italic; }
+main article h2 { color: black; margin: 30px 0px 5px 0px; }
+main article h3 { color: black; margin: 25px 0px 5px 0px; }
+main article time { font-style: italic; }
 
+
+/* FONTS */
 @media all {
-	@media (min-width: 1300px) {
+	@media (min-width: 2600px) {
+		header h1 { font-size: 80px; }
+		header h2 { font-size: 36px; }
+		main article h2 { font-size: 24px; }
+		main article h3 { font-size: 20px; }
+		nav a   { font-size: 18px; }
+		aside a { font-size: 18px; }
+		aside p         { font-size: 16px; }
+		main article p  { font-size: 16px; }
+		main article li { font-size: 16px; }
+		main article a  { font-size: 16px; }
+		aside p time  { font-size: 14px; }
+		main article time { font-size: 12px; }
+	}
+
+	@media (max-width: 2600px) {
+		header h1 { font-size: 80px; }
+		header h2 { font-size: 48px; }
+		main article h2 { font-size: 36px; }
+		main article h3 { font-size: 28px; }
+		nav a   { font-size: 24px; }
+		aside a { font-size: 24px; }
+		aside p         { font-size: 20px; }
+		main article p  { font-size: 20px; }
+		main article li { font-size: 20px; }
+		main article a  { font-size: 20px; }
+		aside p time { font-size: 14px; }
+		main article time { font-size: 14px; }
+	}
+}
+
+
+/* LAYOUT */
+@media all {
+	@media (min-width: 1500px) {
+		body { display: grid; grid-template-columns: 2fr 700px 400px 400px 1fr; }
+		header { grid-row: 1; grid-column: 2; }
+		header * { vertical-align: middle; }
+		nav    { grid-row: 1; grid-column: 3; vertical-align: middle; padding: 20px; justify-content: center; }
+		nav a  { display: block; }
+		aside  { grid-row: 2; grid-column: 3; padding: 20px; }
+		aside * { display: block; }
+		main   { grid-row: 2; grid-column: 2; }
+		footer { grid-row: 3; grid-column: 2; }
+	}
+	@media (max-width: 1500px) and (min-width: 1100px) {
+		body { display: grid; grid-template-columns: 700px 400px auto; }
+		header { grid-row: 1; grid-column: 1; }
+		header * { vertical-align: middle; }
+		nav    { grid-row: 1; grid-column: 2; vertical-align: middle; padding: 20px; justify-content: center; }
+		nav a  { display: block; }
+		aside  { grid-row: 2; grid-column: 2; padding: 20px; }
+		aside * { display: block; }
+		main   { grid-row: 2; grid-column: 1; }
+		footer { grid-row: 3; grid-column: 1; }
+	}
+	@media (min-width: 1100px) {
 		body {
 			background-image: url("https://www.hegemonie.be/static/img/back-general.jpg");
 			background-repeat: no-repeat;
@@ -38,28 +93,27 @@ main article time { font-size: 12px; font-style: italic; }
 			background-attachment: fixed;
 			background-size: contain;
 		}
-		body {
-			display: grid;
-			grid-template-columns: auto 900px 400px auto;
-		}
-		header { grid-row: 1; grid-column: 2; }
-		header * { vertical-align: middle; }
-		nav    { grid-row: 1; grid-column: 3; vertical-align: middle; padding: 30px; }
-		nav a  { display: block; }
-		aside  { grid-row: 2; grid-column: 3; padding: 30px; }
-		aside * { display: block; }
-		main   { grid-row: 2; grid-column: 2; }
-		footer { grid-row: 3; grid-column: 3; }
 	}
-	@media (max-width: 1300px) {
-		body {
-			display: grid;
-			grid-template-columns: auto 600px 300px auto;
-		}
-		header { grid-row: 1; grid-column: 2; }
-		nav    { grid-row: 1; grid-column: 3; justify-content: center; }
+	@media (max-width: 1100px) and (min-width: 700px) {
+		body { display: grid; grid-template-columns: auto 400px; }
+		header { grid-row: 1; grid-column: 1; }
+		nav    { grid-row: 1; grid-column: 2; vertical-align: middle; padding: 20px; justify-content: center; }
 		nav a  { display: block; }
-		main   { grid-row: 2; grid-column: 2 / 4; }
-		footer { grid-row: 3; grid-column: 2 / 4; }
+		aside  { grid-row: 2; grid-column: 2; padding: 20px; }
+		aside * { display: block; }
+		main   { grid-row: 2; grid-column: 1; }
+		footer { grid-row: 3; grid-column: 1; }
+	}
+	@media (max-width: 700px) {
+		body { display: grid; grid-template-columns: auto; }
+		header { grid-row: 1; grid-column: 1; }
+		nav    { grid-row: 2; grid-column: 1; padding: 5px; text-align: center; justify-content: center; background-color: ivory; }
+		nav a  { display: inline; padding: 5px; }
+		nav * { color: black; }
+		aside  { grid-row: 4; grid-column: 1; background-color: ivory; }
+		aside div { background-color: inherit; }
+		aside div * { display: block; color: black; }
+		main   { grid-row: 3; grid-column: 1; }
+		footer { grid-row: 5; grid-column: 1; }
 	}
 }
