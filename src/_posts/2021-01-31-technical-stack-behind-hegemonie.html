@@ -1,5 +1,6 @@
 ---
 Title: The Technical Stack
+Author: jfsmig
 Date: 2021-01-31
 Keywords: |
   hegemonie, game engine, online rpg, stragey game, diplomacy game, game master,
@@ -34,11 +35,11 @@ Description: |
   instrumentation.
 </p>
 <p>
-  All the backend code is written in ${link("https://golang.org","Golang")}.
-  ${link("https://grpc.io","gRPC")} is the middleware shared by all our microservices.
-</p>
-<p>
-  The persistence of the data for each service currently depend on the type of service:
+  Standards appeared, with different tradeoffs. I chose mine: all the backend code
+  is written in ${link("https://golang.org","Golang")}. ${link("https://grpc.io","gRPC")}
+  is the middleware shared by all our microservices. The persistence of the data for
+  each service currently depend on the type of service, but the trend is to sitck on
+  either object storage or key/value storage:
 </p>
 <ul>
   <li>
@@ -55,7 +56,24 @@ Description: |
   </li>
 </ul>
 
-<h3>Observability at the core</h3>
+<h3>Local Logging</h3>
+<p>
+  Should we centalize the logs? No.
+</p>
+<p>
+  It sounds weird, isn't it? The purpose of such a centralization is following the
+  journey of a request in the whole distributed system. There are others ways to
+  achieve this. I want to place a bet on ${anchor("#observability","observability")}
+  instead.
+</p>
+<p>
+  Log traces remain very interesting, I'll never say the opposite. In debug mode
+  particularly. Much less in production mode, excpted for abnormal situations
+  (slow requests, errors). One trace in the access log per request seems acceptable.
+  But no centralisation. Just a local dump, 2 or 3 days retention, and log rotation.
+</p>
+
+<h3 id="observability">Observability at the core</h3>
 <p>
   The fine-grained observability of the execution of the RPC calls is allowed by
   ${link("https://opentelemetry.io","OpenTelemetry")}. Traces are generated in a
@@ -63,7 +81,7 @@ Description: |
   installation with its own Prometheus storage and a dashboard.
 </p>
 
-<h3>Best-in-class Authorization &amp; Authentiation</h3>
+<h3>Best-in-class Authorization &amp; Authentication</h3>
 <p>
   The ${link("https://www.ory.sh","ORY")} suite is used for the AAA purpse.
   At the gate, a ${link("https://haproxy.org","HAProxy")} enforces the security policy
