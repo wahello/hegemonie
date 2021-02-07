@@ -48,7 +48,7 @@ main article time a { font-size: inherit;  }
 
 	@media (max-width: 2600px) {
 		header h1 { font-size: 80px; }
-		header h2 { font-size: 48px; }
+		header h2 { font-size: 36px; }
 		main article h2 { font-size: 36px; }
 		main article h3 { font-size: 28px; }
 		nav a   { font-size: 24px; }

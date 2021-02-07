@@ -6,7 +6,7 @@ Keywords: |
   hegemonie, game engine, online rpg, stragey game, diplomacy game, game master,
   golang, micro services, observability, opentelemetry, prometheus
 Description: |
-  The game engine will following the architectural best practices since day 0.
+  The game engine will follow the architectural best practices since day 0.
 ---
 <%inherit file="blog"/>
 
@@ -22,7 +22,7 @@ Description: |
   Let's be honest: designing a good user interface requires different skills
   than designing a good backend. I have no recent UI skill, and designing a UI
   would end in server-side generated HTML pages. Instead, I dedicate my time to
-  the backend: a well-design set of interconected services, each exposing a
+  the backend: a well-design set of interconnected services, each exposing a
   clean API with the proper instrumentation to secure and observe it.
 </p>
 
@@ -35,10 +35,10 @@ Description: |
   instrumentation.
 </p>
 <p>
-  Standards appeared, with different tradeoffs. I chose mine: all the backend code
+  Standards appeared, with different trade offs. I chose mine: all the backend code
   is written in ${link("https://golang.org","Golang")}. ${link("https://grpc.io","gRPC")}
   is the middleware shared by all our microservices. The persistence of the data for
-  each service currently depend on the type of service, but the trend is to sitck on
+  each service currently depend on the type of service, but the trend is to stick on
   either object storage or key/value storage:
 </p>
 <ul>
@@ -58,7 +58,7 @@ Description: |
 
 <h3>Local Logging</h3>
 <p>
-  Should we centalize the logs? No.
+  Should we centralize the logs? No.
 </p>
 <p>
   It sounds weird, isn't it? The purpose of such a centralization is following the
@@ -68,9 +68,9 @@ Description: |
 </p>
 <p>
   Log traces remain very interesting, I'll never say the opposite. In debug mode
-  particularly. Much less in production mode, excpted for abnormal situations
+  particularly. Much less in production mode, excepted for abnormal situations
   (slow requests, errors). One trace in the access log per request seems acceptable.
-  But no centralisation. Just a local dump, 2 or 3 days retention, and log rotation.
+  But no centralization. Just a local dump, 2 or 3 days retention, and log rotation.
 </p>
 
 <h3 id="observability">Observability at the core</h3>
@@ -83,7 +83,7 @@ Description: |
 
 <h3>Best-in-class Authorization &amp; Authentication</h3>
 <p>
-  The ${link("https://www.ory.sh","ORY")} suite is used for the AAA purpse.
+  The ${link("https://www.ory.sh","ORY")} suite is used for the AAA purpose.
   At the gate, a ${link("https://haproxy.org","HAProxy")} enforces the security policy
   with the help of a ${link("","ORY OathKeeper")}.
   OpenID Connect is used for the Authentication via ${link("https://www.ory.sh/hydra/","ORY Hydra")}.
