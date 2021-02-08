@@ -25,6 +25,7 @@
 		&copy; Copyright 2019-2021 ${anchor('/about.html#jfsmig', "Jean-Francois Smigielski")}
 		| ${anchor('/sitemap.html','Sitemap')}
 		| ${anchor('/about.html','About Us')}
+		| ${anchor('/privacy.html','Privacy')}
 	</p>
 </footer>
 
