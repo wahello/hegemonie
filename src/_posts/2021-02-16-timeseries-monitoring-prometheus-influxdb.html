@@ -1,0 +1,115 @@
+---
+Title: Monitoring of timeseries or How to lose time.
+Author: jfsmig
+Date: 2021-02-16
+Keywords: |
+  hegemonie, game engine, online rpg, stragey game, diplomacy game, game master,
+  monitoring, timeseries, timeseries database, Prometheus, InfluxDB
+Description: |
+  Technical tools hardly escape the natural trend toward more entropy.
+  Particularly the timeseries databases.
+---
+<%inherit file="blog"/>
+
+<p>
+  <em>Disclaimer: This is an opinionated post. More than usually.</em>
+  Here do I give you a hint on how to lose precious time while working on
+  a side project. Just try to collect non-trivial metrics from core entities
+  of your business. Like monitoring the activity of the Cities in an Hegemonie
+  instance.
+</p>
+
+<h3>Push vs. Pull</h3>
+<p>
+  There is no big deal here since each method has its advantages. Pull is seen
+  simpler to deploy, while Push is seen simpler to scale. "Pull" partisans will
+  tell you that you know what you did deploy. So you know what/where to
+  monitor, then just configure that in the collector.
+</p>
+<p>
+  Scaling is not an issue for me, in the context of Hegemonie. First thing
+  first, I would manage that topic when foreseeing a scalability issue.
+</p>
+<p>
+  Unfortunately, in my case I monitor neither system metrics nor service
+  metrics. I typically need to discover the entities, then collect the stats
+  from each of them. This is way easy easier to achieve in a <em>PUSH</em>
+  model because each services <em>knows</em> the entities it manages. I don't
+  need to discover what to pull.
+</p>
+
+<h3>Prometheus: Wrong Pattern, Buggy.</h3>
+<p>
+  Famous and obvious, CNCF managed, Liberal Apache-2.0 License, Pull-oriented.
+</p>
+<p>
+  A bug like ${link('https://github.com/prometheus/prometheus/issues/3746','#3746')}
+  just tells you that 1/ Prometheus just doesn't work for a very simple use
+  case and that 2/ it's team listen to no-one in their community.
+</p>
+<p>
+  However, if I consider this as just a bug (because it is) that will be
+  eventually fixed. If I give a chance to Prometheus, what should I do to
+  cope with its unwanted Pull pattern? I should develop a service discovery
+  module to inform Prometheus about the regions, and then develop an exporter
+  that would convert region stats into Prometheus compliant stats.
+</p>
+
+<h3>InfluxDB: What's wrong with it?!</h3>
+<p>
+  Famous but less than Prometheus, managed by a company, non-compete
+  Licensing model, Push-oriented.
+</p>
+<p>
+  I initially gave a try to InfluxDB in 2015, it was v0.8.x, my use case was
+  simple.  I had a wonderful experience with it. Then I gave it another try
+  in the context of Hegemonie. We are in 2021, I am picking InfluxDB v2.0.4,
+  and the journey didn't end well.
+</p>
+<ol>
+  <li>
+    I try the Docker image to integrate it into my Docker-Compose
+    configuration. Argl, they use RedHat's Quay.io whose manifest isn't
+    known on my Ubuntu distribution. I need to allow that at the system
+    level, just for one tool... I'm sorry but no.
+  </li>
+  <li>I want to rebuild the Docker image using the provided configuration.
+    Argl, I need to install yarn and rustup, I already have nodejs, npm,
+    rustc and cargo. I understand that the built-in dashboard evolved a bit
+    since 2015.
+  </li>
+  <li>
+    Ok, I have the tools installed. I launch the `docker build` command.
+    Wow, roughly 3000 nodejs packages are fetched. Argl... <em>Javascript
+    Heap, out of memory</em>. 4GB are not enough. I am not alone in that
+    case, someone already opened a ticker about that, I drop a comment
+    and my workaround.
+  </li>
+  <li>
+    The docker Image is ready, I push it in my own repository on the
+    Docker Hub. I integrate a container and spawn it in my docker-compose
+    stack. It seems to work... Ah, not really. The UI isn't as expected,
+    I just have a black screen, and Firefox's console shows that a
+    Web Assembly module (WASM) has an unexpected MIME-Type. Holy Sh*t,
+    I am not the first to encounter this, there's also a ticket for that.
+  </li>
+  <li>
+    That's just the UI, maybe does the API endpoint work well. I try the
+    influx CLI to list the registered organizations... "Endpoint unexpectedly
+    closed the connection". That's maybe my fault, a misconfiguration of
+    docker-compose.
+  </li>
+</ol>
+<p>
+  And I had to stop there, I started at 10:30PM, it was then 1:30AM and I was
+  tired. I just keep in mind that if it is that complicated out of the box,
+  this is a bad sign for the rest of the adventure. Hey InfluxData, it should
+  not be that complicated!
+</p>
+
+<h3>Next Step... Warp10? Back to Prometheus?</h3>
+<p>
+  I still need something to collect my timeseries. The in-game monitoring is
+  a feature I want to propose in my game engine.
+</p>
+
