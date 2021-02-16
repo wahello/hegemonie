@@ -1,0 +1,49 @@
+{
+  "short_name": "Hegemonie",
+  "name": "Hegemonie.be",
+  "description": "Online Diplomacy RPG",
+  "start_url": "/index.html",
+  "background_color": "#3367D6",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#3367D6",
+  "icons": [
+    {
+      "src": "/static/favicon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/favicon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Privacy Disclaimer",
+      "short_name": "Privacy",
+      "description": "We respect your privacy",
+      "url": "/privacy.html",
+      "icons": [{ "src": "/static/favicon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "About Hegemonie",
+      "short_name": "About",
+      "description": "Who we are",
+      "url": "/about.html",
+      "icons": [{ "src": "/static/favicon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/img/back-chateau.jpg",
+      "type": "image/jpg",
+      "sizes": "540x720"
+    },
+    {
+      "src": "/static/img/back-general.jpg",
+      "type": "image/jpg"
+    }
+  ]
+}
