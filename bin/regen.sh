@@ -11,23 +11,30 @@ THIS_DIR=$(dirname "$THIS_FILE")
 BASE_DIR=$(dirname "$THIS_DIR")
 pushd "${BASE_DIR}"
 
-case $1 in
-	env)
-		virtualenv .env
-		. .env/bin/activate
-		pip3 install --upgrade -r requirements.txt
-		;;
-	www)
-		. .env/bin/activate
-		./bin/wwwgen.py src .build
-		find .build -type f -name '.*.sw?' -delete
-		;;
-	push)
-		tar cf - -C .build/ . | ssh gunkan 'tar xvf - -C /var/www/hegemonie'
-		;;
-	*)
-		echo "$0 (env|www|push)" 1>&2
-		exit 2
-		;;
-esac
+for what in $@ ; do
+	case $1 in
+		env) ;;
+		www) ;;
+		push) ;;
+		*) echo "$0 (env|www|push)" 1>&2 ; exit 2 ;;
+	esac
+done
 
+for what in $@ ; do
+	case "$what" in
+		env)
+			virtualenv .env
+			. .env/bin/activate
+			pip3 install --upgrade -r requirements.txt
+			;;
+		www)
+			. .env/bin/activate
+			./bin/wwwgen.py src .build
+			find .build -type f -name '.*.sw?' -delete
+			;;
+		push)
+			tar cf - -C .build/ . | ssh gunkan 'tar xvf - -C /var/www/hegemonie'
+			;;
+		*) exit 2 ;;
+	esac
+done
