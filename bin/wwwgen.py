@@ -316,6 +316,8 @@ with open(dstdir + 'feed.xml', 'wb') as f:
 # Copy the static files
 special_files = (
     'robots.txt',
+    'browserconfig.xml',
+    'site.webmanifest',
 )
 copytree(srcdir + 'static', dstdir + 'static')
 for f in special_files:
