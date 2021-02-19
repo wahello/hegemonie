@@ -17,11 +17,13 @@ import (
 )
 
 type cityApp struct {
-	regionApp
+	proto.UnimplementedCityServer
+
+	app *regionApp
 }
 
 func (s *cityApp) List(req *proto.CitiesByCharReq, stream proto.City_ListServer) error {
-	return s._regLock('r', req.Region, func(r *region.Region) error {
+	return s.app._regLock('r', req.Region, func(r *region.Region) error {
 		last := req.Marker
 		for {
 			tab := r.Cities.Slice(last, 100)
@@ -33,7 +35,7 @@ func (s *cityApp) List(req *proto.CitiesByCharReq, stream proto.City_ListServer)
 				if c.Owner != req.Character && c.Deputy != req.Character {
 					continue
 				}
-				err := stream.Send(ShowCityPublic(s.w, c, false))
+				err := stream.Send(showCityPublic(s.app.w, c, false))
 				if err == io.EOF {
 					return nil
 				}
@@ -46,7 +48,7 @@ func (s *cityApp) List(req *proto.CitiesByCharReq, stream proto.City_ListServer)
 }
 
 func (s *cityApp) AllCities(req *proto.PaginatedQuery, stream proto.City_AllCitiesServer) error {
-	return s._regLock('r', req.Region, func(r *region.Region) error {
+	return s.app._regLock('r', req.Region, func(r *region.Region) error {
 		last := req.Marker
 		for {
 			tab := r.Cities.Slice(last, 100)
@@ -55,7 +57,7 @@ func (s *cityApp) AllCities(req *proto.PaginatedQuery, stream proto.City_AllCiti
 			}
 			for _, c := range tab {
 				last = c.ID
-				err := stream.Send(ShowCityPublic(s.w, c, false))
+				err := stream.Send(showCityPublic(s.app.w, c, false))
 				if err == io.EOF {
 					return nil
 				}
@@ -68,8 +70,8 @@ func (s *cityApp) AllCities(req *proto.PaginatedQuery, stream proto.City_AllCiti
 }
 
 func (s *cityApp) Show(ctx context.Context, req *proto.CityId) (reply *proto.CityView, err error) {
-	err = s.cityLock('r', req, func(r *region.Region, c *region.City) error {
-		view := ShowCity(s.w, c)
+	err = s.app.cityLock('r', req, func(r *region.Region, c *region.City) error {
+		view := showCity(s.app.w, c)
 		utils.Logger.Debug().
 			Int("#a", len(view.Assets.Armies)).
 			Int("#k", len(view.Assets.Knowledges)).
@@ -85,28 +87,28 @@ func (s *cityApp) Show(ctx context.Context, req *proto.CityId) (reply *proto.Cit
 }
 
 func (s *cityApp) Study(ctx context.Context, req *proto.StudyReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		_, e := c.Study(r, req.KnowledgeType)
 		return e
 	})
 }
 
 func (s *cityApp) Build(ctx context.Context, req *proto.BuildReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		_, e := c.Build(r, req.BuildingType)
 		return e
 	})
 }
 
 func (s *cityApp) Train(ctx context.Context, req *proto.TrainReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		_, e := c.Train(r, req.UnitType)
 		return e
 	})
 }
 
 func (s *cityApp) ListArmies(req *proto.CityId, stream proto.City_ListArmiesServer) error {
-	return s.cityLock('r', req, func(r *region.Region, c *region.City) error {
+	return s.app.cityLock('r', req, func(r *region.Region, c *region.City) error {
 		var last string
 		for {
 			tab := c.Armies.Slice(last, 100)
@@ -129,7 +131,7 @@ func (s *cityApp) ListArmies(req *proto.CityId, stream proto.City_ListArmiesServ
 
 // Create an army made of only Units (no Resources carried)
 func (s *cityApp) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		_, e := c.CreateArmyFromIds(r, req.Unit...)
 		return e
 	})
@@ -137,14 +139,14 @@ func (s *cityApp) CreateArmy(ctx context.Context, req *proto.CreateArmyReq) (*pr
 
 // Create an army made of only Resources (no Units)
 func (s *cityApp) CreateTransport(ctx context.Context, req *proto.CreateTransportReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		_, e := c.CreateTransport(r, resAbsP2M(req.Stock))
 		return e
 	})
 }
 
 func (s *cityApp) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		army := c.Armies.Get(req.Army)
 		if army == nil {
 			return status.Error(codes.NotFound, "no such army")
@@ -154,7 +156,7 @@ func (s *cityApp) TransferUnit(ctx context.Context, req *proto.TransferUnitReq) 
 }
 
 func (s *cityApp) TransferResources(ctx context.Context, req *proto.TransferResourcesReq) (*proto.None, error) {
-	return none, s.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
+	return none, s.app.cityLock('w', req.City, func(r *region.Region, c *region.City) error {
 		army := c.Armies.Get(req.Army)
 		if army == nil {
 			return status.Error(codes.NotFound, "no such army")

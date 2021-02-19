@@ -10,7 +10,7 @@ import (
 	proto "github.com/jfsmig/hegemonie/pkg/region/proto"
 )
 
-func ShowEvolution(w *region.World, c *region.City) *proto.CityEvolution {
+func showEvolution(w *region.World, c *region.City) *proto.CityEvolution {
 	cv := &proto.CityEvolution{}
 
 	for _, kt := range c.KnowledgeFrontier(w) {
@@ -90,7 +90,7 @@ func resModM2P(r region.ResourceModifiers) *proto.ResourcesMod {
 	return &rm
 }
 
-func ShowProduction(w *region.World, c *region.City) *proto.ProductionView {
+func showProduction(w *region.World, c *region.City) *proto.ProductionView {
 	v := &proto.ProductionView{}
 	prod := c.GetProduction(w)
 	v.Base = resAbsM2P(prod.Base)
@@ -100,7 +100,7 @@ func ShowProduction(w *region.World, c *region.City) *proto.ProductionView {
 	return v
 }
 
-func ShowStock(w *region.World, c *region.City) *proto.StockView {
+func showStock(w *region.World, c *region.City) *proto.StockView {
 	v := &proto.StockView{}
 	stock := c.GetStock(w)
 	v.Base = resAbsM2P(stock.Base)
@@ -111,7 +111,7 @@ func ShowStock(w *region.World, c *region.City) *proto.StockView {
 	return v
 }
 
-func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
+func showAssets(w *region.World, c *region.City) *proto.CityAssets {
 	v := &proto.CityAssets{}
 
 	for _, k := range c.Knowledges {
@@ -140,7 +140,7 @@ func ShowAssets(w *region.World, c *region.City) *proto.CityAssets {
 	return v
 }
 
-func ShowCity(w *region.World, c *region.City) *proto.CityView {
+func showCity(w *region.World, c *region.City) *proto.CityView {
 	cv := &proto.CityView{
 		Public: &proto.PublicCity{
 			Id:   c.ID,
@@ -165,18 +165,18 @@ func ShowCity(w *region.World, c *region.City) *proto.CityView {
 		},
 	}
 
-	for _, c := range c.Lieges() {
+	for _, c := range c.GetLieges() {
 		cv.Politics.Lieges = append(cv.Politics.Lieges, c.ID)
 	}
 
-	cv.Evol = ShowEvolution(w, c)
-	cv.Production = ShowProduction(w, c)
-	cv.Stock = ShowStock(w, c)
-	cv.Assets = ShowAssets(w, c)
+	cv.Evol = showEvolution(w, c)
+	cv.Production = showProduction(w, c)
+	cv.Stock = showStock(w, c)
+	cv.Assets = showAssets(w, c)
 	return cv
 }
 
-func ShowArmyCommand(c *region.Command) *proto.ArmyCommand {
+func showArmyCommand(c *region.Command) *proto.ArmyCommand {
 	cmd := proto.ArmyCommand{Type: proto.ArmyCommandType_Unknown, Target: c.Cell}
 	switch c.Action {
 	case region.CmdMove:
@@ -195,7 +195,7 @@ func ShowArmyCommand(c *region.Command) *proto.ArmyCommand {
 	return &cmd
 }
 
-func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
+func showArmy(w *region.World, a *region.Army) *proto.ArmyView {
 	view := &proto.ArmyView{
 		Id:       a.ID,
 		Name:     a.Name,
@@ -203,15 +203,15 @@ func ShowArmy(w *region.World, a *region.Army) *proto.ArmyView {
 		Stock:    resAbsM2P(a.Stock),
 	}
 	for _, u := range a.Units {
-		view.Units = append(view.Units, ShowUnit(w, u))
+		view.Units = append(view.Units, showUnit(w, u))
 	}
 	for _, c := range a.Targets {
-		view.Commands = append(view.Commands, ShowArmyCommand(&c))
+		view.Commands = append(view.Commands, showArmyCommand(&c))
 	}
 	return view
 }
 
-func ShowUnit(w *region.World, u *region.Unit) *proto.UnitView {
+func showUnit(w *region.World, u *region.Unit) *proto.UnitView {
 	return &proto.UnitView{
 		Id:     u.ID,
 		IdType: u.Type,
@@ -221,7 +221,7 @@ func ShowUnit(w *region.World, u *region.Unit) *proto.UnitView {
 	}
 }
 
-func ShowCityPublic(w *region.World, c *region.City, scored bool) *proto.PublicCity {
+func showCityPublic(w *region.World, c *region.City, scored bool) *proto.PublicCity {
 	var score int64
 	if scored {
 		score = c.GetActualPopularity(w)
@@ -235,5 +235,33 @@ func ShowCityPublic(w *region.World, c *region.City, scored bool) *proto.PublicC
 		Cult:      c.Cult,
 		Politics:  c.PoliticalGroup,
 		Ethny:     c.EthnicGroup,
+	}
+}
+
+func showCityStats(r *region.Region, c *region.City) *proto.CityStats {
+	stats := c.GetStats(r)
+	return &proto.CityStats{
+		// Identifiers
+		Id:   c.ID,
+		Name: c.Name,
+		// Gauges
+		StockUsage:     resAbsM2P(stats.StockUsage),
+		StockCapacity:  resAbsM2P(stats.StockCapacity),
+		ScoreArmy:      stats.ScoreMilitary,
+		ScoreBuilding:  stats.ScoreBuildings,
+		ScoreKnowledge: stats.ScoreKnowledge,
+		// Counters
+		ResourceProduced: resAbsM2P(stats.Activity.ResourceProduced),
+		ResourceReceived: resAbsM2P(stats.Activity.ResourceReceived),
+		ResourceSent:     resAbsM2P(stats.Activity.ResourceSent),
+		FightJoined:      stats.Activity.FightsJoined,
+		FightLeft:        stats.Activity.FightsLeft,
+		FightLost:        stats.Activity.FightsLost,
+		FightWon:         stats.Activity.FightsWon,
+		Moves:            stats.Activity.Moves,
+		TaxReceived:      resAbsM2P(stats.Activity.TaxReceived),
+		TaxSent:          resAbsM2P(stats.Activity.TaxSent),
+		UnitLost:         stats.Activity.UnitsLost,
+		UnitRaised:       stats.Activity.UnitsRaised,
 	}
 }

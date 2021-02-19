@@ -1,3 +1,4 @@
+---
 ignore:
   - "attic/**"      # obsolete code
   - "vendor/**"     # third-party code

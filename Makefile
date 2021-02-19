@@ -13,14 +13,18 @@ AUTO=
 AUTO+= pkg/map/graph/map_auto.go
 AUTO+= pkg/region/model/world_auto.go
 # grpc
+AUTO+= pkg/map/proto/map_grpc.pb.go
 AUTO+= pkg/map/proto/map.pb.go
+AUTO+= pkg/event/proto/event_grpc.pb.go
 AUTO+= pkg/event/proto/event.pb.go
+AUTO+= pkg/region/proto/region_grpc.pb.go
 AUTO+= pkg/region/proto/region.pb.go
+AUTO+= pkg/healthcheck/healthcheck_grpc.pb.go
 AUTO+= pkg/healthcheck/healthcheck.pb.go
 
 default: hege
 
-all: prepare hege docker
+all: prepare hege
 
 gen-set:
 	$(GO) install $(BASE)/pkg/gen-set
@@ -40,17 +44,21 @@ pkg/region/model/world_auto.go: pkg/region/model/types.go pkg/gen-set/gen-set.go
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/region/model
 
+define grpc_generate
+	$(PROTOC) -I api --go_out=$(1) --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative --go-grpc_out=$(1) $(2)
+endef
+
 pkg/map/proto/%.pb.go: api/map.proto
-	$(PROTOC) -I api api/map.proto --go_out=plugins=grpc:pkg/map/proto
+	$(call grpc_generate,pkg/map/proto,api/map.proto)
 
 pkg/region/proto/%.pb.go: api/region.proto
-	$(PROTOC) -I api api/region.proto  --go_out=plugins=grpc:pkg/region/proto
+	$(call grpc_generate,pkg/region/proto,api/region.proto)
 
 pkg/event/proto/%.pb.go: api/event.proto
-	$(PROTOC) -I api api/event.proto  --go_out=plugins=grpc:pkg/event/proto
+	$(call grpc_generate,pkg/event/proto,api/event.proto)
 
 pkg/healthcheck/%.pb.go: api/healthcheck.proto
-	$(PROTOC) -I api api/healthcheck.proto  --go_out=plugins=grpc:pkg/healthcheck
+	$(call grpc_generate,pkg/healthcheck,api/healthcheck.proto)
 
 clean: clean-auto clean-coverage
 
@@ -69,8 +77,3 @@ test: all clean-coverage
 benchmark: all clean-coverage
 	set -e ; go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic -bench=$$D $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ;  done
 
-try: all
-	sudo docker-compose up
-
-docker:
-	./bin/hege-docker-build.sh

@@ -1,13 +1,14 @@
+---
 version: "3.3"
 
 services:
 
-#------------------------------------------------------------------------------#
-# ORY KRATOS: Self-login infrastructure
-# https://www.ory.sh/kratos/
-# https://github.com/ory/kratos
-# > Manages the self-registration of users and the 2FA authentication
-#------------------------------------------------------------------------------#
+  # -------------------------------------------------------------------------- #
+  # ORY KRATOS
+  # User database, self-login infrastructure, 2FA authentication
+  # https://www.ory.sh/kratos/
+  # https://github.com/ory/kratos
+  # -------------------------------------------------------------------------- #
 
   kratos-selfservice-ui-node:
     image: oryd/kratos-selfservice-ui-node:v0.5.0-alpha.1
@@ -37,7 +38,7 @@ services:
     volumes:
       -
         type: bind
-        source: ./docs/etc/email-password
+        source: ./etc/kratos
         target: /etc/config/kratos
 
   kratos_migrate:
@@ -51,7 +52,7 @@ services:
     volumes:
       -
         type: bind
-        source: ./docs/etc/email-password
+        source: ./etc/kratos
         target: /etc/config/kratos
 
   kratos_db:
@@ -63,19 +64,13 @@ services:
       POSTGRES_USER: "kratos"
       POSTGRES_DB: "kratos"
 
-  mailslurper:
-    image: oryd/mailslurper:latest-smtps
-    ports:
-      - "4436:4436"
-      - "4437:4437"
-    restart: on-failure
-
-#------------------------------------------------------------------------------#
-# ORY KETO: User and Policies management
-# https://www.ory.sh/kratos/
-# https://github.com/ory/kratos
-# > Manages the permissions for users to manages characters
-#------------------------------------------------------------------------------#
+  # -------------------------------------------------------------------------- #
+  # ORY KETO
+  # User and Policies management, a.k.a. the permission mapping users to
+  # characters
+  # https://www.ory.sh/keto/
+  # https://github.com/ory/keto
+  # -------------------------------------------------------------------------- #
 
   keto:
     image: "oryd/keto"
@@ -87,7 +82,7 @@ services:
       - keto_db
       - keto_migrate
     restart: on-failure
- 
+
   keto_migrate:
     image: "oryd/keto"
     environment:
@@ -106,3 +101,14 @@ services:
       POSTGRES_USER: "keto"
       POSTGRES_DB: "keto"
 
+  # -------------------------------------------------------------------------- #
+  # ORY mailslurper
+  # Intercept confirmation emails to ease the testing process.
+  # -------------------------------------------------------------------------- #
+
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - "4436:4436"
+      - "4437:4437"
+    restart: on-failure

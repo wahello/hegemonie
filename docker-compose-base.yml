@@ -1,58 +1,83 @@
+---
 version: "3.3"
 
 services:
 
-  #---------------------------------------------------------------------------#
-  # HAPROXY
-  # Reverse proxy to secure the gRPC services
-  #---------------------------------------------------------------------------#
+  # -------------------------------------------------------------------------- #
+  # HAProxy
+  # Reverse proxy to secure the gRPC services of Hegemonie
+  # -------------------------------------------------------------------------- #
 
   hege_proxy:
-    image: "jfsmig/hegemonie-demo-haproxy"
-    ports: 
-      - "8443:8443"
-    restart: on-failure
-
-  #---------------------------------------------------------------------------#
-  # PROMETHEUS
-  # Collection of in-iame timeseries to report the usage of regions
-  #---------------------------------------------------------------------------#
-
-  hege_prometheus:
-    image: "jfsmig/hegemonie-demo-prometheus:latest"
+    image: "haproxytech/haproxy-ubuntu"
     ports:
-      - "9090:9090"
+      - "8443:8443"
+    volumes:
+      - type: bind
+        source: "@@BASE@@/etc/hegemonie"
+        target: /etc/hegemonie
+      - type: bind
+        source: "@@BASE@@/etc/haproxy"
+        target: /etc/haproxy
     restart: on-failure
 
-  #---------------------------------------------------------------------------#
-  # HEGEMONIE
+  # -------------------------------------------------------------------------- #
+  # InfluxDB
+  # Collection of in-game timeseries to report the usage of regions
+  # -------------------------------------------------------------------------- #
+
+  hege_stats-ingame:
+    image: "influxdb:1.8.4"
+    ports:
+      - "8086:8086"
+      - "6060:6060"
+    restart: on-failure
+
+  # -------------------------------------------------------------------------- #
+  # Hegemonie
   # core services running game instances
   # https://www.hegemonie.be/
   # https://github.com/jfsmig/hegemonie
-  #---------------------------------------------------------------------------#
+  # -------------------------------------------------------------------------- #
 
   hege_regions:
-    image: "jfsmig/hegemonie-demo"
+    image: "jfsmig/hegemonie"
     expose:
       - "6000"
       - "6001"
     volumes:
-      - "/tmp/regions:/data/regions"
-    command: server -v regions /data/regions
+      - type: bind
+        source: "@@BASE@@/etc/hegemonie"
+        target: /etc/hegemonie
+      - type: bind
+        source: "@@BASE@@/var/lib/hegemonie"
+        target: /var/lib/hegemonie
+    command: server -v regions -f /etc/hegemonie/server.yml
 
   hege_events:
-    image: "jfsmig/hegemonie-demo"
+    image: "jfsmig/hegemonie"
     expose:
       - "6000"
       - "6001"
     volumes:
-      - "/tmp/events:/data/events"
-    command: server -v events /data/events
+      - type: bind
+        source: "@@BASE@@/etc/hegemonie"
+        target: /etc/hegemonie
+      - type: bind
+        source: "@@BASE@@/var/lib/hegemonie"
+        target: /var/lib/hegemonie
+    command: server -v events -f /etc/hegemonie/server.yml
 
   hege_maps:
-    image: "jfsmig/hegemonie-demo"
+    image: "jfsmig/hegemonie"
     expose:
       - "6000"
       - "6001"
-    command: server -v maps
-
+    volumes:
+      - type: bind
+        source: "@@BASE@@/etc/hegemonie"
+        target: /etc/hegemonie
+      - type: bind
+        source: "@@BASE@@/var/lib/hegemonie"
+        target: /var/lib/hegemonie
+    command: server -v maps -f /etc/hegemonie/server.yml

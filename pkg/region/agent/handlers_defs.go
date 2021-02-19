@@ -11,14 +11,16 @@ import (
 )
 
 type defsApp struct {
-	regionApp
+	proto.UnimplementedDefinitionsServer
+
+	app *regionApp
 }
 
 func (app *defsApp) ListUnits(req *proto.PaginatedQuery, stream proto.Definitions_ListUnitsServer) error {
-	return app._worldLock('r', func() error {
+	return app.app._worldLock('r', func() error {
 		last := req.GetMarker()
 		for {
-			tab := app.w.Definitions.Units.Slice(last, 100)
+			tab := app.app.w.Definitions.Units.Slice(last, 100)
 			if len(tab) <= 0 {
 				return nil
 			}
@@ -38,9 +40,9 @@ func (app *defsApp) ListUnits(req *proto.PaginatedQuery, stream proto.Definition
 }
 
 func (app *defsApp) ListBuildings(req *proto.PaginatedQuery, stream proto.Definitions_ListBuildingsServer) error {
-	return app._worldLock('r', func() error {
+	return app.app._worldLock('r', func() error {
 		for last := req.GetMarker(); ; {
-			tab := app.w.Definitions.Buildings.Slice(last, 100)
+			tab := app.app.w.Definitions.Buildings.Slice(last, 100)
 			if len(tab) <= 0 {
 				return nil
 			}
@@ -60,9 +62,9 @@ func (app *defsApp) ListBuildings(req *proto.PaginatedQuery, stream proto.Defini
 }
 
 func (app *defsApp) ListKnowledges(req *proto.PaginatedQuery, stream proto.Definitions_ListKnowledgesServer) error {
-	return app._worldLock('r', func() error {
+	return app.app._worldLock('r', func() error {
 		for last := req.GetMarker(); ; {
-			tab := app.w.Definitions.Knowledges.Slice(last, 100)
+			tab := app.app.w.Definitions.Knowledges.Slice(last, 100)
 			if len(tab) <= 0 {
 				return nil
 			}

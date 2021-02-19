@@ -1,3 +1,4 @@
+---
 exclude_paths:
   - "attic/**"      # obsolete code
   - "vendor/**"     # third-party code

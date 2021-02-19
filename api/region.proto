@@ -5,7 +5,7 @@
 
 syntax = "proto3";
 
-option go_package = "proto";
+option go_package = ".;proto";
 
 package hege.reg;
 
@@ -23,6 +23,12 @@ service Admin {
 
   // Compute the scoreboard of the region.
   rpc GetScores(RegionId) returns (stream PublicCity) {}
+
+  // PushStats extracts the usage in-game stats of each city in the given
+  // region and pushes them to the collector.
+  rpc PushStats(RegionId) returns (None) {}
+
+  rpc GetStats(RegionId) returns (stream CityStats) {}
 }
 
 service City {
@@ -341,6 +347,31 @@ message CityAssets {
 message CityPolitics {
   uint64 overlord = 1;
   repeated uint64 lieges = 2;
+}
+
+message CityStats {
+  // Identifier
+  uint64 id = 1;
+  string name = 2;
+  // Gauges
+  ResourcesAbs stockCapacity = 3;
+  ResourcesAbs stockUsage = 4;
+  uint64 scoreBuilding = 5;
+  uint64 scoreKnowledge = 6;
+  uint64 scoreArmy = 7;
+  // Counters
+  ResourcesAbs resourceProduced = 8;
+  ResourcesAbs resourceSent = 9;
+  ResourcesAbs resourceReceived = 10;
+  ResourcesAbs taxSent = 11;
+  ResourcesAbs taxReceived = 12;
+  uint64 moves = 13;
+  uint64 unitRaised = 14;
+  uint64 unitLost = 15;
+  uint64 fightJoined = 16;
+  uint64 fightLeft = 17;
+  uint64 fightWon = 18;
+  uint64 fightLost = 19;
 }
 
 message PublicCity {

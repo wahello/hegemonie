@@ -3,12 +3,15 @@
 coverage.txt
 profile.out
 
+
 docker-compose.yml
 
-docs/maps/*.final.json
+etc/hegemonie/pki/*
+**/maps/*.final.json
 
 # Stains from the website branch
 .env/
+.build/
 requirements.txt
 regen.sh
 wwwgen.py

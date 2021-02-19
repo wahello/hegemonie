@@ -16,10 +16,10 @@ Start a sandbox environment using ``docker-compose``. For more information,
 please refer to the page with the [technical elements](./TECH.md).
 
 ```shell
-BASE=github.com/jfsmig/hegemonie
-go get "${BASE}"
-cd "${GOPATH}/${BASE}"
-docker-compose up
+set -ex
+git clone https://github.com/jfsmig/hegemonie.git
+cd hegemonie
+./bin/hege-docker up
 ```
 
 ## How To Contribute
@@ -51,12 +51,14 @@ reasons:
   description of the world.
   
 * For transparency purposes, so that there is no doubt that anything odd is done
-  with your data.
+  with your data while running a game.
   
 * For an easy adoption, we deliberately chose a liberal license so that there
-  cannot be any legal concern in using the code. We would appreciate you
-  upstream your changes to the code, but you should not be forced to. It is
-  already an honor to have a use case.
+  cannot be any legal concern in using the code, commercially or not. We would
+  appreciate you upstream your changes to the code, but you should not be forced
+  to. It is already an honor to have a use case.
+  
+* Because any participant to the project deserves anyone to know it.
 
 ## Contact
 

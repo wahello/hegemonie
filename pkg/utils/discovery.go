@@ -7,6 +7,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/go-openapi/errors"
 )
 
 // StatelessDiscovery is the simplest form of Discovery API providing one call per
@@ -39,15 +40,25 @@ type StatelessDiscovery interface {
 var DefaultDiscovery = TestEnv()
 
 type singleHost struct {
-	endpoint string
+	hostname string
 }
 
 type singleEndpoint struct {
 	endpoint string
 }
 
+// StaticConfig is a StatelessDiscovery implementation with a different
+// endpoint for each kind of service, configured once in the application.
+type StaticConfig struct {
+	kratos  string
+	keto    string
+	maps    string
+	regions string
+	events  string
+}
+
 // TestEnv forwards to SingleHost on localhost
-func TestEnv() StatelessDiscovery { return SingleHost("localhost") }
+func TestEnv() StatelessDiscovery { return SingleEndpoint("localhost:6000") }
 
 // SingleHost creates a singleHost implementation.
 // singleHost is the simplest implementation of a StatelessDiscovery ever.
@@ -60,7 +71,7 @@ func SingleHost(h string) StatelessDiscovery { return &singleHost{h} }
 func SingleEndpoint(e string) StatelessDiscovery { return &singleEndpoint{e} }
 
 func (d *singleHost) makeEndpoint(p uint) (string, error) {
-	return fmt.Sprintf("%s:%d", d.endpoint, p), nil
+	return fmt.Sprintf("%s:%d", d.hostname, p), nil
 }
 
 // Kratos ... see StatelessDiscovery.Kratos
@@ -92,3 +103,40 @@ func (d *singleEndpoint) Region() (string, error) { return d.endpoint, nil }
 
 // Event ... see StatelessDiscovery.Event
 func (d *singleEndpoint) Event() (string, error) { return d.endpoint, nil }
+
+// NewStaticConfig instantiates a StaticConfig with the default endpoint value
+// for each service type.
+func NewStaticConfig() StatelessDiscovery {
+	f1 := func(s string, _ error) string { return s }
+	return &StaticConfig{
+		maps:    f1(DefaultDiscovery.Map()),
+		events:  f1(DefaultDiscovery.Event()),
+		regions: f1(DefaultDiscovery.Region()),
+	}
+}
+
+func (d *StaticConfig) nyi() (string, error) { return "", errors.NotImplemented("NYI") }
+
+// Kratos ... see StatelessDiscovery.Kratos
+func (d *StaticConfig) Kratos() (string, error) { return d.nyi() }
+
+// Keto ... see StatelessDiscovery.Keto
+func (d *StaticConfig) Keto() (string, error) { return d.nyi() }
+
+// Map ... see StatelessDiscovery.Map
+func (d *StaticConfig) Map() (string, error) { return d.maps, nil }
+
+// Region ... see StatelessDiscovery.Region
+func (d *StaticConfig) Region() (string, error) { return d.regions, nil }
+
+// Event ... see StatelessDiscovery.Event
+func (d *StaticConfig) Event() (string, error) { return d.events, nil }
+
+// SetMap updates the endpoint of the maps service
+func (d *StaticConfig) SetMap(ep string) { d.maps = ep }
+
+// SetRegion updates the endpoint of the region service
+func (d *StaticConfig) SetRegion(ep string) { d.regions = ep }
+
+// SetEvent updates the endpoint of the event service
+func (d *StaticConfig) SetEvent(ep string) { d.events = ep }

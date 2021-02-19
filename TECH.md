@@ -24,27 +24,33 @@ The Hegemonie platform consist in a set of microservices.
 
 In addition, side services act as technology enablers.
 
-* **The services of the ORY suite** provide OpenAPI interfaces to manage the
-  general authentication and authorization needs.
+* The services of the [ORY suite](https://ory.sh) provide OpenAPI interfaces to
+  manage the general authentication and authorization needs.
 
-* **Services implementing the OpenTelemetry suite** provide the collection, the
-  aggregation, the storage and the display of events traces. Those services help
-  troubleshooting problems in the whole solution, despite its largely
-  distributed character.
+* Services implementing the [OpenTelemetry](https://opentelemetry.io/) suite
+  provide the collection, the aggregation, the storage and the display of events
+  traces. Those services help troubleshooting problems in the whole solution,
+  despite its largely distributed character.
 
-* **An API gateway** ensuring the required authentication of the calls to the
+* An **API gateway** ensuring the required authentication of the calls to the
   backend, doing the load balancing among the target backend, rate limiting on a
-  per-user basis, etc.
+  per-user basis, etc. This is currently achieved by an
+  [HAProxy](https://github.com/haproxy/haproxy) that will soon delegate the
+  authentication and authorization decisions to an
+  [ORY OathKeeper](https://github.com/ory/oathkeeper).
+
+* A [Prometheus](https://prometheus.io) service to keep the in-game statistics
+  that serve the Game Mastery purpose.
 
 ![Hegemonie Architecture](https://raw.githubusercontent.com/jfsmig/hegemonie/master/docs/system-architecture.png)
 
-## Single CLI
+## A Single administration CLI
 
 Everything is controlled by a single CLI tool, ``hege`` that allows starting the
 Hegemonie services, doing the daily operations, and a giving a shortcut access
 to the backend services (without any authentication).
 
-## 100% Go
+## Hegemonie is pure golang
 
 Written in 100% in [Go](https://golang.org): for the sake of Simplicity and
 Portability. The code mostly depends
@@ -66,24 +72,24 @@ scaling oppotunities:
 
 * The **API gateway**, whatever nginx or haproxy, acts as a stateless ingress
   proxy and can ensure HA in an active/active fashion.
-  
+
 * The **event server** is currently stateful because it relies on a local
   storage. Further scaling plans exist, based on a stateless service in front of
   a relatively scalabale KV backend (TiKV), plus a partitioning/sharding of the
   users if necessary. ``TiKV`` services have their own scalability model.
-  
+
 * The **region server** is stateful: it manages all the entities in-game.
   Distinct region services (i.e. processes) will host distinct datasets. So
   there is a limit in size for a region, but a de facto natural sharding
   opportunity of the users among the regions (i.e. services).
-  
+
 * The **map server** keeps a cache (loaded from a read-only reference) but
   serves stateless requests on read-only content. It can be multiplied _ad lib_.
-  
+
 * The services of the **ORY suite** are stateless and can be multiplied as much
   as required. Their underlying ``PostgreSQL`` instances have their own
   scalability model.
-  
+
 * The services of the **OpenTelemetry stack** are mostly stateless, and the
   storage solutions have their own scalability measures.
 
@@ -116,8 +122,13 @@ implementation.
 
 ### Deploy with Docker
 
+TL;DR:
+
 ```shell
-docker-compose up
+set -ex
+git clone https://github.com/jfsmig/hegemonie.git
+cd hegemonie
+./bin/hege-docker up
 ```
 
 More information to come soon.

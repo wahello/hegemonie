@@ -498,6 +498,21 @@ func (c *City) Build(w *Region, bID uint64) (string, error) {
 	return id, nil
 }
 
-func (c *City) Lieges() []*City {
+// Lieges returns a list of all the Lieges of the current City.
+func (c *City) GetLieges() []*City {
 	return c.lieges[:]
+}
+
+// GetStats computes the gauges and extract the counters to build a CityStats
+// about the current City.
+func (c *City) GetStats(w *Region) CityStats {
+	stock := c.GetStock(w.world)
+	return CityStats{
+		Activity:       c.Counters,
+		StockCapacity:  stock.Actual,
+		StockUsage:     stock.Usage,
+		ScoreBuildings: uint64(c.Buildings.Len()),
+		ScoreKnowledge: uint64(c.Knowledges.Len()),
+		ScoreMilitary:  uint64(c.Armies.Len()),
+	}
 }

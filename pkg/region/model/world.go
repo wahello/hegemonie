@@ -29,7 +29,7 @@ func (w *World) SetNotifier(n Notifier) {
 	w.notifier = LogEvent(n)
 }
 
-func (w *World) SetMapCliet(c MapView) {
+func (w *World) SetMapClient(c MapView) {
 	// TODO(jfs): maybe wrap with a cache if perf is too poor
 	w.mapView = c
 }

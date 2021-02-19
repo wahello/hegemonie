@@ -10,12 +10,16 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/juju/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"io"
 	"os"
+	"time"
 )
 
 // ActionFunc names the signature of the hook to be called when the gRPC connection
@@ -28,10 +32,27 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 		InsecureSkipVerify: true,
 	}
 
+	options := []grpc_retry.CallOption{
+		grpc_retry.WithCodes(codes.Unavailable),
+		grpc_retry.WithBackoff(
+			grpc_retry.BackoffExponentialWithJitter(250*time.Millisecond, 0.1),
+		),
+		grpc_retry.WithMax(5),
+		grpc_retry.WithPerRetryTimeout(1 * time.Second),
+	}
+
 	cnx, err := grpc.DialContext(ctx, endpoint,
 		grpc.WithTransportCredentials(credentials.NewTLS(config)),
-		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(grpc_prometheus.UnaryClientInterceptor)),
-		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(grpc_prometheus.StreamClientInterceptor)),
+		grpc.WithUnaryInterceptor(
+			grpc_middleware.ChainUnaryClient(
+				grpc_prometheus.UnaryClientInterceptor,
+				grpc_retry.UnaryClientInterceptor(options...),
+			)),
+		grpc.WithStreamInterceptor(
+			grpc_middleware.ChainStreamClient(
+				grpc_prometheus.StreamClientInterceptor,
+				grpc_retry.StreamClientInterceptor(options...),
+			)),
 	)
 	if err != nil {
 		return errors.Trace(err)
@@ -81,4 +102,14 @@ func EncodeStream(recv RecvFunc) error {
 		}
 	}
 	return nil
+}
+
+// RegisterableMonitorable summaries the expectations on the application backend.
+type RegisterableMonitorable interface {
+	// Register must plug the requests handlers of the backend in the grpc.Server
+	Register(grpcServer *grpc.Server) error
+
+	// Check must return a status of the whole backend, to be returned to the
+	// client for health-check purposes.
+	Check(ctx context.Context) grpc_health_v1.HealthCheckResponse_ServingStatus
 }

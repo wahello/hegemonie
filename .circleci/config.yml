@@ -1,18 +1,25 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
+---
 version: 2
 jobs:
   build:
     docker:
       - image: jfsmig/hegemonie-dependencies:latest
+    environment:
+      GOPATH: /gopath
+      PATH: /gopath/bin:/go/bin:/usr/local/go/bin:/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin
     steps:
       - checkout
       - run: |
-          go mod download
-      - run: |
-          go get -v -t -d ./...
           go get -u -t github.com/golang/protobuf
           go get -u -t google.golang.org/grpc
-          go install github.com/golang/protobuf/protoc-gen-go/
+          go get \
+            google.golang.org/protobuf/cmd/protoc-gen-go \
+            google.golang.org/grpc/cmd/protoc-gen-go-grpc
+      - run: |
+          make prepare
+          go get -v -t -d ./...
+          go mod download
       - run: make
       - run: make test
       - run: make benchmark

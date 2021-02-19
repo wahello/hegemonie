@@ -8,12 +8,12 @@ package mapagent
 import (
 	"context"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/map/graph"
 	"github.com/jfsmig/hegemonie/pkg/map/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/juju/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,31 +23,35 @@ import (
 
 // Config gathers the configuration fields required to start a gRPC map API service.
 type Config struct {
-	PathRepository string
+	PathRepository string `yaml:"repository" json:"repository"`
 }
 
 type srvMap struct {
+	proto.UnimplementedMapServer
+
 	config Config
 	maps   mapgraph.SetOfMaps
 	rw     sync.RWMutex
 }
 
-// Run starts an Map API service bond to Endpoint
-// ctx is used for a clean stop of the service.
-func (cfg Config) Register(_ context.Context, grpcSrv *grpc.Server) error {
+// Application implements the expectations of the application backend
+func (cfg Config) Application(ctx context.Context) (utils.RegisterableMonitorable, error) {
 	app := &srvMap{config: cfg, maps: make(mapgraph.SetOfMaps, 0)}
 	if err := app.LoadDirectory(cfg.PathRepository); err != nil {
-		return errors.Trace(err)
+		return nil, errors.Trace(err)
 	}
+	return app, nil
+}
 
-	grpc_health_v1.RegisterHealthServer(grpcSrv, app)
+// Register starts an Map API service bond to Endpoint
+// ctx is used for a clean stop of the service.
+func (s *srvMap) Register(grpcSrv *grpc.Server) error {
+	proto.RegisterMapServer(grpcSrv, s)
 	grpc_prometheus.Register(grpcSrv)
-	proto.RegisterMapServer(grpcSrv, app)
-
 	utils.Logger.Info().
-		Int("maps", app.maps.Len()).
+		Int("maps", s.maps.Len()).
 		Msg("Ready")
-	for _, m := range app.maps {
+	for _, m := range s.maps {
 		utils.Logger.Debug().
 			Str("name", m.ID).
 			Int("sites", m.Cells.Len()).
@@ -57,25 +61,8 @@ func (cfg Config) Register(_ context.Context, grpcSrv *grpc.Server) error {
 	return nil
 }
 
-// Check implements the one-shot healthcheck of the gRPC service
-func (s *srvMap) Check(_ context.Context, _ *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
-	// FIXME(jfs): check the service ID
-	return &grpc_health_v1.HealthCheckResponse{
-		Status: grpc_health_v1.HealthCheckResponse_SERVING,
-	}, nil
-}
-
-// Watch implements the long polling healthcheck of the gRPC service
-func (s *srvMap) Watch(_ *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.Health_WatchServer) error {
-	// FIXME(jfs): check the service ID
-	for {
-		err := srv.Send(&grpc_health_v1.HealthCheckResponse{
-			Status: grpc_health_v1.HealthCheckResponse_SERVING,
-		})
-		if err != nil {
-			return errors.Trace(err)
-		}
-	}
+func (s *srvMap) Check(ctx context.Context) grpc_health_v1.HealthCheckResponse_ServingStatus {
+	return grpc_health_v1.HealthCheckResponse_SERVING
 }
 
 // Vertices streams Vertice objects, sorted by ID.

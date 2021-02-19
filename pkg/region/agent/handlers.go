@@ -8,20 +8,20 @@ package regagent
 import (
 	"context"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/jfsmig/hegemonie/pkg/healthcheck"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
 	"github.com/jfsmig/hegemonie/pkg/region/proto"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/juju/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 )
 
 // Config gathers the configuration fields required to start a gRPC region API service.
 type Config struct {
-	PathDefs string
-	PathLive string
+	PathDefs string `yaml:"definitions" json:"definitions"`
+	PathLive string `yaml:"live" json:"live"`
 }
 
 type regionApp struct {
@@ -31,63 +31,71 @@ type regionApp struct {
 
 var none = &proto.None{}
 
-// Run starts a Region API service bond to Endpoint
-// ctx is used for a clean stop of the service.
-func (cfg Config) Register(ctx context.Context, grpcSrv *grpc.Server) error {
+// Application implements the expectations of the application backend
+func (cfg Config) Application(ctx context.Context) (utils.RegisterableMonitorable, error) {
 	w, err := region.NewWorld(ctx)
 	if err != nil {
-		return errors.Annotate(err, "")
+		return nil, errors.Annotate(err, "")
 	}
 
 	if cfg.PathDefs == "" {
-		return errors.NotValidf("Missing path for definition data directory")
+		return nil, errors.NotValidf("Missing path for definition data directory")
 	}
 
 	if cfg.PathLive == "" {
-		return errors.NotValidf("Missing path for live data directory")
+		return nil, errors.NotValidf("Missing path for live data directory")
 	}
 
 	err = w.LoadDefinitions(cfg.PathDefs)
 	if err != nil {
-		return errors.Annotate(err, "pathDefs error")
+		return nil, errors.Annotate(err, "pathDefs error")
 	}
 
 	err = w.LoadRegions(cfg.PathLive)
 	if err != nil {
-		return errors.Annotate(err, "pathLive error")
+		return nil, errors.Annotate(err, "pathLive error")
 	}
 
 	err = w.Check()
 	if err != nil {
-		return errors.Annotate(err, "inconsistent world")
+		return nil, errors.Annotate(err, "inconsistent world")
 	}
 
 	var eventEndpoint string
 	eventEndpoint, err = utils.DefaultDiscovery.Event()
 	if err != nil {
-		return errors.Annotatef(err, "Invalid Event service configured [%s]", eventEndpoint)
+		return nil, errors.Annotatef(err, "Invalid Event service configured [%s]", eventEndpoint)
 	}
 	var cnxEvent *grpc.ClientConn
 	cnxEvent, err = grpc.Dial(eventEndpoint, grpc.WithInsecure())
 	if err != nil {
-		return errors.Annotate(err, "dial error")
+		return nil, errors.Annotate(err, "dial error")
 	}
 	defer cnxEvent.Close()
 	w.SetNotifier(&EventStore{cnx: cnxEvent})
 
-	grpc_health_v1.RegisterHealthServer(grpcSrv, &regionApp{w: w, cfg: cfg})
+	return &regionApp{w: w, cfg: cfg}, nil
+}
+
+// Register pugs the internal gRPC routes into the given server
+func (app *regionApp) Register(grpcSrv *grpc.Server) error {
+	proto.RegisterCityServer(grpcSrv, &cityApp{app: app})
+	proto.RegisterDefinitionsServer(grpcSrv, &defsApp{app: app})
+	proto.RegisterAdminServer(grpcSrv, &adminApp{app: app})
+	proto.RegisterArmyServer(grpcSrv, &armyApp{app: app})
 	grpc_prometheus.Register(grpcSrv)
-	proto.RegisterCityServer(grpcSrv, &cityApp{regionApp{w: w, cfg: cfg}})
-	proto.RegisterDefinitionsServer(grpcSrv, &defsApp{regionApp{w: w, cfg: cfg}})
-	proto.RegisterAdminServer(grpcSrv, &adminApp{regionApp{w: w, cfg: cfg}})
-	proto.RegisterArmyServer(grpcSrv, &armyApp{regionApp{w: w, cfg: cfg}})
 
 	utils.Logger.Info().
-		Str("defs", cfg.PathDefs).
-		Str("live", cfg.PathLive).
+		Str("defs", app.cfg.PathDefs).
+		Str("live", app.cfg.PathLive).
 		Msg("starting")
 
 	return nil
+}
+
+// Make the RegionApp monnitorable by the server stub
+func (app *regionApp) Check(ctx context.Context) grpc_health_v1.HealthCheckResponse_ServingStatus {
+	return grpc_health_v1.HealthCheckResponse_SERVING
 }
 
 func (app *regionApp) _worldLock(mode rune, action func() error) error {

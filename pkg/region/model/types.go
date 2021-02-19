@@ -158,6 +158,39 @@ type CityStock struct {
 	Usage Resources
 }
 
+// CityActivityCounters gathers counters that depict the activity of the City
+// and that are continuously updated by the regions service.
+type CityActivityCounters struct {
+	ResourceProduced Resources
+	ResourceSent     Resources
+	ResourceReceived Resources
+	TaxSent          Resources
+	TaxReceived      Resources
+
+	Moves        uint64
+	FightsJoined uint64
+	FightsLeft   uint64
+	FightsWon    uint64
+	FightsLost   uint64
+	UnitsRaised  uint64
+	UnitsLost    uint64
+}
+
+// CityStats gathers gauges and counters that give a hint on the activity of
+// a City. The counters, that are centralized in the Activity field, are
+// extracted as-is from a struct that is continuously updated while the
+// gauges are mostly computed.
+type CityStats struct {
+	// Gauges
+	StockCapacity  Resources
+	StockUsage     Resources
+	ScoreBuildings uint64
+	ScoreKnowledge uint64
+	ScoreMilitary  uint64
+	// Counters
+	Activity CityActivityCounters
+}
+
 type KnowledgeType struct {
 	ID    uint64 `json:"Id"`
 	Name  string `json:"Name"`
@@ -354,6 +387,9 @@ type City struct {
 
 	// Artifacts currently placed in the City.
 	Artifacts SetOfArtifacts
+
+	// Stats has a self-explanatory name
+	Counters CityActivityCounters
 
 	// PRIVATE
 	// Pointer to the current Overlord of the current City

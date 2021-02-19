@@ -1,0 +1,102 @@
+#!/bin/bash
+# Copyright (c) 2018-2021 Contributors as noted in the AUTHORS file
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+set -euxo pipefail
+
+THIS_FILE=$(realpath "${BASH_SOURCE[0]}")
+THIS_DIR=$(dirname "${THIS_FILE}")
+REPO=$(readlink -e "${THIS_DIR}/..")
+
+function finish() {
+	set +e
+	kill %4 %3 %2 %1
+	wait
+}
+
+function config() {
+	D=$(mktemp -p '' -d hege-sandbox-XXXXXXXX)
+	cd "$D"
+
+	if [[ $# -gt 0 ]] ; then
+		BASE="$1"
+	else
+		BASE="$D"
+	fi
+
+	mkdir -p \
+		"$D/etc/hegemonie/pki" \
+		"$D/etc/hegemonie/maps" \
+		"$D/var/lib/hegemonie/events" \
+		"$D/var/lib/hegemonie/regions" \
+  	"$D/etc/prometheus" \
+  	"$D/etc/haproxy"
+
+	# Generate a self-signed certificate, one certificate for the (inner) gRPC
+	# services and on certificate for the (outer) gateways
+	"$REPO/bin/hege-pki" ca "$D/etc/hegemonie/pki"
+	for t in inner outer ; do
+		"$REPO/bin/hege-pki" srv "$D/etc/hegemonie/pki" "$t"
+	done
+
+	# Prepare the configuration for each gRPC service
+	cp -p  "$REPO/etc/hegemonie/client.yml" "$D/etc/hegemonie/"
+	sed "s;@@BASE@@;$BASE;" < "$REPO/etc/hegemonie/server-all-in-one.yml" > "$D/etc/hegemonie/server.yml"
+
+	# Generate the sample data:
+	# - sample maps destined to the gRPC maps service
+	# - sample world definitions destined to the gRPC regions service
+	"$REPO/bin/hege-map-transform.sh" "$REPO/docs/maps/" "$D/etc/hegemonie/maps"
+	cp -rp "$REPO/docs/definitions/hegeIV" "$D/etc/hegemonie/definitions"
+
+	# Generate a sample configuration for the Proxy
+	sed "s;@@BASE@@;$BASE;" < "$REPO/etc/haproxy/haproxy-all-in-one.cfg" > "$D/etc/haproxy/haproxy.cfg"
+
+	echo "$D"
+}
+
+function run() {
+	[[ $# -ge 1 ]]
+	[[ -n "$1" ]]
+	D=$1
+	[[ -d "$D" ]]
+	cd "$D"
+
+	trap finish SIGTERM SIGINT EXIT
+
+	# Start a single all-in-oone service 
+	hege server -f "$D/etc/hegemonie/server.yml" all &
+
+	# A quick check to see if all the services answer
+	hege client -f "$D/etc/hegemonie/client.yml" maps list
+
+	# Now start the proxy 
+	haproxy -- "$D/etc/haproxy/haproxy.cfg" &
+
+	wait
+}
+
+function usage() {
+	set +x
+	echo "Usage: $0 [config|run|help]"
+	echo "  $0 help                : display this help section"
+	echo "  $0 config              : generate a sandbox config. and dump its path on stdout"
+	echo "  $0 run PATH_TO_SANDBOX : run a sandbox env. configured in the given directory"
+	echo "  $0                     : shortcut to generate a config and run it"
+	echo "                           (a.k.a \"$0 run \$($0 config)\")"
+	set -x
+}
+
+if [[ $# -eq 0 ]] ; then
+	exec $0 run $($0 config)
+else
+	action=$1 ; shift
+	case "$action" in
+		help) usage ; exit 0 ;;
+		config) config $@ ;;
+		run) run $@ ;;
+	esac
+fi
+
