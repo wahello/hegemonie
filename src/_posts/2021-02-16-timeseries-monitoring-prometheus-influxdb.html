@@ -1,7 +1,7 @@
 ---
 Title: Monitoring of timeseries or How to lose time.
 Author: jfsmig
-Date: 2021-02-16
+Date: 2021-02-21
 Keywords: |
   hegemonie, game engine, online rpg, stragey game, diplomacy game, game master,
   monitoring, timeseries, timeseries database, Prometheus, InfluxDB
@@ -27,8 +27,9 @@ Description: |
   monitor, then just configure that in the collector.
 </p>
 <p>
-  Scaling is not an issue for me, in the context of Hegemonie. First thing
+  Scaling is not an issue for me in the context of Hegemonie. First thing
   first, I would manage that topic when foreseeing a scalability issue.
+  Let's buid a MVP first.
 </p>
 <p>
   Unfortunately, in my case I monitor neither system metrics nor service
@@ -55,7 +56,7 @@ Description: |
   that would convert region stats into Prometheus compliant stats.
 </p>
 
-<h3>InfluxDB: What's wrong with it?!</h3>
+<h3>InfluxDB v2.0.X: What's wrong with it?!</h3>
 <p>
   Famous but less than Prometheus, managed by a company, non-compete
   Licensing model, Push-oriented.
@@ -107,9 +108,21 @@ Description: |
   not be that complicated!
 </p>
 
-<h3>Next Step... Warp10? Back to Prometheus?</h3>
+<h3>InfluxDB v.1.8.4: Simple, Straight To The Point</h3>
 <p>
-  I still need something to collect my timeseries. The in-game monitoring is
-  a feature I want to propose in my game engine.
+  Famous but less than Prometheus, managed by a company, non-compete
+  Licensing model, Push-oriented.
 </p>
-
+<p>
+  I don't know what happened to InfluxData when they designed InfluxDB v2.
+  There is a huge gap in the unboxing experience! In 2.0.X *noting* worked,
+  in 1.8.X it just worked well. I had the feeling of a mature tool. The docs
+  were clear, the tooling just as good as expected. And the magic happened,
+  it just worked!
+</p>
+<p>
+  As I said, the poor experience with InfluxDB 2.0.4 cannot be anything else
+  than a transitional state. InfluxData promises that using the
+  v2 client makes the code interoperable with InfluxDB 1.8.x and 2.0.x.
+  It makes me confident in the stability of my choice.
+</p>
