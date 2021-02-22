@@ -1,3 +1,7 @@
 <%include file="header"/>
+<article>
+<h1>${title}</h1>
+<time datetime="${date}"></time>
 ${self.body()}
+</article>
 <%include file="footer"/>

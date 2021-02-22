@@ -1,6 +1,7 @@
 body { background-color: #FFFFFF; margin: 10px; padding: 0px; }
 
-* { font-family: Helvetica, Tahoma, sans-serif; color: black; }
+/* * { font-family: Helvetica, Tahoma, sans-serif; color: black; }*/
+* { font-family: 'Montserrat', sans-serif; color: black; }
 a { text-decoration: none; color: mediumvioletred; }
 
 nav a { padding: 0px; font-weight: bold; }
@@ -12,9 +13,10 @@ aside p time { display: inline; font-style: italic; }
 aside p time a { font-size: inherit;  }
 
 header { margin: 10px 0px 10px 0px; }
-header h1 { color: deeppink; }
-header h2 { color: darkorange; }
-header h1, header h2 {
+header div { font-weight: bold; }
+header .title { color: deeppink; }
+header .banner { color: darkorange; }
+header .title, header .banner {
 	padding-top: 0px;
 	padding-bottom: 0px;
 	margin-top: 0px;
@@ -22,7 +24,7 @@ header h1, header h2 {
 }
 
 main article { background-color: rgba(255, 255, 255, 0.7); }
-main article h1 { display: none; }
+main article h1 { color: black; margin: 30px 0px 5px 0px; }
 main article h2 { color: black; margin: 30px 0px 5px 0px; }
 main article h3 { color: black; margin: 25px 0px 5px 0px; }
 main article time { font-style: italic; }
@@ -32,8 +34,9 @@ main article time a { font-size: inherit;  }
 /* FONTS */
 @media all {
 	@media (min-width: 2600px) {
-		header h1 { font-size: 80px; }
-		header h2 { font-size: 36px; }
+		header .title { font-size: 80px; }
+		header .banner { font-size: 36px; }
+		main article h1 { font-size: 36px; }
 		main article h2 { font-size: 24px; }
 		main article h3 { font-size: 20px; }
 		nav a   { font-size: 18px; }
@@ -47,10 +50,11 @@ main article time a { font-size: inherit;  }
 	}
 
 	@media (max-width: 2600px) {
-		header h1 { font-size: 80px; }
-		header h2 { font-size: 36px; }
-		main article h2 { font-size: 36px; }
-		main article h3 { font-size: 28px; }
+		header .title { font-size: 80px; }
+		header .banner { font-size: 36px; }
+		main article h1 { font-size: 36px; }
+		main article h2 { font-size: 24px; }
+		main article h3 { font-size: 20px; }
 		nav a   { font-size: 24px; }
 		aside a { font-size: 24px; }
 		aside p         { font-size: 20px; }

@@ -10,7 +10,7 @@ Description: |
 ---
 <%inherit file="blog"/>
 
-<h3>API First!</h3>
+<h2>API First!</h2>
 <p>
   Tens of years of evolution in IT teach us that the boundaries and the
   interactions between the parts of a system are a key part of the
@@ -26,7 +26,7 @@ Description: |
   clean API with the proper instrumentation to secure and observe it.
 </p>
 
-<h3>Micro-services architecture</h3>
+<h2>Micro-services architecture</h2>
 <p>
   My personal conviction leads me to split the system into isolated services (where
   a "service" stands for a set of network processes serving its API). Despite the
@@ -56,7 +56,7 @@ Description: |
   </li>
 </ul>
 
-<h3>Local Logging</h3>
+<h2>Local Logging</h2>
 <p>
   Should we centralize the logs? No.
 </p>
@@ -73,7 +73,7 @@ Description: |
   But no centralization. Just a local dump, 2 or 3 days retention, and log rotation.
 </p>
 
-<h3 id="observability">Observability at the core</h3>
+<h2 id="observability">Observability at the core</h2>
 <p>
   The fine-grained observability of the execution of the RPC calls is allowed by
   ${link("https://opentelemetry.io","OpenTelemetry")}. Traces are generated in a
@@ -81,7 +81,7 @@ Description: |
   installation with its own Prometheus storage and a dashboard.
 </p>
 
-<h3>Best-in-class Authorization &amp; Authentication</h3>
+<h2>Best-in-class Authorization &amp; Authentication</h2>
 <p>
   The ${link("https://www.ory.sh","ORY")} suite is used for the AAA purpose.
   At the gate, a ${link("https://haproxy.org","HAProxy")} enforces the security policy
@@ -93,7 +93,7 @@ Description: |
   ${link("https://jwt.io","JSON Web Tokens")} for each RPC.
 </p>
 
-<h3>Monitoring</h3>
+<h2>Monitoring</h2>
 <p>
   The monitoring of the platform is achieved with
   ${link("https://prometheus.io","Prometheus")}. A set of exporters is in place for

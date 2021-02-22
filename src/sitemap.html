@@ -6,22 +6,16 @@ Description: |
 sitemap_frequency: weekly
 ---
 <%inherit file="main"/>
+<h2>Landing Pages</h2>
+<ul>
+  % for k, m, _ in pages.site():
+  <li>${anchor(m['url'],k)}</li>
+  % endfor
+</ul>
 
-<article>
-  <h2>Sitemap</h2>
-
-  <h3>Static Pages</h3>
-  <ul>
-    % for k, m, _ in pages.site():
-    <li>${anchor(m['url'],k)}</li>
-    % endfor
-  </ul>
-
-  <h3>Blog Articles</h3>
-  <ul>
-    % for k, m, _ in pages.blog():
-    <li>${anchor(m['url'],k)}</li>
-    % endfor
-  </ul>
-
-</article>
+<h2>Blog Articles</h2>
+<ul>
+  % for k, m, _ in pages.blog():
+  <li>${anchor(m['url'],k)}</li>
+  % endfor
+</ul>

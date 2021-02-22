@@ -8,57 +8,54 @@ Description: |
   Tens of years of accumulated experience.
 ---
 <%inherit file="main"/>
-<article>
 
-	<h2>Who is behind Hegemonie?</h2>
+<h2>Who is behind Hegemonie?</h2>
 % for nick in sorted(people.keys()):
 <%
 hr = people[nick]
 meta, data = hr
 %>
-  <div itemscope="" itemtype="http://schema.org/Person" id="${nick}">
-    % if 'twitter' in meta:
-    <link itemprop="sameAs" href="https://twitter.com/${meta['twitter']}"/>
-    % endif
-    % if 'linkedin' in meta:
-    <link itemprop="sameAs" href="https://www.linkedin.com/in/${meta['linkedin']}/"/>
+<div itemscope="" itemtype="http://schema.org/Person" id="${nick}">
+  % if 'twitter' in meta:
+  <link itemprop="sameAs" href="https://twitter.com/${meta['twitter']}"/>
+  % endif
+  % if 'linkedin' in meta:
+  <link itemprop="sameAs" href="https://www.linkedin.com/in/${meta['linkedin']}/"/>
+  % endif
+  % if 'github' in meta:
+  <link itemprop="sameAs" href="https://github.com/${meta['github']}/"/>
+  % endif
+
+  <h3 itemprop="name">${meta['name']}</h3>
+  ${data}
+
+  % if 'roles' in meta and len(meta['roles']):
+  <p>
+    Known to be
+    % for role in meta['roles']:
+    ${role['title']} @${link(role['url'],role['org'])},
+    % endfor
+    etc.
+  </p>
+  % endif
+
+  <p>
+    Get in touch:
+    % if 'email' in meta:
+    ${link("mailto:"+meta['email'],"e-mail")}
     % endif
     % if 'github' in meta:
-    <link itemprop="sameAs" href="https://github.com/${meta['github']}/"/>
+    - ${link("https://github.com/"+meta['github'],"GitHub")}
     % endif
-
-    <h3 itemprop="name">${meta['name']}</h3>
-    ${data}
-
-    % if 'roles' in meta and len(meta['roles']):
-    <p>
-      Known to be
-      % for role in meta['roles']:
-      ${role['title']} @${link(role['url'],role['org'])},
-      % endfor
-      etc.
-    </p>
+    % if 'twitter' in meta:
+    - ${link("https://twitter.com/"+meta['twitter'],"Twitter")}
     % endif
-
-    <p>
-      Get in touch:
-      % if 'email' in meta:
-      ${link("mailto:"+meta['email'],"e-mail")}
-      % endif
-      % if 'github' in meta:
-      - ${link("https://github.com/"+meta['github'],"GitHub")}
-      % endif
-      % if 'twitter' in meta:
-      - ${link("https://twitter.com/"+meta['twitter'],"Twitter")}
-      % endif
-      % if 'linkedin' in meta:
-      - ${link("https://www.linkedin.com/in/"+meta['linkedin'],"LinkedIn")}
-      % endif
-      % if 'about' in meta:
-      - ${link("https://about.me/"+meta['about'],"About.Me")}
-      % endif
-    </p>
-  </div>
+    % if 'linkedin' in meta:
+    - ${link("https://www.linkedin.com/in/"+meta['linkedin'],"LinkedIn")}
+    % endif
+    % if 'about' in meta:
+    - ${link("https://about.me/"+meta['about'],"About.Me")}
+    % endif
+  </p>
+</div>
 % endfor
-</article>
-
