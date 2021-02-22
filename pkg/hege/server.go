@@ -278,7 +278,7 @@ func (srv *srvCommons) wrapPreRun(srvtype string) func(*cobra.Command, []string)
 		if err != nil {
 			return errors.Annotate(err, "invalid configuration")
 		}
-		utils.Logger.Info().RawJSON("srv", dumps(srv)).Msg("configuration")
+		utils.Logger.Info().RawJSON("srv", utils.JSON2Buf(srv)).Msg("configuration")
 
 		utils.OverrideLogID("hege," + srv.ServiceType)
 		utils.ApplyLogModifiers()

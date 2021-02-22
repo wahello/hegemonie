@@ -5,7 +5,9 @@
 
 package region
 
-import "github.com/juju/errors"
+import (
+	"github.com/juju/errors"
+)
 
 // WLock acquires an exclusive ("writer") lock on the current world
 // The request for a writer's lock has the priority on any equest for a reader's lock.
@@ -23,13 +25,29 @@ func (w *World) RLock() { w.rw.RLock() }
 // RUnlock releases a shared("reader") lock on the current world
 func (w *World) RUnlock() { w.rw.RUnlock() }
 
-// SetNotifier changes the event notifier associated with the current World.
-// That Notifier is user for inègame notifications, to collect a per-Character log.
+// NewWorld instantiates an empty World, free of any definition
+func NewWorld() (*World, error) {
+	return &World{
+		notifier: LogEvent(&noEvt{}),
+		mapView:  &noopMapClient{},
+		Regions:  make(SetOfRegions, 0),
+		Definitions: DefinitionsBase{
+			Units:      make(SetOfUnitTypes, 0),
+			Buildings:  make(SetOfBuildingTypes, 0),
+			Knowledges: make(SetOfKnowledgeTypes, 0),
+		},
+	}, nil
+}
+
+// SetNotifier changes the event Notifier associated with the current World.
+// That Notifier is used for in-game notifications, to collect a per-Character log.
 func (w *World) SetNotifier(n Notifier) {
 	w.notifier = LogEvent(n)
 }
 
-func (w *World) SetMapClient(c MapView) {
+// SetMapClient changes the MapClient associated to the current World.
+// that MapClient will further be used for paths resolution before armies movements
+func (w *World) SetMapClient(c MapClient) {
 	// TODO(jfs): maybe wrap with a cache if perf is too poor
 	w.mapView = c
 }
@@ -40,6 +58,9 @@ type NamedCity struct {
 	ID   uint64
 }
 
+// CreateRegion instantiates and registers a Region into the current World.
+// There is no check that the map exists!
+// There is no check that the set of City exist on the map!
 func (w *World) CreateRegion(name, mapName string, cities []NamedCity) (*Region, error) {
 	if w.Regions.Has(name) {
 		return nil, errors.AlreadyExistsf("region found with id [%s]", name)

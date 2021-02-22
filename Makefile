@@ -10,6 +10,7 @@ COV_OUT=coverage.txt
 
 AUTO=
 # gen-set
+AUTO+= pkg/gen-set/genset_auto_test.go
 AUTO+= pkg/map/graph/map_auto.go
 AUTO+= pkg/region/model/world_auto.go
 # grpc
@@ -26,21 +27,25 @@ default: hege
 
 all: prepare hege
 
-gen-set:
+gen-set: pkg/gen-set/gen-set.go
 	$(GO) install $(BASE)/pkg/gen-set
 
 hege: gen-set
 	$(GO) install $(BASE)/pkg/hege
 
-.PHONY: all default prepare clean clean-auto clean-coverage test bench fmt docker try gen-set hege
+.PHONY: all default prepare clean clean-auto clean-coverage test bench fmt docker try hege
 
 prepare: $(AUTO)
 
-pkg/map/graph/map_auto.go: pkg/map/graph/map.go pkg/gen-set/gen-set.go
+pkg/gen-set/genset_auto_test.go: pkg/gen-set/genset_test.go gen-set
+	-rm $@
+	$(GO) generate github.com/jfsmig/hegemonie/pkg/gen-set
+
+pkg/map/graph/map_auto.go: pkg/map/graph/map.go gen-set
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/map/graph
 
-pkg/region/model/world_auto.go: pkg/region/model/types.go pkg/gen-set/gen-set.go
+pkg/region/model/world_auto.go: pkg/region/model/types.go gen-set
 	-rm $@
 	$(GO) generate github.com/jfsmig/hegemonie/pkg/region/model
 

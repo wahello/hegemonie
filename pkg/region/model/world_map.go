@@ -13,17 +13,25 @@ import (
 )
 
 // Map actions that are exposed to a World
-type MapView interface {
+type MapClient interface {
 	// Step resolves the next step of the from src to dst
 	// the context is typically inheritated from the original request context.
 	Step(ctx context.Context, mapName string, src, dst uint64) (uint64, error)
 }
 
-type directPathResolver struct{}
+type noopMapClient struct{}
 
-func newDirectPathResolver(_ context.Context) (MapView, error) {
+func (nmc *noopMapClient) Step(ctx context.Context, mapName string, src, dst uint64) (uint64, error) {
+	return 0, errors.NotImplementedf("NYI: noop Map client")
+}
+
+// NewDirectMapClient instantiates a Map client tat directly resolves the paths via the Map service
+// returned by the utils.DefaultDiscovery.
+func NewDirectMapClient(_ context.Context) (MapClient, error) {
 	return &directPathResolver{}, nil
 }
+
+type directPathResolver struct{}
 
 func (r *directPathResolver) Step(ctx context.Context, mapName string, src, dst uint64) (uint64, error) {
 	// TODO(jfs): keep a cache of the map connection

@@ -34,14 +34,6 @@ func (reg *Region) CityGet(id uint64) *City {
 	return reg.Cities.Get(id)
 }
 
-func (reg *Region) CityGetAt(loc uint64) *City {
-	return reg.CityGet(loc)
-}
-
-func (reg *Region) CityCheck(id uint64) bool {
-	return reg.CityGet(id) != nil
-}
-
 func (reg *Region) CityCreateModel(loc uint64, model *City) (*City, error) {
 	if reg.Cities.Has(loc) {
 		return nil, errors.AlreadyExistsf("city found at [%v]", loc)

@@ -22,7 +22,7 @@ src/
 
 # Auto-generated files
 **/*.pb.go
-**/*_auto.go
+**/*_auto*.go
 
 **/CMakeCache.txt
 **/CMakeFiles

@@ -33,7 +33,7 @@ var none = &proto.None{}
 
 // Application implements the expectations of the application backend
 func (cfg Config) Application(ctx context.Context) (utils.RegisterableMonitorable, error) {
-	w, err := region.NewWorld(ctx)
+	w, err := region.NewWorld()
 	if err != nil {
 		return nil, errors.Annotate(err, "")
 	}
@@ -61,18 +61,19 @@ func (cfg Config) Application(ctx context.Context) (utils.RegisterableMonitorabl
 		return nil, errors.Annotate(err, "inconsistent world")
 	}
 
-	var eventEndpoint string
-	eventEndpoint, err = utils.DefaultDiscovery.Event()
+	var notifier region.Notifier
+	notifier, err = NewEventStoreClient(ctx)
 	if err != nil {
-		return nil, errors.Annotatef(err, "Invalid Event service configured [%s]", eventEndpoint)
+		return nil, errors.Annotate(err, "event store client")
 	}
-	var cnxEvent *grpc.ClientConn
-	cnxEvent, err = grpc.Dial(eventEndpoint, grpc.WithInsecure())
+	w.SetNotifier(notifier)
+
+	var mc region.MapClient
+	mc, err = region.NewDirectMapClient(ctx)
 	if err != nil {
-		return nil, errors.Annotate(err, "dial error")
+		return nil, errors.Annotate(err, "map client")
 	}
-	defer cnxEvent.Close()
-	w.SetNotifier(&EventStore{cnx: cnxEvent})
+	w.SetMapClient(mc)
 
 	return &regionApp{w: w, cfg: cfg}, nil
 }

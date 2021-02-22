@@ -97,10 +97,9 @@ func (c *City) GetProduction(w *World) *CityProduction {
 		p.Knowledge.ComposeWith(t.Prod)
 	}
 
-	p.Base = c.Production
-	p.Actual = c.Production
-	p.Actual.Apply(p.Buildings)
-	p.Actual.Apply(p.Knowledge)
+	p.Base = c.Production.Copy()
+	p.Actual = c.Production.Copy()
+	p.Actual.Apply(p.Buildings, p.Knowledge)
 	return p
 }
 
@@ -119,11 +118,10 @@ func (c *City) GetStock(w *World) *CityStock {
 		p.Buildings.ComposeWith(t.Stock)
 	}
 
-	p.Base = c.StockCapacity
-	p.Actual = c.StockCapacity
-	p.Actual.Apply(p.Buildings)
-	p.Actual.Apply(p.Knowledge)
-	p.Usage = c.Stock
+	p.Base = c.StockCapacity.Copy()
+	p.Actual = c.StockCapacity.Copy()
+	p.Actual.Apply(p.Buildings, p.Knowledge)
+	p.Usage = c.Stock.Copy()
 	return p
 }
 
@@ -210,7 +208,7 @@ func (c *City) ProduceLocally(w *Region, p *CityProduction) Resources {
 
 func (c *City) Produce(_ context.Context, w *Region) {
 	// Pre-compute the modified values of Stock and Production.
-	// We just reuse a functon that already does it (despite it does more)
+	// We just reuse a function that already does it (despite it does more)
 	prod0 := c.GetProduction(w.world)
 	stock := c.GetStock(w.world)
 
@@ -218,29 +216,27 @@ func (c *City) Produce(_ context.Context, w *Region) {
 	prod := c.ProduceLocally(w, prod0)
 	c.Stock.Add(prod)
 
-	if c.Overlord != 0 {
-		if c.pOverlord != nil {
-			// Compute the expected Tax based on the local production
-			var tax Resources = prod
-			tax.Multiply(c.TaxRate)
-			// Ensure the tax isn't superior to the actual production (to cope with
-			// invalid tax rates)
-			tax.TrimTo(c.Stock)
-			// Then preempt the tax from the stock
-			c.Stock.Remove(tax)
+	if c.Overlord != 0 && c.pOverlord != nil {
+		// Compute the expected Tax based on the local production
+		var tax Resources = prod
+		tax.Multiply(c.TaxRate)
+		// Ensure the tax isn't superior to the actual production (to cope with
+		// invalid tax rates)
+		tax.TrimTo(c.Stock)
+		// Then preempt the tax from the stock
+		c.Stock.Remove(tax)
 
-			// TODO(jfs): check for potential shortage
-			//  shortage := c.Tax.GreaterThan(tax)
+		// TODO(jfs): check for potential shortage
+		//  shortage := c.Tax.GreaterThan(tax)
 
-			if w.world.Config.InstantTransfers {
-				c.pOverlord.Stock.Add(tax)
-			} else {
-				c.SendResourcesTo(w, c.pOverlord, tax)
-			}
-
-			// FIXME(jfs): notify overlord
-			// FIXME(jfs): notify c
+		if w.world.Config.InstantTransfers {
+			c.pOverlord.Stock.Add(tax)
+		} else {
+			c.SendResourcesTo(w, c.pOverlord, tax)
 		}
+
+		// FIXME(jfs): notify overlord
+		// FIXME(jfs): notify c
 	}
 
 	// ATM the stock maybe still stores resources. We use them to make the assets evolve.
@@ -254,8 +250,10 @@ func (c *City) Produce(_ context.Context, w *Region) {
 				c.Stock.Remove(ut.Cost)
 				u.Ticks--
 				if u.Ticks <= 0 {
-					// FIXME(jfs): Notify the City
+					// FIXME(jfs): Notify the City that a Unit is OK
 				}
+			} else {
+				// FIXME(jfs): Notify the maintenance fault to the City
 			}
 		}
 	}
@@ -474,6 +472,19 @@ func (c *City) ownedKnowledgeTypes(reg *Region) SetOfKnowledgeTypes {
 	return out
 }
 
+// StartBuilding instantiates a new Building with the given BuildingType definition,
+// and the construction ticks to the maximum.
+// CAUTION: there is no resources spent in this method, there is no check performed
+// on the constraints.
+func (c *City) StartBuilding(t *BuildingType) *Building {
+	id := uuid.New().String()
+	b := &Building{ID: id, Type: t.ID, Ticks: t.Ticks}
+	c.Buildings.Add(b)
+	return b
+}
+
+// Build forwards the call to StartBuilding if all the conditions are met, after the initial fee
+// given in the BuildingType
 func (c *City) Build(w *Region, bID uint64) (string, error) {
 	t := w.world.BuildingTypeGet(bID)
 	if t == nil {
@@ -493,9 +504,8 @@ func (c *City) Build(w *Region, bID uint64) (string, error) {
 		return "", errors.Forbiddenf("insufficient resources")
 	}
 
-	id := uuid.New().String()
-	c.Buildings.Add(&Building{ID: id, Type: bID, Ticks: t.Ticks})
-	return id, nil
+	c.Stock.Remove(t.Cost0)
+	return c.StartBuilding(t).ID, nil
 }
 
 // Lieges returns a list of all the Lieges of the current City.

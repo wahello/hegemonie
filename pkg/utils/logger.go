@@ -6,6 +6,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/juju/errors"
@@ -143,6 +144,23 @@ func DumpJSON(x interface{}) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", " ")
 	return encoder.Encode(x)
+}
+
+// JSON2Str generates a string with the JSON representation of the given object.
+// No indentation, everything on one line. Errors ignored.
+func JSON2Str(x interface{}) string {
+	sb := strings.Builder{}
+	encoder := json.NewEncoder(&sb)
+	_ = encoder.Encode(x)
+	return sb.String()
+}
+
+// JSON2Buf generates the JSON-encoded form of the given object, stored in the returned byte array.
+// No indentation, no CRLF
+func JSON2Buf(obj interface{}) []byte {
+	buf := bytes.Buffer{}
+	json.NewEncoder(&buf).Encode(obj)
+	return buf.Bytes()
 }
 
 // StatusJSON encodes a standard error structure and then forwards it to DumpJSON

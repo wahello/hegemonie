@@ -51,10 +51,6 @@ type noEvtArmy struct{}
 type noEvtKnowledge struct{}
 type noEvtUnits struct{}
 
-func LogEvent(n Notifier) Notifier {
-	return &eventLogger{sub: n}
-}
-
 func (n *noEvt) Army(to *City) EventArmy           { return &noEvtArmy{} }
 func (n *noEvt) Knowledge(to *City) EventKnowledge { return &noEvtKnowledge{} }
 func (n *noEvt) Units(to *City) EventUnits         { return &noEvtUnits{} }
@@ -71,6 +67,10 @@ func (ctx *noEvtKnowledge) Send()                                         {}
 func (ctx *noEvtUnits) Item(c *City, k *UnitType) EventUnits { return ctx }
 func (ctx *noEvtUnits) Step(current, max uint64) EventUnits  { return ctx }
 func (ctx *noEvtUnits) Send()                                {}
+
+func LogEvent(n Notifier) Notifier {
+	return &eventLogger{sub: n}
+}
 
 type eventLogger struct {
 	sub Notifier

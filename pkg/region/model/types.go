@@ -57,7 +57,7 @@ type World struct {
 	notifier Notifier
 
 	// Interface to the map
-	mapView MapView
+	mapView MapClient
 
 	rw sync.RWMutex
 }

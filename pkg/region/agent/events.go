@@ -12,11 +12,30 @@ import (
 	"github.com/google/uuid"
 	hegemonie_rpevent_proto "github.com/jfsmig/hegemonie/pkg/event/proto"
 	"github.com/jfsmig/hegemonie/pkg/region/model"
+	"github.com/jfsmig/hegemonie/pkg/utils"
+	"github.com/juju/errors"
 	"google.golang.org/grpc"
 )
 
 type EventStore struct {
 	cnx *grpc.ClientConn
+}
+
+// NewEventStoreClient instantiates an event notifier that targets the events service
+// returned by utils.DefaultDiscovery
+func NewEventStoreClient(ctx context.Context) (region.Notifier, error) {
+	eventEndpoint, err := utils.DefaultDiscovery.Event()
+	if err != nil {
+		return nil, errors.Annotate(err, "discovery error")
+	}
+
+	var cnxEvent *grpc.ClientConn
+	cnxEvent, err = utils.Dial(ctx, eventEndpoint)
+	if err != nil {
+		return nil, errors.Annotate(err, "dial error")
+	}
+
+	return &EventStore{cnx: cnxEvent}, nil
 }
 
 type EventArmy struct {

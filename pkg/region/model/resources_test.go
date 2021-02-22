@@ -98,4 +98,27 @@ func TestModifiers(t *testing.T) {
 			t.Fatal()
 		}
 	}
+
+	for _, op := range []ResourceModifiers{
+		ResourceModifierUniform(5.0, 0.0),
+		ResourceModifierUniform(1.0, 7.0),
+	} {
+		if ResourceModifierNoop().Equals(op) {
+			t.Fatal()
+		}
+	}
+}
+
+func TestCompose(t *testing.T) {
+	mod := ResourceModifierNoop()
+	mod.ComposeWith(ResourceModifierNoop())
+	if !mod.Equals(ResourceModifierNoop()) {
+		t.Fatal()
+	}
+
+	mod = ResourceModifierUniform(1.0, 1.0)
+	mod.ComposeWith(mod)
+	if !mod.Equals(ResourceModifierUniform(1.0, 2.0)) {
+		t.Fatal()
+	}
 }

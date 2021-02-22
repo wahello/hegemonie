@@ -8,7 +8,6 @@ package region
 import (
 	"encoding/json"
 	"github.com/juju/errors"
-	"golang.org/x/net/context"
 	"os"
 	"path/filepath"
 	"sort"
@@ -94,23 +93,6 @@ func (defs *DefinitionsBase) load(path string) (err error) {
 		sort.Sort(&defs.Units)
 	}
 	return err
-}
-
-func NewWorld(ctx context.Context) (*World, error) {
-	mv, err := newDirectPathResolver(ctx)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	return &World{
-		notifier: LogEvent(&noEvt{}),
-		mapView:  mv,
-		Regions:  make(SetOfRegions, 0),
-		Definitions: DefinitionsBase{
-			Units:      make(SetOfUnitTypes, 0),
-			Buildings:  make(SetOfBuildingTypes, 0),
-			Knowledges: make(SetOfKnowledgeTypes, 0),
-		},
-	}, nil
 }
 
 func (w *World) Check() error {

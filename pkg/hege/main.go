@@ -6,9 +6,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/jfsmig/hegemonie/pkg/map/client"
 	"github.com/jfsmig/hegemonie/pkg/utils"
 	"github.com/juju/errors"
@@ -100,9 +98,3 @@ func toolsMap(_ context.Context) *cobra.Command {
 }
 
 func nonLeaf(_ *cobra.Command, _ []string) error { return errors.New("missing subcommand") }
-
-func dumps(obj interface{}) []byte {
-	buf := bytes.Buffer{}
-	json.NewEncoder(&buf).Encode(obj)
-	return buf.Bytes()
-}

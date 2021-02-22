@@ -32,10 +32,10 @@ func (r Resources) IsZero() bool {
 	return true
 }
 
-func (r Resources) GetRatio(nb float64) Resources {
-	var rc Resources = r
+func (r Resources) Copy() Resources {
+	var rc Resources
 	for i := 0; i < ResourceMax; i++ {
-		rc[i] = uint64(float64(rc[i]) * nb)
+		rc[i] = r[i]
 	}
 	return rc
 }
@@ -92,7 +92,7 @@ func (r *Resources) Multiply(rm ResourcesMultiplier) {
 func (r *Resources) Increment(ri ResourcesIncrement) {
 	for i := 0; i < ResourceMax; i++ {
 		post := r[i] + uint64(ri[i])
-		if post > r[i] {
+		if post < r[i] {
 			r[i] = 0
 		} else {
 			r[i] = post
@@ -100,9 +100,13 @@ func (r *Resources) Increment(ri ResourcesIncrement) {
 	}
 }
 
-func (r *Resources) Apply(rm ResourceModifiers) {
-	r.Multiply(rm.Mult)
-	r.Increment(rm.Plus)
+func (r *Resources) Apply(rm ...ResourceModifiers) {
+	resultant := ResourceModifierNoop()
+	for _, mod := range rm {
+		resultant.ComposeWith(mod)
+	}
+	r.Multiply(resultant.Mult)
+	r.Increment(resultant.Plus)
 }
 
 func (rm *ResourcesMultiplier) SetValue(v float64) {
@@ -141,6 +145,16 @@ func ResourceModifierUniform(mult float64, inc int64) ResourceModifiers {
 
 func ResourceModifierNoop() ResourceModifiers {
 	return ResourceModifierUniform(1.0, 0.0)
+}
+
+func (o0 ResourceModifiers) Equals(o1 ResourceModifiers) bool {
+	for i := 0; i < ResourceMax; i++ {
+		if o0.Plus[i] != o1.Plus[i] || o0.Mult[i] != o1.Mult[i] {
+			return false
+		}
+	}
+	return true
+
 }
 
 func (o0 *ResourceModifiers) ComposeWith(o1 ResourceModifiers) {

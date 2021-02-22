@@ -6,27 +6,8 @@
 package region
 
 import (
-	"sort"
 	"testing"
 )
-
-func TestSetOfBuildingType(t *testing.T) {
-	u2 := &BuildingType{ID: 2}
-	s := SetOfBuildingTypes{}
-	s.Add(&BuildingType{ID: 1})
-	s.Add(&BuildingType{ID: 3})
-	s.Add(u2)
-	s.Add(&BuildingType{ID: 4})
-	if len(s) != 4 {
-		t.Fatal()
-	}
-	if !sort.IsSorted(s) {
-		t.Fatal()
-	}
-	if u2 != s.Get(2) {
-		t.Fatal()
-	}
-}
 
 func testFrontier(t *testing.T, f []*BuildingType, nb int) {
 	if len(f) != nb {

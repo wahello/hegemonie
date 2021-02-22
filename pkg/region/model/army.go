@@ -38,7 +38,7 @@ func (a *Army) Move(ctx context.Context, r *Region) {
 		src := a.Cell
 		dst := cmd.Cell
 
-		pLocalCity := r.CityGetAt(a.Cell)
+		pLocalCity := r.CityGet(a.Cell)
 
 		nxt, err := w.mapView.Step(ctx, r.MapName, src, dst)
 		if err != nil || nxt == 0 {

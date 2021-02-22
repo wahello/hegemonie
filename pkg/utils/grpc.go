@@ -26,8 +26,9 @@ import (
 // has been established.
 type ActionFunc func(ctx context.Context, cli *grpc.ClientConn) error
 
-// Connect establishes a connection to the given service and then call the action.
-func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
+// Dial establishes a gRPC connection to the given endpoint using all the mandatory
+// options on the connection (security, behavior)
+func Dial(ctx context.Context, endpoint string) (*grpc.ClientConn, error) {
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -41,7 +42,7 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 		grpc_retry.WithPerRetryTimeout(1 * time.Second),
 	}
 
-	cnx, err := grpc.DialContext(ctx, endpoint,
+	return grpc.DialContext(ctx, endpoint,
 		grpc.WithTransportCredentials(credentials.NewTLS(config)),
 		grpc.WithUnaryInterceptor(
 			grpc_middleware.ChainUnaryClient(
@@ -54,6 +55,11 @@ func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
 				grpc_retry.StreamClientInterceptor(options...),
 			)),
 	)
+}
+
+// Connect establishes a connection to the given service and then call the action.
+func Connect(ctx context.Context, endpoint string, action ActionFunc) error {
+	cnx, err := Dial(ctx, endpoint)
 	if err != nil {
 		return errors.Trace(err)
 	}

@@ -132,7 +132,7 @@ func loadDiscovery(path string, must bool) error {
 		utils.DefaultDiscovery = sc
 	}
 
-	utils.Logger.Info().Str("path", path).RawJSON("cfg", dumps(config)).Msg("Loaded")
+	utils.Logger.Info().Str("path", path).RawJSON("cfg", utils.JSON2Buf(config)).Msg("Loaded")
 	return nil
 }
 

@@ -4,3 +4,5 @@ ignore:
   - "vendor/**"     # third-party code
   - "**/*.pb.go"    # grpc auto generated files
   - "**/*_auto.go"  # gen-set auto generated files
+fixes:
+  - "github.com/jfsmig/hegemonie/::"

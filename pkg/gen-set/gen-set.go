@@ -7,6 +7,7 @@ package main
 
 import (
 	"flag"
+	"github.com/juju/errors"
 	"log"
 	"os"
 	"strings"
@@ -25,14 +26,13 @@ var headerTemplate = `// Code generated : DO NOT EDIT.
 package {{.Package}}
 
 import (
-	"sort"
 	"github.com/juju/errors"
+	"math/rand"
+	"sort"
 )
-
 `
 
 var bodyTemplateCommon = `
-
 type {{.SetName}} []{{.ItemType}}
 
 func (s {{.SetName}}) CheckThenFail() {
@@ -51,30 +51,53 @@ func (s {{.SetName}}) Swap(i, j int) {
 
 func (s *{{.SetName}}) Add(a {{.ItemType}}) {
 	*s = append(*s, a)
-	if nb := len(*s); nb > 2 && !sort.IsSorted((*s)[nb-2:]) {
+	switch nb := len(*s); nb {
+	case 0:
+		panic("yet another attack of a solar eruption")
+	case 1:
+		return
+	case 2:
 		sort.Sort(s)
+	default:
+		if !sort.IsSorted((*s)[nb-2:]) {
+			sort.Sort(s)
+		}
+	}
+}
+
+func (s {{.SetName}}) Check() error {
+	if !sort.IsSorted(s) {
+		return errors.NotValidf("sorting (%v) %v", s.Len(), s)
+	}
+	if !s.areItemsUnique() {
+		return errors.NotValidf("unicity")
+	}
+	return nil
+}
+
+func (s *{{.SetName}}) testRandomVacuum() {
+	for s.Len() > 0 {
+		idx := rand.Intn(s.Len())
+		s.Remove((*s)[idx])
+		s.CheckThenFail()
 	}
 }
 `
 
 var bodyTemplate1 = `
-
 func (s {{.SetName}}) Less(i, j int) bool {
 	return s[i]{{.F0}} < s[j]{{.F0}}
 }
 
-func (s {{.SetName}}) Check() error {
-	if !sort.IsSorted(s) {	
-		return errors.NotValidf("unsorted")
-	}
+func (s {{.SetName}}) areItemsUnique() bool {
 	var lastId {{.T0}}
 	for _, a := range s {
 		if lastId == a{{.F0}} {
-			return errors.NotValidf("duplicate ID")
+			return false
 		}
 		lastId = a{{.F0}}
 	}
-	return nil
+	return true
 }
 
 func (s {{.SetName}}) Slice(marker {{.T0}}, max uint32) []{{.ItemType}} {
@@ -131,11 +154,9 @@ func (s *{{.SetName}}) Remove(a {{.ItemType}}) {
 		}
 	}
 }
-
 `
 
 var bodyTemplate2 = `
-
 func (s {{.SetName}}) Less(i, j int) bool {
 	p0, p1 := s[i], s[j]
 	return p0{{.F0}} < p1{{.F0}} || (p0{{.F0}} == p1{{.F0}} && p0{{.F1}} < p1{{.F1}})
@@ -145,19 +166,16 @@ func (s {{.SetName}}) First(at {{.T0}}) int {
 	return sort.Search(len(s), func(i int) bool { return s[i]{{.F0}} >= at })
 }
 
-func (s {{.SetName}}) Check() error {
-	if !sort.IsSorted(s) {
-		return errors.NotValidf("unsorted")
-	}
+func (s {{.SetName}}) areItemsUnique() bool {
 	var l0 {{.T0}}
 	var l1 {{.T1}}
 	for _, a := range s {
 		if l0 == a{{.F0}} && l1 == a{{.F1}} {
-			return errors.NotValidf("duplicate ID")
+			return false
 		}
 		l0 = a{{.F0}}
 	}
-	return nil
+	return true
 }
 
 func (s {{.SetName}}) Slice(m0 {{.T0}}, m1 {{.T1}}, max uint32) []{{.ItemType}} {
@@ -215,7 +233,6 @@ func (s *{{.SetName}}) Remove(a {{.ItemType}}) {
 		}
 	}
 }
-
 `
 
 type arrayInstance struct {
@@ -236,27 +253,25 @@ type arrayInstance struct {
 	T1 string
 }
 
-func main() {
+func run(args []string) error {
 	var err error
 	var fout *os.File
 	var instance arrayInstance
 
-	flag.Parse()
-
 	instance.Date = time.Now().String()
-	instance.Path = flag.Arg(0)
+	instance.Path = args[0]
 	instance.F0 = ".ID"
 	instance.T0 = "uint64"
 
-	p := flag.Arg(1)
+	p := args[1]
 	tokens := strings.Split(p, ":")
 
 	instance.Package = tokens[0]
 	instance.SetName = tokens[1]
 	instance.ItemType = tokens[2]
 
-	if flag.NArg() > 2 {
-		p = flag.Arg(2)
+	if len(args) > 2 {
+		p = args[2]
 		tokens = strings.Split(p, ":")
 		instance.F0 = tokens[0]
 		instance.T0 = tokens[1]
@@ -268,8 +283,8 @@ func main() {
 		}
 	}
 
-	if flag.NArg() > 3 {
-		p = flag.Arg(3)
+	if len(args) > 3 {
+		p = args[3]
 		tokens = strings.Split(p, ":")
 		instance.F1 = tokens[0]
 		instance.T1 = tokens[1]
@@ -281,39 +296,39 @@ func main() {
 		}
 	}
 
-	if flag.NArg() > 4 {
-		panic("Too many args")
+	if len(args) > 4 {
+		return errors.BadRequestf("Too many args")
 	}
 
 	header, err := template.New("header").Parse(headerTemplate)
 	if err != nil {
-		log.Fatalln("Invalid template", err.Error())
+		return errors.Annotate(err, "Invalid template")
 	}
 
 	common, err := template.New("common").Parse(bodyTemplateCommon)
 	if err != nil {
-		log.Fatalln("Invalid template", err.Error())
+		return errors.Annotate(err, "Invalid template")
 	}
 
 	tpl := bodyTemplate1
-	if flag.NArg() == 4 {
+	if len(args) == 4 {
 		tpl = bodyTemplate2
 	}
 	body, err := template.New("body").Parse(tpl)
 	if err != nil {
-		log.Fatalln("Invalid template", err.Error())
+		return errors.Annotate(err, "Invalid template")
 	}
 
 	_, err = os.Stat(instance.Path)
 	if err == nil {
 		fout, err = os.OpenFile(instance.Path, os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
-			log.Fatalln("Invalid output file", err.Error())
+			return errors.Annotate(err, "Invalid output file")
 		}
 	} else {
 		fout, err = os.Create(instance.Path)
 		if err != nil {
-			log.Fatalln("Invalid output file", err.Error())
+			return errors.Annotate(err, "Invalid output file")
 		}
 		header.Execute(fout, &instance)
 	}
@@ -321,4 +336,12 @@ func main() {
 
 	common.Execute(fout, &instance)
 	body.Execute(fout, &instance)
+	return nil
+}
+
+func main() {
+	flag.Parse()
+	if err := run(flag.Args()); err != nil {
+		log.Fatalln("Generation failed", err)
+	}
 }
