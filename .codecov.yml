@@ -1,8 +1,11 @@
 ---
+codecov:
+  disable_default_path_fixes: yes
 ignore:
   - "attic/**"      # obsolete code
   - "vendor/**"     # third-party code
   - "**/*.pb.go"    # grpc auto generated files
   - "**/*_auto.go"  # gen-set auto generated files
+  - "**/*_test.go"  # test code itself
 fixes:
-  - "github.com/jfsmig/hegemonie/::"
+  - "github.com/jfsmig/::"
