@@ -77,8 +77,8 @@ clean-coverage:
 	-rm profile.out $(COV_OUT)
 
 test: all clean-coverage
-	set -e ; go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ; done
+	set -e ; go list ./... | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ; done
 
 benchmark: all clean-coverage
-	set -e ; go list ./... | grep -v -e attic -e vendor | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic -bench=$$D $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ;  done
+	set -e ; go list ./... | while read D ; do go test -race -coverprofile=profile.out -covermode=atomic -bench=$$D $$D ; if [ -f profile.out ] ; then cat profile.out >> $(COV_OUT) ; fi ;  done
 

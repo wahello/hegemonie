@@ -3,26 +3,24 @@
 version: 2
 jobs:
   build:
+    parallelism: 2
     docker:
-      - image: jfsmig/hegemonie-dependencies:latest
-    environment:
-      GOPATH: /gopath
-      PATH: /gopath/bin:/go/bin:/usr/local/go/bin:/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin
+      - image: circleci/golang:1.16
     steps:
       - checkout
       - run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends make protobuf-compiler librocksdb-dev librocksdb5.17
+      - run: |
           go get -u -t github.com/golang/protobuf
           go get -u -t google.golang.org/grpc
-          go get \
-            google.golang.org/protobuf/cmd/protoc-gen-go \
-            google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          go get google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
       - run: |
           make prepare
           go get -v -t -d ./...
           go mod download
-      - run: make
+          make
       - run: make test
-      - run: make benchmark
       - run:
           name: Code Coverage
           command: |

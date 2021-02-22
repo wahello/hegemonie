@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # Install the system dependencies
 
-FROM golang:1.15-buster AS dependencies
+FROM golang:1.16-buster AS dependencies
 
 LABEL maintainer="Jean-Francois SMIGIELSKI <jf.smigielski@gmail.com>"
 
