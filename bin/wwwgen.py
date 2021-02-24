@@ -212,6 +212,10 @@ if 'prev' not in config:
     config['prev'] = 'prev-NOT-SET.html'
 if 'next' not in config:
     config['next'] = 'next-NOT-SET.html'
+if 'site_keywords' not in config:
+    config['site_keywords'] = ''
+if 'keywords' not in config:
+    config['keywords'] = ''
 
 # Load the people involved
 for src in glob(srcdir + '_people/*.html'):
@@ -318,6 +322,7 @@ special_files = (
     'robots.txt',
     'browserconfig.xml',
     'site.webmanifest',
+    'BingSiteAuth.xml',
 )
 copytree(srcdir + 'static', dstdir + 'static')
 for f in special_files:

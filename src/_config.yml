@@ -3,13 +3,14 @@ baseurl: https://www.hegemonie.be
 shorturl: https://hegemonie.be
 title: Civ-like Diplomacy online RPG
 description: Civ-like Diplomacy online RPG
-site_description: |-
+site_description: >-
   Hegemonie.be is game engine for Civ-Like 4X diplomacy RPG.
   For human-scale communities loving roleplay game with rich narrative frames.
-keywords: |-
-  online rpg, roleplay game, online game, game engine, gamemaster, NPC, non payable characters,
-  diplomacy rpg, diplomacy game, diplomacy online rpg,
-  civ-like RPG, civilization, 4X, medfan, medieval, fantastic
+site_keywords: >-
+  4X rpg, grand strategy game, 4X grand strategy game, 4X grand strategy rpg,
+  empire-building strategy game, empire-building online rpg,
+  online rpg, roleplay game, gamemaster, NPC, non playable character,
+  civ-like strategy game, civ-like onine rpg
 next: index.html
 prev: index.html
 author: jfsmig

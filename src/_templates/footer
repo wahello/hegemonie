@@ -1,35 +1,37 @@
 </main>
 
 <nav>
-	<span itemscope itemtype="https://schema.org/BreadcrumbList">
-	<span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+  <span itemscope itemtype="https://schema.org/BreadcrumbList">
+  <span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
   ${anchor("/index.html","Home")}
-	</span>
-	</span>
-  ${ref("https://github.com/jfsmig/hegemonie","GitHub")}
+  </span>
+  </span>
+  ${anchor("https://www.facebook.com/hegemonie.be","Facebook")}
+  ${anchor("https://github.com/jfsmig/hegemonie","GitHub")}
   ${link("https://hub.docker.com/repository/registry-1.docker.io/jfsmig/hegemonie","Docker Hub")}
-  ${link("https://www.facebook.com/hegemonie.be","Facebook")}
   <!-- ${anchor("https://app.hegemonie.be/","LogIn")} -->
 </nav>
 
 <aside itemscope itemtype="http://schema.org/Blog">
 % for key, meta, body in pages.blog():
-	<div itemprop="blogPosts" itemscope itemtype="http://schema.org/BlogPosting">
-		<h2>${anchor(meta['url'], meta['title'])}</h2>
-		<time datetime="${meta['date']}">${meta['date']}</time>
-		<p>${meta['description']}</p>
-	</div>
+  <div itemprop="blogPosts" itemscope itemtype="http://schema.org/BlogPosting">
+    <h2>${anchor(meta['url'], meta['title'])}</h2>
+    <time datetime="${meta['date']}">${meta['date']}</time>
+    <p>${meta['description']}</p>
+  </div>
 % endfor
 </aside>
 
 <footer>
   <p>
-		&copy; Copyright 2019-2021 ${anchor('/about.html#jfsmig', "Jean-Francois Smigielski")}
-		| ${anchor('/sitemap.html','Sitemap')}
-		| ${anchor('/about.html','About Us')}
-		| ${anchor('/privacy.html','Privacy')}
-	</p>
+    &copy; Copyright 2019-2021 ${anchor('/about.html#jfsmig', "Jean-Francois Smigielski")}
+    | ${anchor('/sitemap.html','Sitemap')}
+    | ${anchor('/about.html','About Us')}
+    | ${anchor('/privacy.html','Privacy')}
+    | <a rel="noopener" href="/feed.xml">
+        <img alt="Subscribe our Atom Feed!" src="/static/atom.png" width="24" height="24"/>
+      </a>
+  </p>
 </footer>
-
 </body>
 </html>

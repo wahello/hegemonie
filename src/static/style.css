@@ -15,7 +15,7 @@ aside p time a { font-size: inherit;  }
 header { margin: 10px 0px 10px 0px; }
 header div { font-weight: bold; }
 header .title { color: deeppink; }
-header .banner { color: darkorange; }
+header .banner { color: indianred; }
 header .title, header .banner {
 	padding-top: 0px;
 	padding-bottom: 0px;

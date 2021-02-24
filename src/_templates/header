@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>${title} | Hegemonie.be</title>
 <meta name="robots" content="index, follow"/>
-<meta name="keywords" content="${keywords}"/>
+<meta name="keywords" content="${site_keywords}, ${keywords}"/>
 <meta name="author" content="Jean-Francois Smigielski"/>
 <meta name="theme-color" content="#FFF"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -33,7 +33,7 @@
 <link rel="mask-icon" type="image/svg" href="/static/favicon.svg"/>
 <link rel="manifest" href="/site.webmanifest">
 <link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
-<link rel="alternate" type="application/atom+xml" title="${shorturl} news" href="/feed.xml"/>
+<link rel="alternate" type="application/atom+xml" title="${shorturl} News" href="/feed.xml"/>
 <script type='application/ld+json'>
 {
   "@context": "http://www.schema.org",
